@@ -1,0 +1,174 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Installation &mdash; Borg - Deduplicating Archiver 0.14 documentation</title>
+    
+    <link rel="stylesheet" href="_static/local.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.14',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Borg - Deduplicating Archiver 0.14 documentation" href="index.html" />
+    <link rel="next" title="Quick Start" href="quickstart.html" />
+    <link rel="prev" title="Foreword" href="foreword.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="quickstart.html" title="Quick Start"
+             accesskey="N">next</a></li>
+        <li class="right" >
+          <a href="foreword.html" title="Foreword"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.14 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="installation">
+<span id="id1"></span><h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<p><code class="docutils literal"><span class="pre">Borg</span></code> requires <a class="reference external" href="http://www.python.org/">Python</a> 3.2 or above to work. Even though Python 3 is
+not the default Python version on most Linux distributions, it is usually
+available as an optional install.</p>
+<p>Other dependencies:</p>
+<ul class="simple">
+<li><a class="reference external" href="https://pypi.python.org/pypi/msgpack-python/">msgpack-python</a> &gt;= 0.1.10</li>
+<li><a class="reference external" href="https://www.openssl.org/">OpenSSL</a> &gt;= 1.0.0</li>
+<li><a class="reference external" href="http://savannah.nongnu.org/projects/acl/">libacl</a></li>
+</ul>
+<p>The OpenSSL version bundled with Mac OS X and FreeBSD is most likey too old.
+Newer versions are available from <a class="reference external" href="http://mxcl.github.io/homebrew/">homebrew</a> on OS X and from FreeBSD ports.</p>
+<p>The <a class="reference external" href="https://pypi.python.org/pypi/llfuse/">llfuse</a> python package is also required if you wish to mount an
+archive as a FUSE filesystem.</p>
+<div class="section" id="common-compilation-pre-requisites">
+<h2>Common compilation pre-requisites<a class="headerlink" href="#common-compilation-pre-requisites" title="Permalink to this headline">¶</a></h2>
+<p>The following Debian packages are generally necessary to compile
+<code class="docutils literal"><span class="pre">Borg</span></code>, either through pip, the tarball or git:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>sudo apt-get install python3 python3-dev python3-msgpack python3-sphinx libssl-dev libacl1-dev
+</pre></div>
+</div>
+</div>
+<div class="section" id="installing-from-pypi-using-pip">
+<h2>Installing from PyPI using pip<a class="headerlink" href="#installing-from-pypi-using-pip" title="Permalink to this headline">¶</a></h2>
+<p>To install <code class="docutils literal"><span class="pre">Borg</span></code> system-wide:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>sudo pip3 install borgbackup
+</pre></div>
+</div>
+<p>To install it in a user-specific account:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>pip3 install --user borgbackup
+</pre></div>
+</div>
+<p>Then add <code class="docutils literal"><span class="pre">$HOME/.library/bin</span></code> to your <code class="docutils literal"><span class="pre">$PATH</span></code>.</p>
+</div>
+<div class="section" id="installing-from-source-tarballs">
+<h2>Installing from source tarballs<a class="headerlink" href="#installing-from-source-tarballs" title="Permalink to this headline">¶</a></h2>
+<pre class="literal-block">
+$ curl -O <a class="reference external" href="https://pypi.python.org/packages/source/b/borgbackup/Borg-0.14.tar.gz">https://pypi.python.org/packages/source/b/borgbackup/Borg-0.14.tar.gz</a>
+$ tar -xvzf borgbackup-0.14.tar.gz
+$ cd borgbackup-0.14
+$ sudo python3 setup.py install
+</pre>
+</div>
+<div class="section" id="installing-from-git">
+<h2>Installing from git<a class="headerlink" href="#installing-from-git" title="Permalink to this headline">¶</a></h2>
+<pre class="literal-block">
+$ git clone <a class="reference external" href="https://github.com/borgbackup/borg.git">https://github.com/borgbackup/borg.git</a>
+$ cd borg
+$ sudo python3 setup.py install
+</pre>
+<p>Please note that when installing from git, <a class="reference external" href="http://cython.org/">Cython</a> is required to generate some files that
+are normally bundled with the release tarball.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="sidebarlogo">
+  <a href="index.html">
+  <div class="title">Borg</div>
+</a>
+</div>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Installation</a><ul>
+<li><a class="reference internal" href="#common-compilation-pre-requisites">Common compilation pre-requisites</a></li>
+<li><a class="reference internal" href="#installing-from-pypi-using-pip">Installing from PyPI using pip</a></li>
+<li><a class="reference internal" href="#installing-from-source-tarballs">Installing from source tarballs</a></li>
+<li><a class="reference internal" href="#installing-from-git">Installing from git</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="foreword.html"
+                        title="previous chapter">Foreword</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="quickstart.html"
+                        title="next chapter">Quick Start</a></p><a href="https://github.com/borgbackup/borg"><img style="position: fixed; top: 0; right: 0; border: 0;"
+  src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub"></a>
+
+<h3>Useful Links</h3>
+<ul>
+  <li><a href="https://borgbackup.github.io/">Main Web Site</a></li>
+  <li><a href="https://pypi.python.org/pypi/borgbackup">PyPI packages</a></li>
+  <li><a href="https://github.com/borgbackup/borg">GitHub</a></li>
+  <li><a href="https://github.com/borgbackup/borg/issues">Issue Tracker</a></li>
+  <li><a href="http://librelist.com/browser/borgbackup/">Mailing List</a></li>
+</ul>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="quickstart.html" title="Quick Start"
+             >next</a></li>
+        <li class="right" >
+          <a href="foreword.html" title="Foreword"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.14 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    </div>
+  </body>
+</html>

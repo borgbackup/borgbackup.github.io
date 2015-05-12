@@ -1,0 +1,274 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Tuning &mdash; Borg - Deduplicating Archiver 0.14 documentation</title>
+    
+    <link rel="stylesheet" href="_static/local.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.14',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Borg - Deduplicating Archiver 0.14 documentation" href="index.html" />
+    <link rel="next" title="Internals" href="internals.html" />
+    <link rel="prev" title="Frequently asked questions" href="faq.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="internals.html" title="Internals"
+             accesskey="N">next</a></li>
+        <li class="right" >
+          <a href="faq.html" title="Frequently asked questions"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.14 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="id1">
+<h1>Tuning<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="general-hints">
+<h2>General hints<a class="headerlink" href="#general-hints" title="Permalink to this headline">¶</a></h2>
+<p>CPU load, backup speed, memory and storage usage are covered below.</p>
+<p>As performance and resource usage depend on a lot of factors, you may need to
+tweak the parameters a bit and retry until you found the best ones for your
+setup.</p>
+<p>Usually, the default parameters are selected for best speed under the assumption
+that you run a modern machine with fast CPU, fast I/O and a good amount of RAM.</p>
+<p>If you run an older or low-resource machine or your backup target or connection
+to it is slow, tweaking parameters might give significant speedups.</p>
+</div>
+<div class="section" id="exclude-crap-data">
+<h2>Exclude crap data<a class="headerlink" href="#exclude-crap-data" title="Permalink to this headline">¶</a></h2>
+<p>Maybe you don&#8217;t want to backup:</p>
+<ul class="simple">
+<li>cache / temporary files (they can be rebuilt / are useless)</li>
+<li>specific directories / filenames / file extensions you do not need</li>
+<li>backups (some people make backups of backups...)</li>
+</ul>
+<p>You can exclude these, so they don&#8217;t waste time and space.</p>
+</div>
+<div class="section" id="avoid-scrolling">
+<h2>Avoid scrolling<a class="headerlink" href="#avoid-scrolling" title="Permalink to this headline">¶</a></h2>
+<p>If you do benchmarks, avoid creating a lot of log output, especially if it
+means scrolling text in a window on a graphical user interface.</p>
+<p>Rather use much less log output or at least redirect the output to a log file,
+that is also much faster than scrolling.</p>
+</div>
+<div class="section" id="speed-in-general">
+<h2>Speed (in general)<a class="headerlink" href="#speed-in-general" title="Permalink to this headline">¶</a></h2>
+<p>Keep an eye on CPU and I/O bounds. Try to find the sweet spot in the middle
+where it is not too much I/O bound and not too much CPU bound.</p>
+<div class="section" id="i-o-bound">
+<h3>I/O bound<a class="headerlink" href="#i-o-bound" title="Permalink to this headline">¶</a></h3>
+<p>If CPU load does not sum up to 1 core fully loaded while backing up, the
+process is likely I/O bound (can&#8217;t read or write data fast enough).</p>
+<p>Maybe you want to try higher compression then so it has less data to write.
+Or get faster I/O, if possible.</p>
+</div>
+<div class="section" id="cpu-bound">
+<h3>CPU bound<a class="headerlink" href="#cpu-bound" title="Permalink to this headline">¶</a></h3>
+<p>If you have 1 core fully loaded most of the time, but your backup seems slow,
+the process is likely CPU bound (can&#8217;t compute fast enough).</p>
+<p>Maybe you want to try lower compression then so it has less to compute.
+Using a faster MAC or cipher method might also be an option.
+Or get a faster CPU.</p>
+</div>
+</div>
+<div class="section" id="i-o-speed">
+<h2>I/O speed<a class="headerlink" href="#i-o-speed" title="Permalink to this headline">¶</a></h2>
+<p>From fast to slower:</p>
+<ul class="simple">
+<li>fast local filesystem, SSD or HDD, via PCIe, SATA, USB</li>
+<li>ssh connection to a remote server&#8217;s borg instance</li>
+<li>mounted network filesystems of a remote server</li>
+</ul>
+<p>Not only throughput influences timing, latency does also.</p>
+</div>
+<div class="section" id="backup-space-needed">
+<h2>Backup space needed<a class="headerlink" href="#backup-space-needed" title="Permalink to this headline">¶</a></h2>
+<p>If you always backup the same data mostly, you will often save a lot of space
+due to deduplication - this works independently from compression.</p>
+<p>To avoid running out of space, regularly prune your backup archives according
+to your needs. Backups of same machine which are close in time are usually
+very cheap (because most data is same and deduplicated).</p>
+</div>
+<div class="section" id="compression">
+<h2>Compression<a class="headerlink" href="#compression" title="Permalink to this headline">¶</a></h2>
+<p>If you have a fast backup source and destination and you are not low on backup space:
+Switch off compression, your backup will run faster and with less cpu load.</p>
+<p>If you just want to save a bit space, but stay relatively fast:
+Try zlib level 1.</p>
+<p>If you have very slow source or destination (e.g. a remote backup space via a
+network connection that is quite slower than your local and remote storage):
+Try a higher zlib or lzma.</p>
+</div>
+<div class="section" id="authentication-mac-selection">
+<h2>Authentication &amp; MAC selection<a class="headerlink" href="#authentication-mac-selection" title="Permalink to this headline">¶</a></h2>
+<p>Real MACs (Message Authentication Codes) can only be used when a secret key is
+available. It is signing your backup data and can detect malicious tampering.
+Without a key, a simple hash will be used (which helps to detect accidental
+data corruption, but can not detect malicious data tampering).</p>
+<div class="section" id="older-or-simple-32bit-machine-architecture">
+<h3>Older or simple 32bit machine architecture<a class="headerlink" href="#older-or-simple-32bit-machine-architecture" title="Permalink to this headline">¶</a></h3>
+<p>Use sha256 (no key) or hmac-sha256 (key).</p>
+</div>
+<div class="section" id="bit-architecture-but-no-aes-hardware-acceleration-in-the-cpu">
+<h3>64bit architecture, but no AES hardware acceleration in the CPU<a class="headerlink" href="#bit-architecture-but-no-aes-hardware-acceleration-in-the-cpu" title="Permalink to this headline">¶</a></h3>
+<p>Use sha512-256 (no key) or hmac-sha512-256 (key).</p>
+</div>
+<div class="section" id="modern-64bit-cpu-with-aes-hardware-acceleration-aes-ni-pclmulqdq">
+<h3>Modern 64bit CPU with AES hardware acceleration (AES-NI, PCLMULQDQ)<a class="headerlink" href="#modern-64bit-cpu-with-aes-hardware-acceleration-aes-ni-pclmulqdq" title="Permalink to this headline">¶</a></h3>
+<p>Use ghash (no key) or gmac (key).</p>
+</div>
+</div>
+<div class="section" id="encryption-cipher-selection">
+<h2>Encryption &amp; Cipher selection<a class="headerlink" href="#encryption-cipher-selection" title="Permalink to this headline">¶</a></h2>
+<p>Always encrypt your backups (and keep passphrase and key file [if any] safe).</p>
+<p>The cipher selection chooses between misc. AEAD ciphers (authenticated
+encryption with associated data), it is EtM (encrypt-then-mac):</p>
+<div class="section" id="id2">
+<h3>Older or simple 32bit machine architecture<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<p>Use aes256-ctr + hmac-sha256.</p>
+</div>
+<div class="section" id="id3">
+<h3>64bit architecture, but no AES hardware acceleration in the CPU<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<p>Use aes256-ctr + hmac-sha512-256.</p>
+</div>
+<div class="section" id="id4">
+<h3>Modern 64bit CPU with AES hardware acceleration (AES-NI, PCLMULQDQ)<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<p>Use aes256-gcm (AEAD 1-pass cipher).</p>
+</div>
+</div>
+<div class="section" id="ram-usage">
+<h2>RAM usage<a class="headerlink" href="#ram-usage" title="Permalink to this headline">¶</a></h2>
+<p>Depending on the amount of files and chunks in the repository, memory usage
+varies:</p>
+<ul class="simple">
+<li>about 250+B RAM per file (for &#8220;files&#8221; cache)</li>
+<li>about 44B RAM per 64kiB chunk (for &#8220;chunks&#8221; cache)</li>
+<li>about 40B RAM per 64kiB chunk (for repository index, if remote repo is used,
+this will be allocated on remote side)</li>
+</ul>
+<p>If you run into memory usage issues, your options are:</p>
+<ul class="simple">
+<li>get more RAM (or more swapspace, speed will be slower)</li>
+<li>disable the &#8220;files&#8221; cache, speed will be slower</li>
+<li>have less files / chunks per repo</li>
+</ul>
+<p>Note: RAM compression likely won&#8217;t help as a lot of that data is using
+msgpack, which is already rather efficient.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="sidebarlogo">
+  <a href="index.html">
+  <div class="title">Borg</div>
+</a>
+</div>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Tuning</a><ul>
+<li><a class="reference internal" href="#general-hints">General hints</a></li>
+<li><a class="reference internal" href="#exclude-crap-data">Exclude crap data</a></li>
+<li><a class="reference internal" href="#avoid-scrolling">Avoid scrolling</a></li>
+<li><a class="reference internal" href="#speed-in-general">Speed (in general)</a><ul>
+<li><a class="reference internal" href="#i-o-bound">I/O bound</a></li>
+<li><a class="reference internal" href="#cpu-bound">CPU bound</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#i-o-speed">I/O speed</a></li>
+<li><a class="reference internal" href="#backup-space-needed">Backup space needed</a></li>
+<li><a class="reference internal" href="#compression">Compression</a></li>
+<li><a class="reference internal" href="#authentication-mac-selection">Authentication &amp; MAC selection</a><ul>
+<li><a class="reference internal" href="#older-or-simple-32bit-machine-architecture">Older or simple 32bit machine architecture</a></li>
+<li><a class="reference internal" href="#bit-architecture-but-no-aes-hardware-acceleration-in-the-cpu">64bit architecture, but no AES hardware acceleration in the CPU</a></li>
+<li><a class="reference internal" href="#modern-64bit-cpu-with-aes-hardware-acceleration-aes-ni-pclmulqdq">Modern 64bit CPU with AES hardware acceleration (AES-NI, PCLMULQDQ)</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#encryption-cipher-selection">Encryption &amp; Cipher selection</a><ul>
+<li><a class="reference internal" href="#id2">Older or simple 32bit machine architecture</a></li>
+<li><a class="reference internal" href="#id3">64bit architecture, but no AES hardware acceleration in the CPU</a></li>
+<li><a class="reference internal" href="#id4">Modern 64bit CPU with AES hardware acceleration (AES-NI, PCLMULQDQ)</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ram-usage">RAM usage</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="faq.html"
+                        title="previous chapter">Frequently asked questions</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="internals.html"
+                        title="next chapter">Internals</a></p><a href="https://github.com/borgbackup/borg"><img style="position: fixed; top: 0; right: 0; border: 0;"
+  src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub"></a>
+
+<h3>Useful Links</h3>
+<ul>
+  <li><a href="https://borgbackup.github.io/">Main Web Site</a></li>
+  <li><a href="https://pypi.python.org/pypi/borgbackup">PyPI packages</a></li>
+  <li><a href="https://github.com/borgbackup/borg">GitHub</a></li>
+  <li><a href="https://github.com/borgbackup/borg/issues">Issue Tracker</a></li>
+  <li><a href="http://librelist.com/browser/borgbackup/">Mailing List</a></li>
+</ul>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="internals.html" title="Internals"
+             >next</a></li>
+        <li class="right" >
+          <a href="faq.html" title="Frequently asked questions"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.14 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    </div>
+  </body>
+</html>

@@ -1,0 +1,157 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Frequently asked questions &mdash; Borg - Deduplicating Archiver 0.14 documentation</title>
+    
+    <link rel="stylesheet" href="_static/local.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.14',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Borg - Deduplicating Archiver 0.14 documentation" href="index.html" />
+    <link rel="next" title="Tuning" href="tuning.html" />
+    <link rel="prev" title="Usage" href="usage.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="tuning.html" title="Tuning"
+             accesskey="N">next</a></li>
+        <li class="right" >
+          <a href="usage.html" title="Usage"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.14 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="frequently-asked-questions">
+<h1>Frequently asked questions<a class="headerlink" href="#frequently-asked-questions" title="Permalink to this headline">¶</a></h1>
+<dl class="docutils">
+<dt>Which platforms are supported?</dt>
+<dd>Currently Linux, FreeBSD and MacOS X are supported.</dd>
+<dt>Can I backup VM disk images?</dt>
+<dd>Yes, the <a class="reference internal" href="foreword.html#deduplication-def"><span>deduplication</span></a> technique used by <code class="docutils literal"><span class="pre">Borg</span></code>
+makes sure only the modified parts of the file are stored.</dd>
+<dt>Can I backup from multiple servers into a single repository?</dt>
+<dd><p class="first">Yes, but in order for the deduplication used by Borg to work, it
+needs to keep a local cache containing checksums of all file
+chunks already stored in the repository. This cache is stored in
+<code class="docutils literal"><span class="pre">~/.cache/borg/</span></code>.  If Borg detects that a repository has been
+modified since the local cache was updated it will need to rebuild
+the cache. This rebuild can be quite time consuming.</p>
+<p class="last">So, yes it&#8217;s possible. But it will be most efficient if a single
+repository is only modified from one place. Also keep in mind that
+Borg will keep an exclusive lock on the repository while creating
+or deleting archives, which may make <em>simultaneous</em> backups fail.</p>
+</dd>
+<dt>Which file attributes are preserved?</dt>
+<dd><p class="first">The following attributes are preserved:</p>
+<ul class="last simple">
+<li>Name</li>
+<li>Contents</li>
+<li>Hardlinks and symlinks</li>
+<li>Time of last modification (nanosecond precision with Python &gt;= 3.3)</li>
+<li>User ID of owner</li>
+<li>Group ID of owner</li>
+<li>Unix Permission</li>
+<li>Extended attributes (xattrs)</li>
+<li>Access Control Lists (<a class="reference external" href="https://en.wikipedia.org/wiki/Access_control_list">ACL</a>) on Linux, OS X and FreeBSD</li>
+<li>BSD flags on OS X and FreeBSD</li>
+</ul>
+</dd>
+<dt>How can I specify the encryption passphrase programmatically?</dt>
+<dd>The encryption passphrase can be specified programmatically using the
+<cite>BORG_PASSPHRASE</cite> environment variable. This is convenient when setting up
+automated encrypted backups. Another option is to use
+key file based encryption with a blank passphrase. See
+<a class="reference internal" href="quickstart.html#encrypted-repos"><span>Repository encryption</span></a> for more details.</dd>
+<dt>When backing up to remote servers, is data encrypted before leaving the local machine, or do I have to trust that the remote server isn&#8217;t malicious?</dt>
+<dd>Yes, everything is encrypted before leaving the local machine.</dd>
+<dt>If a backup stops mid-way, does the already-backed-up data stay there? I.e. does Borg resume backups?</dt>
+<dd>Yes, during a backup a special checkpoint archive named <code class="docutils literal"><span class="pre">&lt;archive-name&gt;.checkpoint</span></code> is saved every 5 minutes
+containing all the data backed-up until that point. This means that at most 5 minutes worth of data needs to be
+retransmitted if a backup needs to be restarted.</dd>
+</dl>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="sidebarlogo">
+  <a href="index.html">
+  <div class="title">Borg</div>
+</a>
+</div>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="usage.html"
+                        title="previous chapter">Usage</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="tuning.html"
+                        title="next chapter">Tuning</a></p><a href="https://github.com/borgbackup/borg"><img style="position: fixed; top: 0; right: 0; border: 0;"
+  src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub"></a>
+
+<h3>Useful Links</h3>
+<ul>
+  <li><a href="https://borgbackup.github.io/">Main Web Site</a></li>
+  <li><a href="https://pypi.python.org/pypi/borgbackup">PyPI packages</a></li>
+  <li><a href="https://github.com/borgbackup/borg">GitHub</a></li>
+  <li><a href="https://github.com/borgbackup/borg/issues">Issue Tracker</a></li>
+  <li><a href="http://librelist.com/browser/borgbackup/">Mailing List</a></li>
+</ul>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="tuning.html" title="Tuning"
+             >next</a></li>
+        <li class="right" >
+          <a href="usage.html" title="Usage"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.14 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    </div>
+  </body>
+</html>

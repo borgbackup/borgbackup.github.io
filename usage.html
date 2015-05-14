@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Usage &mdash; Borg - Deduplicating Archiver 0.14 documentation</title>
+    <title>Usage &mdash; Borg - Deduplicating Archiver 0.14+187.gff0c264.dirty documentation</title>
     
     <link rel="stylesheet" href="_static/local.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.14',
+        VERSION:     '0.14+187.gff0c264.dirty',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="Borg - Deduplicating Archiver 0.14 documentation" href="index.html" />
+    <link rel="top" title="Borg - Deduplicating Archiver 0.14+187.gff0c264.dirty documentation" href="index.html" />
     <link rel="next" title="Frequently asked questions" href="faq.html" />
     <link rel="prev" title="Quick Start" href="quickstart.html" /> 
   </head>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="quickstart.html" title="Quick Start"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.14 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.14+187.gff0c264.dirty documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -60,7 +60,6 @@ messages as it is processing.</p>
 <div class="section" id="borg-init">
 <span id="id1"></span><h2>borg init<a class="headerlink" href="#borg-init" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-bash"><div class="highlight"><pre>usage: borg init <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>-v<span class="o">]</span> <span class="o">[</span>--no-files-cache<span class="o">]</span> <span class="o">[</span>-e <span class="o">{</span>none,passphrase,keyfile<span class="o">}]</span>
-                 <span class="o">[</span>-C METHOD<span class="o">]</span> <span class="o">[</span>-c METHOD<span class="o">]</span> <span class="o">[</span>-m METHOD<span class="o">]</span>
                  REPOSITORY
 
 Initialize an empty repository
@@ -73,51 +72,14 @@ optional arguments:
   -v, --verbose         verbose output
   --no-files-cache
   -e <span class="o">{</span>none,passphrase,keyfile<span class="o">}</span>, --encryption <span class="o">{</span>none,passphrase,keyfile<span class="o">}</span>
-                        <span class="k">select</span> encryption key method
-  -C METHOD, --cipher METHOD
-                        <span class="k">select</span> cipher <span class="o">(</span>0..2<span class="o">)</span>
-  -c METHOD, --compression METHOD
-                        <span class="k">select</span> compression method <span class="o">(</span>0..19<span class="o">)</span>
-  -m METHOD, --mac METHOD
-                        <span class="k">select</span> <span class="nb">hash</span>/mac method <span class="o">(</span>0..3<span class="o">)</span>
+                        <span class="k">select</span> encryption method
 </pre></div>
 </div>
 <div class="section" id="description">
 <h3>Description<a class="headerlink" href="#description" title="Permalink to this headline">¶</a></h3>
 <p>This command initializes an empty repository. A repository is a filesystem
 directory containing the deduplicated data from zero or more archives.
-Encryption can be enabled, compression, cipher and mac method can be chosen at
-repository init time.</p>
-<p>&#8211;compression METHODs (default: 00):</p>
-<ul class="simple">
-<li>00      no compression</li>
-<li>01..09  zlib levels 1..9 (1 means low compression, 9 max. compression)</li>
-<li>10..19  lzma levels 0..9 (0 means low compression, 9 max. compression)</li>
-<li>20..29  lz4 (blosc) levels 0..9 (0 = no, 9 = max. compression)</li>
-<li>30..39  lz4hc (blosc) levels 0..9 (0 = no, 9 = max. compression)</li>
-<li>40..49  blosclz (blosc) levels 0..9 (0 = no, 9 = max. compression)</li>
-<li>50..59  snappy (blosc) levels 0..9 (0 = no, 9 = max. compression)</li>
-<li>60..69  zlib (blosc) levels 0..9 (0 = no, 9 = max. compression)</li>
-</ul>
-<p>&#8211;cipher METHODs (default: 00 or 02)</p>
-<ul class="simple">
-<li>00      No encryption</li>
-<li>01      AEAD: AES-CTR + HMAC-SHA256</li>
-<li>02      AEAD: AES-GCM</li>
-</ul>
-<p>&#8211;mac METHODs (default: 02 or 20):</p>
-<ul class="simple">
-<li>00      sha256 (simple hash, no MAC, faster on 32bit CPU)</li>
-<li>01      sha512-256 (simple hash, no MAC, faster on 64bit CPU)</li>
-<li>02      ghash (simple hash, no MAC, fastest on CPUs with AES-GCM support)</li>
-<li>03      sha1 (simple hash, no MAC, fastest on CPUs without AES-GCM support)</li>
-<li>04      sha512 (simple hash, no MAC, faster on 64bit CPU)</li>
-<li>10      hmac-sha256 (MAC, faster on 32bit CPU)</li>
-<li>11      hmac-sha512-256 (MAC, faster on 64bit CPU)</li>
-<li>13      hmac-sha1 (MAC, fastest on CPUs without AES-GCM support)</li>
-<li>14      hmac-sha512 (MAC, faster on 64bit CPU)</li>
-<li>20      gmac (MAC, fastest on CPUs with AES-GCM support)</li>
-</ul>
+Encryption can be enabled at repository init time.</p>
 </div>
 <div class="section" id="examples">
 <h3>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h3>
@@ -410,11 +372,11 @@ specified by the rules.</p>
 
 <span class="c"># Keep 7 end of day, 4 additional end of week archives,</span>
 <span class="c"># and an end of month archive for every month:</span>
-<span class="nv">$ </span>borg prune /mnt/backup --keep-daily<span class="o">=</span><span class="m">7</span> --keep-weekly<span class="o">=</span><span class="m">4</span> --monthly<span class="o">=</span>-1
+<span class="nv">$ </span>borg prune /mnt/backup --keep-daily<span class="o">=</span><span class="m">7</span> --keep-weekly<span class="o">=</span><span class="m">4</span> --keep-monthly<span class="o">=</span>-1
 
 <span class="c"># Keep all backups in the last 10 days, 4 additional end of week archives,</span>
 <span class="c"># and an end of month archive for every month:</span>
-<span class="nv">$ </span>borg prune /mnt/backup --keep-within<span class="o">=</span>10d --keep-weekly<span class="o">=</span><span class="m">4</span> --monthly<span class="o">=</span>-1
+<span class="nv">$ </span>borg prune /mnt/backup --keep-within<span class="o">=</span>10d --keep-weekly<span class="o">=</span><span class="m">4</span> --keep-monthly<span class="o">=</span>-1
 </pre></div>
 </div>
 </div>
@@ -532,6 +494,34 @@ Key file <span class="s2">&quot;/home/USER/.borg/keys/mnt_backup&quot;</span> up
 </div>
 </div>
 </div>
+<div class="section" id="borg-serve">
+<span id="id27"></span><h2>borg serve<a class="headerlink" href="#borg-serve" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-bash"><div class="highlight"><pre>usage: borg serve <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>-v<span class="o">]</span> <span class="o">[</span>--no-files-cache<span class="o">]</span> <span class="o">[</span>--restrict-to-path PATH<span class="o">]</span>
+
+Start in server mode. This <span class="nb">command </span>is usually not used manually.
+
+optional arguments:
+  -h, --help            show this <span class="nb">help </span>message and <span class="nb">exit</span>
+  -v, --verbose         verbose output
+  --no-files-cache
+  --restrict-to-path PATH
+                        restrict repository access to PATH
+</pre></div>
+</div>
+<div class="section" id="id28">
+<h3>Description<a class="headerlink" href="#id28" title="Permalink to this headline">¶</a></h3>
+<p>None</p>
+</div>
+<div class="section" id="id29">
+<h3>Examples<a class="headerlink" href="#id29" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-bash"><div class="highlight"><pre><span class="c"># Allow an SSH keypair to only run attic, and only have access to /mnt/backup.</span>
+<span class="c"># This will help to secure an automated remote backup system.</span>
+<span class="nv">$ </span>cat ~/.ssh/authorized_keys
+<span class="nb">command</span><span class="o">=</span><span class="s2">&quot;attic serve --restrict-to-path /mnt/backup&quot;</span> ssh-rsa AAAAB3<span class="o">[</span>...<span class="o">]</span>
+</pre></div>
+</div>
+</div>
+</div>
 </div>
 
 
@@ -596,6 +586,11 @@ Key file <span class="s2">&quot;/home/USER/.borg/keys/mnt_backup&quot;</span> up
 <li><a class="reference internal" href="#id26">Examples</a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#borg-serve">borg serve</a><ul>
+<li><a class="reference internal" href="#id28">Description</a></li>
+<li><a class="reference internal" href="#id29">Examples</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -642,7 +637,7 @@ Key file <span class="s2">&quot;/home/USER/.borg/keys/mnt_backup&quot;</span> up
         <li class="right" >
           <a href="quickstart.html" title="Quick Start"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.14 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.14+187.gff0c264.dirty documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

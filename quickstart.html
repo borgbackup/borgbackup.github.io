@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Quick Start &mdash; Borg - Deduplicating Archiver 0.14 documentation</title>
+    <title>Quick Start &mdash; Borg - Deduplicating Archiver 0.14+187.gff0c264.dirty documentation</title>
     
     <link rel="stylesheet" href="_static/local.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.14',
+        VERSION:     '0.14+187.gff0c264.dirty',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="Borg - Deduplicating Archiver 0.14 documentation" href="index.html" />
+    <link rel="top" title="Borg - Deduplicating Archiver 0.14+187.gff0c264.dirty documentation" href="index.html" />
     <link rel="next" title="Usage" href="usage.html" />
     <link rel="prev" title="Installation" href="installation.html" /> 
   </head>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="installation.html" title="Installation"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.14 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.14+187.gff0c264.dirty documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -119,17 +119,16 @@ get progress reporting during command execution.</p>
 </div>
 <div class="section" id="automating-backups">
 <h2>Automating backups<a class="headerlink" href="#automating-backups" title="Permalink to this headline">¶</a></h2>
-<p>The following example script backs up <code class="docutils literal"><span class="pre">/home</span></code> and
-<code class="docutils literal"><span class="pre">/var/www</span></code> to a remote server. The script also uses the
-<a class="reference internal" href="usage.html#borg-prune"><span>borg prune</span></a> subcommand to maintain a certain number
-of old archives:</p>
+<p>The following example script backs up <code class="docutils literal"><span class="pre">/home</span></code> and <code class="docutils literal"><span class="pre">/var/www</span></code> to a remote
+server. The script also uses the <a class="reference internal" href="usage.html#borg-prune"><span>borg prune</span></a> subcommand to maintain a
+certain number of old archives:</p>
 <div class="highlight-bash"><div class="highlight"><pre><span class="c">#!/bin/sh</span>
 <span class="nv">REPOSITORY</span><span class="o">=</span>username@remoteserver.com:backup
 
 <span class="c"># Backup all of /home and /var/www except a few</span>
 <span class="c"># excluded directories</span>
-borg create --stats                            <span class="se">\</span>
-    <span class="nv">$REPOSITORY</span>::hostname-<span class="sb">`</span>date +%Y-%m-%d<span class="sb">`</span>      <span class="se">\</span>
+borg create --stats                             <span class="se">\</span>
+    <span class="nv">$REPOSITORY</span>::<span class="sb">`</span>hostname<span class="sb">`</span>-<span class="sb">`</span>date +%Y-%m-%d<span class="sb">`</span>    <span class="se">\</span>
     /home                                       <span class="se">\</span>
     /var/www                                    <span class="se">\</span>
     --exclude /home/*/.cache                    <span class="se">\</span>
@@ -151,7 +150,7 @@ borg prune -v <span class="nv">$REPOSITORY</span> --keep-daily<span class="o">=<
 <p>When repository encryption is enabled all data is encrypted using 256-bit <a class="reference external" href="https://en.wikipedia.org/wiki/Advanced_Encryption_Standard">AES</a>
 encryption and the integrity and authenticity is verified using <a class="reference external" href="http://en.wikipedia.org/wiki/HMAC">HMAC-SHA256</a>.</p>
 <p>All data is encrypted before being written to the repository. This means that
-an attacker that manages to compromise the host containing an encrypted
+an attacker who manages to compromise the host containing an encrypted
 archive will not be able to access any of the data.</p>
 <p><code class="docutils literal"><span class="pre">Borg</span></code> supports two different methods to derive the AES and HMAC keys.</p>
 <dl class="docutils">
@@ -184,17 +183,25 @@ so it must be kept <strong>safe</strong>.</p>
 <p><code class="docutils literal"><span class="pre">Borg</span></code> can initialize and access repositories on remote hosts if the
 host is accessible using SSH.  This is fastest and easiest when <code class="docutils literal"><span class="pre">Borg</span></code>
 is installed on the remote host, in which case the following syntax is used:</p>
-<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>borg init user@hostname:backup
+<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>borg init user@hostname:/mnt/backup
 </pre></div>
 </div>
 <p>or:</p>
-<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>borg init ssh://user@hostname:port/backup
+<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>borg init ssh://user@hostname:port//mnt/backup
+</pre></div>
+</div>
+<p>Remote operations over SSH can be automated with SSH keys. You can restrict the
+use of the SSH keypair by prepending a forced command to the SSH public key in
+the remote server&#8217;s authorized_keys file. Only the forced command will be run
+when the key authenticates a connection. This example will start attic in server
+mode, and limit the attic server to a specific filesystem path:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="nb">command</span><span class="o">=</span><span class="s2">&quot;attic serve --restrict-to-path /mnt/backup&quot;</span> ssh-rsa AAAAB3<span class="o">[</span>...<span class="o">]</span>
 </pre></div>
 </div>
 <p>If it is not possible to install <code class="docutils literal"><span class="pre">Borg</span></code> on the remote host,
 it is still possible to use the remote host to store a repository by
 mounting the remote filesystem, for example, using sshfs:</p>
-<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>sshfs user@hostname:/path/to/folder /mnt
+<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>sshfs user@hostname:/mnt /mnt
 <span class="nv">$ </span>borg init /mnt/backup
 <span class="nv">$ </span>fusermount -u /mnt
 </pre></div>
@@ -268,7 +275,7 @@ repository at the same time.</p>
         <li class="right" >
           <a href="installation.html" title="Installation"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.14 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.14+187.gff0c264.dirty documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

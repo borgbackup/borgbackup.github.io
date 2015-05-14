@@ -109,11 +109,11 @@ Examples
 
     # Keep 7 end of day, 4 additional end of week archives,
     # and an end of month archive for every month:
-    $ borg prune /mnt/backup --keep-daily=7 --keep-weekly=4 --monthly=-1
+    $ borg prune /mnt/backup --keep-daily=7 --keep-weekly=4 --keep-monthly=-1
 
     # Keep all backups in the last 10 days, 4 additional end of week archives,
     # and an end of month archive for every month:
-    $ borg prune /mnt/backup --keep-within=10d --keep-weekly=4 --monthly=-1
+    $ borg prune /mnt/backup --keep-within=10d --keep-weekly=4 --keep-monthly=-1
 
 
 .. include:: usage/info.rst.inc
@@ -167,4 +167,16 @@ Examples
     New passphrase: 
     Enter same passphrase again: 
     Key file "/home/USER/.borg/keys/mnt_backup" updated
+
+
+.. include:: usage/serve.rst.inc
+
+Examples
+~~~~~~~~
+::
+
+    # Allow an SSH keypair to only run attic, and only have access to /mnt/backup.
+    # This will help to secure an automated remote backup system.
+    $ cat ~/.ssh/authorized_keys
+    command="attic serve --restrict-to-path /mnt/backup" ssh-rsa AAAAB3[...]
 

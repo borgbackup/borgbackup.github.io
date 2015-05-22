@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Frequently asked questions &mdash; Borg - Deduplicating Archiver 0.14+187.gff0c264.dirty documentation</title>
+    <title>Frequently asked questions &mdash; Borg - Deduplicating Archiver 0.16+185.g9d1560f.dirty documentation</title>
     
     <link rel="stylesheet" href="_static/local.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.14+187.gff0c264.dirty',
+        VERSION:     '0.16+185.g9d1560f.dirty',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="Borg - Deduplicating Archiver 0.14+187.gff0c264.dirty documentation" href="index.html" />
+    <link rel="top" title="Borg - Deduplicating Archiver 0.16+185.g9d1560f.dirty documentation" href="index.html" />
     <link rel="next" title="Internals" href="internals.html" />
     <link rel="prev" title="Usage" href="usage.html" /> 
   </head>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="usage.html" title="Usage"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.14+187.gff0c264.dirty documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.16+185.g9d1560f.dirty documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -59,15 +59,15 @@ other BSDs, etc. but they are not officially supported.</p>
 makes sure only the modified parts of the file are stored.
 Also, we have optional simple sparse file support for extract.</dd>
 <dt>Can I backup from multiple servers into a single repository?</dt>
-<dd><p class="first">Yes, but in order for the deduplication used by Borg to work, it
+<dd><p class="first">Yes, but in order for the deduplication used by <code class="docutils literal"><span class="pre">Borg</span></code> to work, it
 needs to keep a local cache containing checksums of all file
 chunks already stored in the repository. This cache is stored in
-<code class="docutils literal"><span class="pre">~/.cache/borg/</span></code>.  If Borg detects that a repository has been
+<code class="docutils literal"><span class="pre">~/.cache/borg/</span></code>.  If <code class="docutils literal"><span class="pre">Borg</span></code> detects that a repository has been
 modified since the local cache was updated it will need to rebuild
 the cache. This rebuild can be quite time consuming.</p>
 <p class="last">So, yes it&#8217;s possible. But it will be most efficient if a single
 repository is only modified from one place. Also keep in mind that
-Borg will keep an exclusive lock on the repository while creating
+<code class="docutils literal"><span class="pre">Borg</span></code> will keep an exclusive lock on the repository while creating
 or deleting archives, which may make <em>simultaneous</em> backups fail.</p>
 </dd>
 <dt>Which file types, attributes, etc. are preserved?</dt>
@@ -107,8 +107,17 @@ holes in a sparse file.</li>
 automated encrypted backups. Another option is to use
 key file based encryption with a blank passphrase. See
 <a class="reference internal" href="quickstart.html#encrypted-repos"><span>Repository encryption</span></a> for more details.</dd>
-<dt>When backing up to remote servers, is data encrypted before leaving the local machine, or do I have to trust that the remote server isn&#8217;t malicious?</dt>
-<dd>Yes, everything is encrypted before leaving the local machine.</dd>
+<dt>When backing up to remote encrypted repos, is encryption done locally?</dt>
+<dd>Yes, file and directory metadata and data is locally encrypted, before
+leaving the local machine. We do not mean the transport layer encryption
+by that, but the data/metadata itself. Transport layer encryption (e.g.
+when ssh is used as a transport) applies additionally.</dd>
+<dt>When backing up to remote servers, do I have to trust the remote server?</dt>
+<dd>Yes and No.
+No, as far as data confidentiality is concerned - all your files/dirs data
+and metadata are stored in their encrypted form into the repository.
+Yes, as an attacker with access to the remote server could delete (or
+otherwise make unavailable) all your backups.</dd>
 <dt>If a backup stops mid-way, does the already-backed-up data stay there? I.e. does <code class="docutils literal"><span class="pre">Borg</span></code> resume backups?</dt>
 <dd>Yes, during a backup a special checkpoint archive named <code class="docutils literal"><span class="pre">&lt;archive-name&gt;.checkpoint</span></code> is saved every 5 minutes
 containing all the data backed-up until that point. This means that at most 5 minutes worth of data needs to be
@@ -118,6 +127,40 @@ retransmitted if a backup needs to be restarted.</dd>
 <div class="last highlight-bash"><div class="highlight"><pre><span class="nb">export </span><span class="nv">LANG</span><span class="o">=</span>en_US.UTF-8  <span class="c"># or similar, important is correct charset</span>
 </pre></div>
 </div>
+</dd>
+<dt>If I want to run <code class="docutils literal"><span class="pre">Borg</span></code> on a ARM CPU older than ARM v6?</dt>
+<dd><p class="first">You need to enable the alignment trap handler to fixup misaligned accesses:</p>
+<blockquote class="last">
+<div>echo &#8220;2&#8221; &gt; /proc/cpu/alignment</div></blockquote>
+</dd>
+<dt>Why was Borg forked from Attic?</dt>
+<dd><p class="first">Borg was created in May 2015 in response to the difficulty of
+getting new code or larger changes incorporated into Attic and
+establishing a bigger developer community / more open development.</p>
+<p>More details can be found in <a class="reference external" href="https://github.com/jborg/attic/issues/217">ticket 217</a>) that led to the fork.</p>
+<p>Borg intends to be:</p>
+<ul class="last">
+<li><p class="first">simple:
+* as simple as possible, but no simpler
+* do the right thing by default, but offer options</p>
+</li>
+<li><p class="first">open:
+* welcome feature requests
+* accept pull requests of good quality and coding style
+* give feedback on PRs that can&#8217;t be accepted &#8220;as is&#8221;
+* discuss openly, don&#8217;t work in the dark</p>
+</li>
+<li><p class="first">changing:
+* Borg is not compatible with Attic
+* do not break compatibility accidentally, without a good reason</p>
+<blockquote>
+<div><p>or without warning. allow compatibility breaking for other cases.</p>
+</div></blockquote>
+<ul class="simple">
+<li>if major version number changes, it may have incompatible changes</li>
+</ul>
+</li>
+</ul>
 </dd>
 </dl>
 </div>
@@ -174,7 +217,7 @@ retransmitted if a backup needs to be restarted.</dd>
         <li class="right" >
           <a href="usage.html" title="Usage"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.14+187.gff0c264.dirty documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.16+185.g9d1560f.dirty documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

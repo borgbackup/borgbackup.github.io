@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Usage &mdash; Borg - Deduplicating Archiver 0.14+187.gff0c264.dirty documentation</title>
+    <title>Usage &mdash; Borg - Deduplicating Archiver 0.16+185.g9d1560f.dirty documentation</title>
     
     <link rel="stylesheet" href="_static/local.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.14+187.gff0c264.dirty',
+        VERSION:     '0.16+185.g9d1560f.dirty',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="Borg - Deduplicating Archiver 0.14+187.gff0c264.dirty documentation" href="index.html" />
+    <link rel="top" title="Borg - Deduplicating Archiver 0.16+185.g9d1560f.dirty documentation" href="index.html" />
     <link rel="next" title="Frequently asked questions" href="faq.html" />
     <link rel="prev" title="Quick Start" href="quickstart.html" /> 
   </head>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="quickstart.html" title="Quick Start"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.14+187.gff0c264.dirty documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.16+185.g9d1560f.dirty documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -86,7 +86,7 @@ Encryption can be enabled at repository init time.</p>
 <div class="highlight-bash"><div class="highlight"><pre><span class="c"># Local repository</span>
 <span class="nv">$ </span>borg init /mnt/backup
 
-<span class="c"># Remote repository</span>
+<span class="c"># Remote repository (accesses a remote borg via ssh)</span>
 <span class="nv">$ </span>borg init user@hostname:backup
 
 <span class="c"># Encrypted remote repository</span>
@@ -514,10 +514,10 @@ optional arguments:
 </div>
 <div class="section" id="id29">
 <h3>Examples<a class="headerlink" href="#id29" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-bash"><div class="highlight"><pre><span class="c"># Allow an SSH keypair to only run attic, and only have access to /mnt/backup.</span>
+<div class="highlight-bash"><div class="highlight"><pre><span class="c"># Allow an SSH keypair to only run |project_name|, and only have access to /mnt/backup.</span>
 <span class="c"># This will help to secure an automated remote backup system.</span>
 <span class="nv">$ </span>cat ~/.ssh/authorized_keys
-<span class="nb">command</span><span class="o">=</span><span class="s2">&quot;attic serve --restrict-to-path /mnt/backup&quot;</span> ssh-rsa AAAAB3<span class="o">[</span>...<span class="o">]</span>
+<span class="nb">command</span><span class="o">=</span><span class="s2">&quot;borg serve --restrict-to-path /mnt/backup&quot;</span> ssh-rsa AAAAB3<span class="o">[</span>...<span class="o">]</span>
 </pre></div>
 </div>
 </div>
@@ -637,7 +637,7 @@ optional arguments:
         <li class="right" >
           <a href="quickstart.html" title="Quick Start"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.14+187.gff0c264.dirty documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.16+185.g9d1560f.dirty documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

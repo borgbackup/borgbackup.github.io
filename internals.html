@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Internals &mdash; Borg - Deduplicating Archiver 0.16+186.gf6442fe.dirty documentation</title>
+    <title>Internals &mdash; Borg - Deduplicating Archiver 0.23.0 documentation</title>
     
     <link rel="stylesheet" href="_static/local.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.16+186.gf6442fe.dirty',
+        VERSION:     '0.23.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="Borg - Deduplicating Archiver 0.16+186.gf6442fe.dirty documentation" href="index.html" />
+    <link rel="top" title="Borg - Deduplicating Archiver 0.23.0 documentation" href="index.html" />
     <link rel="prev" title="Frequently asked questions" href="faq.html" /> 
   </head>
   <body role="document">
@@ -33,7 +33,7 @@
         <li class="right" style="margin-right: 10px">
           <a href="faq.html" title="Frequently asked questions"
              accesskey="P">previous</a></li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.16+186.gf6442fe.dirty documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.23.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -46,32 +46,34 @@
 <span id="id1"></span><h1>Internals<a class="headerlink" href="#internals" title="Permalink to this headline">¶</a></h1>
 <p>This page documents the internal data structures and storage
 mechanisms of <code class="docutils literal"><span class="pre">Borg</span></code>. It is partly based on <a class="reference external" href="http://librelist.com/browser/attic/2014/5/6/questions-and-suggestions-about-inner-working-of-attic&gt;">mailing list
-discussion about internals</a> and also on static code analysis. It may
-not be exactly up to date with the current source code.</p>
+discussion about internals</a> and also on static code analysis.</p>
+<p>It may not be exactly up to date with the current source code.</p>
+<div class="section" id="repository-and-archives">
+<h2>Repository and Archives<a class="headerlink" href="#repository-and-archives" title="Permalink to this headline">¶</a></h2>
 <p><code class="docutils literal"><span class="pre">Borg</span></code> stores its data in a <cite>Repository</cite>. Each repository can
 hold multiple <cite>Archives</cite>, which represent individual backups that
 contain a full archive of the files specified when the backup was
 performed. Deduplication is performed across multiple backups, both on
-data and metadata, using <cite>Segments</cite> chunked with the <a class="reference external" href="https://en.wikipedia.org/wiki/Buzhash">Buzhash</a>
-algorithm. Each repository has the following file structure:</p>
+data and metadata, using <cite>Chunks</cite> created by the chunker using the <a class="reference external" href="https://en.wikipedia.org/wiki/Buzhash">Buzhash</a>
+algorithm.</p>
+<p>Each repository has the following file structure:</p>
 <dl class="docutils">
 <dt>README</dt>
-<dd>simple text file describing the repository</dd>
+<dd>simple text file telling that this is a <code class="docutils literal"><span class="pre">Borg</span></code> repository</dd>
 <dt>config</dt>
-<dd>description of the repository, includes the unique identifier. also
-acts as a lock file</dd>
+<dd>repository configuration and lock file</dd>
 <dt>data/</dt>
-<dd>directory where the actual data (<cite>segments</cite>) is stored</dd>
+<dd>directory where the actual data is stored</dd>
 <dt>hints.%d</dt>
-<dd>undocumented</dd>
+<dd>hints for repository compaction</dd>
 <dt>index.%d</dt>
-<dd>cache of the file indexes. those files can be regenerated with
-<code class="docutils literal"><span class="pre">check</span> <span class="pre">--repair</span></code></dd>
+<dd>repository index</dd>
 </dl>
+</div>
 <div class="section" id="config-file">
 <h2>Config file<a class="headerlink" href="#config-file" title="Permalink to this headline">¶</a></h2>
-<p>Each repository has a <code class="docutils literal"><span class="pre">config</span></code> file which which is a <code class="docutils literal"><span class="pre">INI</span></code>
-formatted file which looks like this:</p>
+<p>Each repository has a <code class="docutils literal"><span class="pre">config</span></code> file which which is a <code class="docutils literal"><span class="pre">INI</span></code>-style file
+and looks like this:</p>
 <div class="highlight-bash"><div class="highlight"><pre><span class="o">[</span>repository<span class="o">]</span>
 <span class="nv">version</span> <span class="o">=</span> 1
 <span class="nv">segments_per_dir</span> <span class="o">=</span> 10000
@@ -82,17 +84,28 @@ formatted file which looks like this:</p>
 <p>This is where the <code class="docutils literal"><span class="pre">repository.id</span></code> is stored. It is a unique
 identifier for repositories. It will not change if you move the
 repository around so you can make a local transfer then decide to move
-the repository in another (even remote) location at a later time.</p>
-<p><code class="docutils literal"><span class="pre">Borg</span></code> will do a POSIX read lock on that file when operating
+the repository to another (even remote) location at a later time.</p>
+<p><code class="docutils literal"><span class="pre">Borg</span></code> will do a POSIX read lock on the config file when operating
 on the repository.</p>
+</div>
+<div class="section" id="keys">
+<h2>Keys<a class="headerlink" href="#keys" title="Permalink to this headline">¶</a></h2>
+<p>The key to address the key/value store is usually computed like this:</p>
+<p>key = id = id_hash(unencrypted_data)</p>
+<p>The id_hash function is:</p>
+<ul class="simple">
+<li>sha256 (no encryption keys available)</li>
+<li>hmac-sha256 (encryption keys available)</li>
+</ul>
 </div>
 <div class="section" id="segments-and-archives">
 <h2>Segments and archives<a class="headerlink" href="#segments-and-archives" title="Permalink to this headline">¶</a></h2>
-<p><code class="docutils literal"><span class="pre">Borg</span></code> is a &#8220;filesystem based transactional key value
-store&#8221;. It makes extensive use of <a class="reference external" href="http://msgpack.org/">msgpack</a> to store data and, unless
+<p>A <code class="docutils literal"><span class="pre">Borg</span></code> repository is a filesystem based transactional key/value
+store. It makes extensive use of <a class="reference external" href="http://msgpack.org/">msgpack</a> to store data and, unless
 otherwise noted, data is stored in <a class="reference external" href="http://msgpack.org/">msgpack</a> encoded files.</p>
-<p>Objects referenced by a key (256bits id/hash) are stored inline in
-files (<cite>segments</cite>) of size approx 5MB in <code class="docutils literal"><span class="pre">repo/data</span></code>. They contain:</p>
+<p>Objects referenced by a key are stored inline in files (<cite>segments</cite>) of approx.
+5MB size in numbered subdirectories of <code class="docutils literal"><span class="pre">repo/data</span></code>.</p>
+<p>They contain:</p>
 <ul class="simple">
 <li>header size</li>
 <li>crc</li>
@@ -107,20 +120,24 @@ strictly append-only and modified only once.</p>
 basically a transaction log where each repository operation is
 appended to the file. So if an object is written to the repository a
 <code class="docutils literal"><span class="pre">PUT</span></code> tag is written to the file followed by the object id and
-data. And if an object is deleted a <code class="docutils literal"><span class="pre">DELETE</span></code> tag is appended
+data. If an object is deleted a <code class="docutils literal"><span class="pre">DELETE</span></code> tag is appended
 followed by the object id. A <code class="docutils literal"><span class="pre">COMMIT</span></code> tag is written when a
 repository transaction is committed.  When a repository is opened any
 <code class="docutils literal"><span class="pre">PUT</span></code> or <code class="docutils literal"><span class="pre">DELETE</span></code> operations not followed by a <code class="docutils literal"><span class="pre">COMMIT</span></code> tag are
 discarded since they are part of a partial/uncommitted transaction.</p>
-<p>The manifest is an object with an id of only zeros (32 bytes), that
-references all the archives. It contains:</p>
+</div>
+<div class="section" id="the-manifest">
+<h2>The manifest<a class="headerlink" href="#the-manifest" title="Permalink to this headline">¶</a></h2>
+<p>The manifest is an object with an all-zero key that references all the
+archives.
+It contains:</p>
 <ul class="simple">
 <li>version</li>
-<li>list of archives</li>
+<li>list of archive infos</li>
 <li>timestamp</li>
 <li>config</li>
 </ul>
-<p>Each archive contains:</p>
+<p>Each archive info contains:</p>
 <ul class="simple">
 <li>name</li>
 <li>id</li>
@@ -130,21 +147,21 @@ references all the archives. It contains:</p>
 each time.</p>
 <p>The archive metadata does not contain the file items directly. Only
 references to other objects that contain that data. An archive is an
-object that contain metadata:</p>
+object that contains:</p>
 <ul class="simple">
 <li>version</li>
 <li>name</li>
-<li>items list</li>
+<li>list of chunks containing item metadata</li>
 <li>cmdline</li>
 <li>hostname</li>
 <li>username</li>
 <li>time</li>
 </ul>
-<p>Each item represents a file or directory or
-symlink is stored as an <code class="docutils literal"><span class="pre">item</span></code> dictionary that contains:</p>
+<p>Each item represents a file, directory or other fs item and is stored as an
+<code class="docutils literal"><span class="pre">item</span></code> dictionary that contains:</p>
 <ul class="simple">
 <li>path</li>
-<li>list of chunks</li>
+<li>list of data chunks</li>
 <li>user</li>
 <li>group</li>
 <li>uid</li>
@@ -162,110 +179,112 @@ it and it is reset every time an inode&#8217;s metadata is changed.</p>
 <p>All items are serialized using msgpack and the resulting byte stream
 is fed into the same chunker used for regular file data and turned
 into deduplicated chunks. The reference to these chunks is then added
-to the archive metadata. This allows the archive to store many files,
-beyond the <code class="docutils literal"><span class="pre">MAX_OBJECT_SIZE</span></code> barrier of 20MB.</p>
-<p>A chunk is an object as well, of course. The chunk id is either
-<a class="reference external" href="http://en.wikipedia.org/wiki/HMAC">HMAC-SHA256</a>, when encryption is used, or a <a class="reference external" href="https://en.wikipedia.org/wiki/SHA-256">SHA256</a> hash otherwise.</p>
-<p>Hints are stored in a file (<code class="docutils literal"><span class="pre">repo/hints</span></code>) and contain:</p>
+to the archive metadata.</p>
+<p>A chunk is stored as an object as well, of course.</p>
+</div>
+<div class="section" id="chunks">
+<h2>Chunks<a class="headerlink" href="#chunks" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal"><span class="pre">Borg</span></code> uses a rolling hash computed by the <a class="reference external" href="https://en.wikipedia.org/wiki/Buzhash">Buzhash</a> algorithm, with a
+window size of 4095 bytes (<cite>0xFFF</cite>), with a minimum chunk size of 1024 bytes.
+It triggers (chunks) when the last 16 bits of the hash are zero, producing
+chunks of 64kiB on average.</p>
+<p>The buzhash table is altered by XORing it with a seed randomly generated once
+for the archive, and stored encrypted in the keyfile.</p>
+</div>
+<div class="section" id="indexes-caches">
+<h2>Indexes / Caches<a class="headerlink" href="#indexes-caches" title="Permalink to this headline">¶</a></h2>
+<p>The files cache is stored in <code class="docutils literal"><span class="pre">cache/files</span></code> and is indexed on the
+<code class="docutils literal"><span class="pre">file</span> <span class="pre">path</span> <span class="pre">hash</span></code>. At backup time, it is used to quickly determine whether we
+need to chunk a given file (or whether it is unchanged and we already have all
+its pieces).
+It contains:</p>
+<ul class="simple">
+<li>age</li>
+<li>file inode number</li>
+<li>file size</li>
+<li>file mtime_ns</li>
+<li>file content chunk hashes</li>
+</ul>
+<p>The inode number is stored to make sure we distinguish between
+different files, as a single path may not be unique across different
+archives in different setups.</p>
+<p>The files cache is stored as a python associative array storing
+python objects, which generates a lot of overhead.</p>
+<p>The chunks cache is stored in <code class="docutils literal"><span class="pre">cache/chunks</span></code> and is indexed on the
+<code class="docutils literal"><span class="pre">chunk</span> <span class="pre">id_hash</span></code>. It is used to determine whether we already have a specific
+chunk, to count references to it and also for statistics.
+It contains:</p>
+<ul class="simple">
+<li>reference count</li>
+<li>size</li>
+<li>encrypted/compressed size</li>
+</ul>
+<p>The repository index is stored in <code class="docutils literal"><span class="pre">repo/index.%d</span></code> and is indexed on the
+<code class="docutils literal"><span class="pre">chunk</span> <span class="pre">id_hash</span></code>. It is used to determine a chunk&#8217;s location in the repository.
+It contains:</p>
+<ul class="simple">
+<li>segment (that contains the chunk)</li>
+<li>offset (where the chunk is located in the segment)</li>
+</ul>
+<p>The repository index file is random access.</p>
+<p>Hints are stored in a file (<code class="docutils literal"><span class="pre">repo/hints.%d</span></code>).
+It contains:</p>
 <ul class="simple">
 <li>version</li>
 <li>list of segments</li>
 <li>compact</li>
 </ul>
+<p>hints and index can be recreated if damaged or lost using <code class="docutils literal"><span class="pre">check</span> <span class="pre">--repair</span></code>.</p>
+<p>The chunks cache and the repository index are stored as hash tables, with
+only one slot per bucket, but that spreads the collisions to the following
+buckets. As a consequence the hash is just a start position for a linear
+search, and if the element is not in the table the index is linearly crossed
+until an empty bucket is found.</p>
+<p>When the hash table is almost full at 90%, its size is doubled. When it&#8217;s
+almost empty at 25%, its size is halved. So operations on it have a variable
+complexity between constant and linear with low factor, and memory overhead
+varies between 10% and 300%.</p>
 </div>
-<div class="section" id="chunks">
-<h2>Chunks<a class="headerlink" href="#chunks" title="Permalink to this headline">¶</a></h2>
-<p><code class="docutils literal"><span class="pre">Borg</span></code> uses a rolling checksum with <a class="reference external" href="https://en.wikipedia.org/wiki/Buzhash">Buzhash</a> algorithm, with
-window size of 4095 bytes (<cite>0xFFF</cite>), with a minimum of 1024, and triggers when
-the last 16 bits of the checksum are null, producing chunks of 64kB on
-average. All these parameters are fixed. The buzhash table is altered
-by XORing it with a seed randomly generated once for the archive, and
-stored encrypted in the keyfile.</p>
-</div>
-<div class="section" id="indexes">
-<h2>Indexes<a class="headerlink" href="#indexes" title="Permalink to this headline">¶</a></h2>
-<p>There are two main indexes: the chunk lookup index and the repository
-index. There is also the file chunk cache.</p>
-<p>The chunk lookup index is stored in <code class="docutils literal"><span class="pre">cache/chunk</span></code> and is indexed on
-the <code class="docutils literal"><span class="pre">chunk</span> <span class="pre">hash</span></code>. It contains:</p>
-<ul class="simple">
-<li>reference count</li>
-<li>size</li>
-<li>ciphered size</li>
-</ul>
-<p>The repository index is stored in <code class="docutils literal"><span class="pre">repo/index.%d</span></code> and is also
-indexed on <code class="docutils literal"><span class="pre">chunk</span> <span class="pre">hash</span></code> and contains:</p>
-<ul class="simple">
-<li>segment</li>
-<li>offset</li>
-</ul>
-<p>The repository index files are random access but those files can be
-recreated if damaged or lost using <code class="docutils literal"><span class="pre">check</span> <span class="pre">--repair</span></code>.</p>
-<p>Both indexes are stored as hash tables, directly mapped in memory from
-the file content, with only one slot per bucket, but that spreads the
-collisions to the following buckets. As a consequence the hash is just
-a start position for a linear search, and if the element is not in the
-table the index is linearly crossed until an empty bucket is
-found. When the table is full at 90% its size is doubled, when it&#8217;s
-empty at 25% its size is halfed. So operations on it have a variable
-complexity between constant and linear with low factor, and memory
-overhead varies between 10% and 300%.</p>
-<p>The file chunk cache is stored in <code class="docutils literal"><span class="pre">cache/files</span></code> and is indexed on
-the <code class="docutils literal"><span class="pre">file</span> <span class="pre">path</span> <span class="pre">hash</span></code> and contains:</p>
-<ul class="simple">
-<li>age</li>
-<li>inode number</li>
-<li>size</li>
-<li>mtime_ns</li>
-<li>chunks hashes</li>
-</ul>
-<p>The inode number is stored to make sure we distinguish between
-different files, as a single path may not be unique across different
-archives in different setups.</p>
-<p>The file chunk cache is stored as a python associative array storing
-python objects, which generate a lot of overhead. This takes around
-240 bytes per file without the chunk list, to be compared to at most
-64 bytes of real data (depending on data alignment), and around 80
-bytes per chunk hash (vs 32), with a minimum of ~250 bytes even if
-only one chunk hash.</p>
-</div>
-<div class="section" id="indexes-memory-usage">
-<h2>Indexes memory usage<a class="headerlink" href="#indexes-memory-usage" title="Permalink to this headline">¶</a></h2>
-<p>Here is the estimated memory usage of <code class="docutils literal"><span class="pre">Borg</span></code> when using those
-indexes.</p>
+<div class="section" id="indexes-caches-memory-usage">
+<h2>Indexes / Caches memory usage<a class="headerlink" href="#indexes-caches-memory-usage" title="Permalink to this headline">¶</a></h2>
+<p>Here is the estimated memory usage of <code class="docutils literal"><span class="pre">Borg</span></code>:</p>
+<blockquote>
+<div><p>chunk_count ~= total_file_size / 65536</p>
+<p>repo_index_usage = chunk_count * 40</p>
+<p>chunks_cache_usage = chunk_count * 44</p>
+<p>files_cache_usage = total_file_count * 240 + chunk_count * 80</p>
 <dl class="docutils">
-<dt>Repository index</dt>
-<dd>40 bytes x N ~ 200MB (If a remote repository is
-used this will be allocated on the remote side)</dd>
-<dt>Chunk lookup index</dt>
-<dd>44 bytes x N ~ 220MB</dd>
-<dt>File chunk cache</dt>
-<dd>probably 80-100 bytes x N ~ 400MB</dd>
+<dt>mem_usage ~= repo_index_usage + chunks_cache_usage + files_cache_usage</dt>
+<dd>= total_file_count * 240 + total_file_size / 400</dd>
 </dl>
-<p>In the above we assume 350GB of data that we divide on an average 64KB
-chunk size, so N is around 5.3 million.</p>
+</div></blockquote>
+<p>All units are Bytes.</p>
+<p>It is assuming every chunk is referenced exactly once and that typical chunk size is 64kiB.</p>
+<p>If a remote repository is used the repo index will be allocated on the remote side.</p>
+<p>E.g. backing up a total count of 1Mi files with a total size of 1TiB:</p>
+<blockquote>
+<div>mem_usage  =  1 * 2**20 * 240  +  1 * 2**40 / 400  =  2.8GiB</div></blockquote>
+<p>Note: there is a commandline option to switch off the files cache. You&#8217;ll save
+some memory, but it will need to read / chunk all the files then.</p>
 </div>
 <div class="section" id="encryption">
 <h2>Encryption<a class="headerlink" href="#encryption" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference external" href="https://en.wikipedia.org/wiki/Advanced_Encryption_Standard">AES</a> is used with CTR mode of operation (so no need for padding). A 64
-bits initialization vector is used, a <a class="reference external" href="http://en.wikipedia.org/wiki/HMAC">HMAC-SHA256</a> is computed
-on the encrypted chunk with a random 64 bits nonce and both are stored
-in the chunk. The header of each chunk is : <code class="docutils literal"><span class="pre">TYPE(1)</span></code> +
-<code class="docutils literal"><span class="pre">HMAC(32)</span></code> + <code class="docutils literal"><span class="pre">NONCE(8)</span></code> + <code class="docutils literal"><span class="pre">CIPHERTEXT</span></code>. Encryption and HMAC use
-two different keys.</p>
-<p>In AES CTR mode you can think of the IV as the start value for the
-counter. The counter itself is incremented by one after each 16 byte
-block. The IV/counter is not required to be random but it must NEVER be
-reused. So to accomplish this <code class="docutils literal"><span class="pre">Borg</span></code> initializes the encryption counter
-to be higher than any previously used counter value before encrypting
-new data.</p>
-<p>To reduce payload size only 8 bytes of the 16 bytes nonce is saved in
-the payload, the first 8 bytes are always zeroes. This does not affect
-security but limits the maximum repository capacity to only 295
-exabytes (2**64 * 16 bytes).</p>
-<p>Encryption keys are either a passphrase, passed through the
-<code class="docutils literal"><span class="pre">BORG_PASSPHRASE</span></code> environment or prompted on the commandline, or
-stored in automatically generated key files.</p>
+<p><a class="reference external" href="https://en.wikipedia.org/wiki/Advanced_Encryption_Standard">AES</a> is used in CTR mode (so no need for padding). A 64bit initialization
+vector is used, a <a class="reference external" href="http://en.wikipedia.org/wiki/HMAC">HMAC-SHA256</a> is computed on the encrypted chunk with a
+random 64bit nonce and both are stored in the chunk.
+The header of each chunk is : <code class="docutils literal"><span class="pre">TYPE(1)</span></code> + <code class="docutils literal"><span class="pre">HMAC(32)</span></code> + <code class="docutils literal"><span class="pre">NONCE(8)</span></code> + <code class="docutils literal"><span class="pre">CIPHERTEXT</span></code>.
+Encryption and HMAC use two different keys.</p>
+<p>In AES CTR mode you can think of the IV as the start value for the counter.
+The counter itself is incremented by one after each 16 byte block.
+The IV/counter is not required to be random but it must NEVER be reused.
+So to accomplish this <code class="docutils literal"><span class="pre">Borg</span></code> initializes the encryption counter to be
+higher than any previously used counter value before encrypting new data.</p>
+<p>To reduce payload size, only 8 bytes of the 16 bytes nonce is saved in the
+payload, the first 8 bytes are always zeros. This does not affect security but
+limits the maximum repository capacity to only 295 exabytes (2**64 * 16 bytes).</p>
+<p>Encryption keys are either derived from a passphrase or kept in a key file.
+The passphrase is passed through the <code class="docutils literal"><span class="pre">BORG_PASSPHRASE</span></code> environment variable
+or prompted for interactive usage.</p>
 </div>
 <div class="section" id="key-files">
 <h2>Key files<a class="headerlink" href="#key-files" title="Permalink to this headline">¶</a></h2>
@@ -282,20 +301,18 @@ the repository. The format is based on <a class="reference external" href="http:
 <dt>enc_key</dt>
 <dd>the key used to encrypt data with AES (256 bits)</dd>
 <dt>enc_hmac_key</dt>
-<dd>the key used to HMAC the resulting AES-encrypted data (256 bits)</dd>
+<dd>the key used to HMAC the encrypted data (256 bits)</dd>
 <dt>id_key</dt>
-<dd>the key used to HMAC the above chunks, the resulting hash is
-stored out of band (256 bits)</dd>
+<dd>the key used to HMAC the plaintext chunk data to compute the chunk&#8217;s id</dd>
 <dt>chunk_seed</dt>
 <dd>the seed for the buzhash chunking table (signed 32 bit integer)</dd>
 </dl>
-<p>Those fields are processed using <a class="reference external" href="http://msgpack.org/">msgpack</a>. The utf-8 encoded phassphrase
-is encrypted with <a class="reference external" href="https://en.wikipedia.org/wiki/PBKDF2">PBKDF2</a> and <a class="reference external" href="https://en.wikipedia.org/wiki/SHA-256">SHA256</a> using 100000 iterations and a
-random 256 bits salt to give us a derived key. The derived key is 256
-bits long.  A <a class="reference external" href="http://en.wikipedia.org/wiki/HMAC">HMAC-SHA256</a> checksum of the above fields is generated
-with the derived key, then the derived key is also used to encrypt the
-above pack of fields. Then the result is stored in a another <a class="reference external" href="http://msgpack.org/">msgpack</a>
-formatted as follows:</p>
+<p>Those fields are processed using <a class="reference external" href="http://msgpack.org/">msgpack</a>. The utf-8 encoded passphrase
+is processed with <a class="reference external" href="https://en.wikipedia.org/wiki/PBKDF2">PBKDF2</a> (<a class="reference external" href="https://en.wikipedia.org/wiki/SHA-256">SHA256</a>, 100000 iterations, random 256 bit salt)
+to give us a derived key. The derived key is 256 bits long.
+A <a class="reference external" href="http://en.wikipedia.org/wiki/HMAC">HMAC-SHA256</a> checksum of the above fields is generated with the derived
+key, then the derived key is also used to encrypt the above pack of fields.
+Then the result is stored in a another <a class="reference external" href="http://msgpack.org/">msgpack</a> formatted as follows:</p>
 <dl class="docutils">
 <dt>version</dt>
 <dd>currently always an integer, 1</dd>
@@ -317,6 +334,10 @@ key file, wrapped using the standard <code class="docutils literal"><span class=
 The header is a single line with a MAGIC string, a space and a hexadecimal
 representation of the repository id.</p>
 </div>
+<div class="section" id="compression">
+<h2>Compression<a class="headerlink" href="#compression" title="Permalink to this headline">¶</a></h2>
+<p>Currently, zlib level 6 is used as compression.</p>
+</div>
 </div>
 
 
@@ -332,13 +353,17 @@ representation of the repository id.</p>
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Internals</a><ul>
+<li><a class="reference internal" href="#repository-and-archives">Repository and Archives</a></li>
 <li><a class="reference internal" href="#config-file">Config file</a></li>
+<li><a class="reference internal" href="#keys">Keys</a></li>
 <li><a class="reference internal" href="#segments-and-archives">Segments and archives</a></li>
+<li><a class="reference internal" href="#the-manifest">The manifest</a></li>
 <li><a class="reference internal" href="#chunks">Chunks</a></li>
-<li><a class="reference internal" href="#indexes">Indexes</a></li>
-<li><a class="reference internal" href="#indexes-memory-usage">Indexes memory usage</a></li>
+<li><a class="reference internal" href="#indexes-caches">Indexes / Caches</a></li>
+<li><a class="reference internal" href="#indexes-caches-memory-usage">Indexes / Caches memory usage</a></li>
 <li><a class="reference internal" href="#encryption">Encryption</a></li>
 <li><a class="reference internal" href="#key-files">Key files</a></li>
+<li><a class="reference internal" href="#compression">Compression</a></li>
 </ul>
 </li>
 </ul>
@@ -379,7 +404,7 @@ representation of the repository id.</p>
         <li class="right" style="margin-right: 10px">
           <a href="faq.html" title="Frequently asked questions"
              >previous</a></li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.16+186.gf6442fe.dirty documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.23.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

@@ -1,0 +1,132 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Internals &mdash; BorgWeb - Web User Interface for BorgBackup 0.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/local.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="BorgWeb - Web User Interface for BorgBackup 0.0.0 documentation" href="index.html" />
+    <link rel="prev" title="Frequently asked questions" href="faq.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="faq.html" title="Frequently asked questions"
+             accesskey="P">previous</a></li>
+        <li class="nav-item nav-item-0"><a href="index.html">BorgWeb - Web User Interface for BorgBackup 0.0.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="internals">
+<span id="id1"></span><h1>Internals<a class="headerlink" href="#internals" title="Permalink to this headline">¶</a></h1>
+<p>This page documents the internal workings of <code class="docutils literal"><span class="pre">BorgWeb</span></code>.</p>
+<div class="section" id="what-we-use">
+<h2>What we use<a class="headerlink" href="#what-we-use" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Flask and Werkzeug - Python web micro-framework and http toolbox</li>
+<li>Bootstrap and jQuery - CSS framework, Javascript library</li>
+<li><code class="docutils literal"><span class="pre">BorgBackup</span></code> - for doing the backups</li>
+</ul>
+<div class="section" id="develop-js">
+<h3>Develop JS<a class="headerlink" href="#develop-js" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic simple">
+<li>Have NodeJS/io.js and NPM installed.</li>
+<li><code class="docutils literal"><span class="pre">git</span> <span class="pre">clone</span> <span class="pre">https://github.com/borgbackup/borgweb.git</span></code></li>
+<li><code class="docutils literal"><span class="pre">cd</span> <span class="pre">borgweb/js</span></code></li>
+<li><code class="docutils literal"><span class="pre">npm</span> <span class="pre">install</span></code></li>
+<li><code class="docutils literal"><span class="pre">gulp</span> <span class="pre">watch</span></code></li>
+<li>Edit JS files within <code class="docutils literal"><span class="pre">js/</span></code>; files will automatically be bundle into <code class="docutils literal"><span class="pre">borgweb/static/bundle.js</span></code></li>
+</ol>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="sidebarlogo">
+  <a href="index.html">
+  <div class="title">Borg<br>Web</div>
+</a>
+</div>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Internals</a><ul>
+<li><a class="reference internal" href="#what-we-use">What we use</a><ul>
+<li><a class="reference internal" href="#develop-js">Develop JS</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="faq.html"
+                        title="previous chapter">Frequently asked questions</a></p><a href="https://github.com/borgbackup/borgweb"><img style="position: fixed; top: 0; right: 0; border: 0;"
+  src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub"></a>
+
+<h3>Useful Links</h3>
+<ul>
+  <li><a href="https://borgweb.github.io/">Main Web Site</a></li>
+  <li><a href="https://pypi.python.org/pypi/borgweb">PyPI packages</a></li>
+  <li><a href="https://github.com/borgbackup/borgweb">GitHub</a></li>
+  <li><a href="https://github.com/borgbackup/borgweb/issues">Issue Tracker</a></li>
+  <li><a href="http://librelist.com/browser/borgbackup/">Mailing List</a></li>
+</ul>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="faq.html" title="Frequently asked questions"
+             >previous</a></li>
+        <li class="nav-item nav-item-0"><a href="index.html">BorgWeb - Web User Interface for BorgBackup 0.0.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    </div>
+  </body>
+</html>

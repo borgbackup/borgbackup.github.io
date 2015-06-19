@@ -1,0 +1,169 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Foreword &mdash; Borg - Deduplicating Archiver 0.23.0+6.g9eaaaed documentation</title>
+    
+    <link rel="stylesheet" href="_static/local.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.23.0+6.g9eaaaed',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Borg - Deduplicating Archiver 0.23.0+6.g9eaaaed documentation" href="index.html" />
+    <link rel="next" title="Installation" href="installation.html" />
+    <link rel="prev" title="Welcome to Borg" href="index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="installation.html" title="Installation"
+             accesskey="N">next</a></li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to Borg"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.23.0+6.g9eaaaed documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="foreword">
+<span id="id1"></span><h1>Foreword<a class="headerlink" href="#foreword" title="Permalink to this headline">¶</a></h1>
+<p><code class="docutils literal"><span class="pre">Borg</span></code> is a secure backup program for Linux, FreeBSD and Mac OS X.
+<code class="docutils literal"><span class="pre">Borg</span></code> is designed for efficient data storage where only new or
+modified data is stored.</p>
+<div class="section" id="features">
+<h2>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h2>
+<dl class="docutils">
+<dt>Space efficient storage</dt>
+<dd>Variable block size <a class="reference external" href="https://en.wikipedia.org/wiki/Data_deduplication">deduplication</a> is used to reduce the number of bytes
+stored by detecting redundant data. Each file is split into a number of
+variable length chunks and only chunks that have never been seen before
+are compressed and added to the repository.</dd>
+<dt>Optional data encryption</dt>
+<dd>All data can be protected using 256-bit <a class="reference external" href="https://en.wikipedia.org/wiki/Advanced_Encryption_Standard">AES</a> encryption and data integrity
+and authenticity is verified using <a class="reference external" href="http://en.wikipedia.org/wiki/HMAC">HMAC-SHA256</a>.</dd>
+<dt>Off-site backups</dt>
+<dd><code class="docutils literal"><span class="pre">Borg</span></code> can store data on any remote host accessible over SSH as
+long as <code class="docutils literal"><span class="pre">Borg</span></code> is installed.</dd>
+<dt>Backups mountable as filesystems</dt>
+<dd>Backup archives are <a class="reference internal" href="usage.html#borg-mount"><span>mountable</span></a> as
+<a class="reference external" href="https://en.wikipedia.org/wiki/Filesystem_in_Userspace">userspace filesystems</a> for easy backup verification and restores.</dd>
+</dl>
+</div>
+<div class="section" id="glossary">
+<h2>Glossary<a class="headerlink" href="#glossary" title="Permalink to this headline">¶</a></h2>
+<dl class="docutils" id="deduplication-def">
+<dt>Deduplication</dt>
+<dd>Deduplication is a technique for improving storage utilization by
+eliminating redundant data.</dd>
+</dl>
+<dl class="docutils" id="archive-def">
+<dt>Archive</dt>
+<dd>An archive is a collection of files along with metadata that include file
+permissions, directory structure and various file attributes.
+Since each archive in a repository must have a unique name a good naming
+convention is <code class="docutils literal"><span class="pre">hostname-YYYY-MM-DD</span></code>.</dd>
+</dl>
+<dl class="docutils" id="repository-def">
+<dt>Repository</dt>
+<dd>A repository is a filesystem directory storing data from zero or more
+archives. The data in a repository is both deduplicated and
+optionally encrypted making it both efficient and safe. Repositories are
+created using <a class="reference internal" href="usage.html#borg-init"><span>borg init</span></a> and the contents can be listed using
+<a class="reference internal" href="usage.html#borg-list"><span>borg list</span></a>.</dd>
+<dt>Key file</dt>
+<dd>When a repository is initialized a key file containing a password
+protected encryption key is created. It is vital to keep this file safe
+since the repository data is totally inaccessible without it.</dd>
+</dl>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="sidebarlogo">
+  <a href="index.html">
+  <div class="title">Borg</div>
+</a>
+</div>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Foreword</a><ul>
+<li><a class="reference internal" href="#features">Features</a></li>
+<li><a class="reference internal" href="#glossary">Glossary</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Welcome to Borg</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="installation.html"
+                        title="next chapter">Installation</a></p><a href="https://github.com/borgbackup/borg"><img style="position: fixed; top: 0; right: 0; border: 0;"
+  src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub"></a>
+
+<h3>Useful Links</h3>
+<ul>
+  <li><a href="https://borgbackup.github.io/">Main Web Site</a></li>
+  <li><a href="https://pypi.python.org/pypi/borgbackup">PyPI packages</a></li>
+  <li><a href="https://github.com/borgbackup/borg">GitHub</a></li>
+  <li><a href="https://github.com/borgbackup/borg/issues">Issue Tracker</a></li>
+  <li><a href="http://librelist.com/browser/borgbackup/">Mailing List</a></li>
+</ul>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="installation.html" title="Installation"
+             >next</a></li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to Borg"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.23.0+6.g9eaaaed documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    </div>
+  </body>
+</html>

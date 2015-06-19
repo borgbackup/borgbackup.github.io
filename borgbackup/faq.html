@@ -1,0 +1,226 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Frequently asked questions &mdash; Borg - Deduplicating Archiver 0.23.0+6.g9eaaaed documentation</title>
+    
+    <link rel="stylesheet" href="_static/local.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.23.0+6.g9eaaaed',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Borg - Deduplicating Archiver 0.23.0+6.g9eaaaed documentation" href="index.html" />
+    <link rel="next" title="Internals" href="internals.html" />
+    <link rel="prev" title="Usage" href="usage.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="internals.html" title="Internals"
+             accesskey="N">next</a></li>
+        <li class="right" >
+          <a href="usage.html" title="Usage"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.23.0+6.g9eaaaed documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="frequently-asked-questions">
+<h1>Frequently asked questions<a class="headerlink" href="#frequently-asked-questions" title="Permalink to this headline">¶</a></h1>
+<dl class="docutils">
+<dt>Which platforms are supported?</dt>
+<dd><p class="first">Currently Linux, FreeBSD and MacOS X are supported.</p>
+<p class="last">You can try your luck on other POSIX-like systems, like Cygwin,
+other BSDs, etc. but they are not officially supported.</p>
+</dd>
+<dt>Can I backup VM disk images?</dt>
+<dd>Yes, the <a class="reference internal" href="foreword.html#deduplication-def"><span>deduplication</span></a> technique used by <code class="docutils literal"><span class="pre">Borg</span></code>
+makes sure only the modified parts of the file are stored.
+Also, we have optional simple sparse file support for extract.</dd>
+<dt>Can I backup from multiple servers into a single repository?</dt>
+<dd><p class="first">Yes, but in order for the deduplication used by <code class="docutils literal"><span class="pre">Borg</span></code> to work, it
+needs to keep a local cache containing checksums of all file
+chunks already stored in the repository. This cache is stored in
+<code class="docutils literal"><span class="pre">~/.cache/borg/</span></code>.  If <code class="docutils literal"><span class="pre">Borg</span></code> detects that a repository has been
+modified since the local cache was updated it will need to rebuild
+the cache. This rebuild can be quite time consuming.</p>
+<p class="last">So, yes it&#8217;s possible. But it will be most efficient if a single
+repository is only modified from one place. Also keep in mind that
+<code class="docutils literal"><span class="pre">Borg</span></code> will keep an exclusive lock on the repository while creating
+or deleting archives, which may make <em>simultaneous</em> backups fail.</p>
+</dd>
+<dt>Which file types, attributes, etc. are preserved?</dt>
+<dd><ul class="first last simple">
+<li>Directories</li>
+<li>Regular files</li>
+<li>Hardlinks (considering all files in the same archive)</li>
+<li>Symlinks (stored as symlink, the symlink is not followed)</li>
+<li>Character and block device files</li>
+<li>FIFOs (&#8220;named pipes&#8221;)</li>
+<li>Name</li>
+<li>Contents</li>
+<li>Time of last modification (nanosecond precision with Python &gt;= 3.3)</li>
+<li>User ID of owner</li>
+<li>Group ID of owner</li>
+<li>Unix Mode/Permissions (u/g/o permissions, suid, sgid, sticky)</li>
+<li>Extended Attributes (xattrs)</li>
+<li>Access Control Lists (<a class="reference external" href="https://en.wikipedia.org/wiki/Access_control_list">ACL</a>) on Linux, OS X and FreeBSD</li>
+<li>BSD flags on OS X and FreeBSD</li>
+</ul>
+</dd>
+<dt>Which file types, attributes, etc. are <em>not</em> preserved?</dt>
+<dd><ul class="first last simple">
+<li>UNIX domain sockets (because it does not make sense - they are meaningless
+without the running process that created them and the process needs to
+recreate them in any case). So, don&#8217;t panic if your backup misses a UDS!</li>
+<li>The precise on-disk representation of the holes in a sparse file.
+Archive creation has no special support for sparse files, holes are
+backed up as (deduplicated and compressed) runs of zero bytes.
+Archive extraction has optional support to extract all-zero chunks as
+holes in a sparse file.</li>
+</ul>
+</dd>
+<dt>How can I specify the encryption passphrase programmatically?</dt>
+<dd>The encryption passphrase can be specified programmatically using the
+<cite>BORG_PASSPHRASE</cite> environment variable. This is convenient when setting up
+automated encrypted backups. Another option is to use
+key file based encryption with a blank passphrase. See
+<a class="reference internal" href="quickstart.html#encrypted-repos"><span>Repository encryption</span></a> for more details.</dd>
+<dt>When backing up to remote encrypted repos, is encryption done locally?</dt>
+<dd>Yes, file and directory metadata and data is locally encrypted, before
+leaving the local machine. We do not mean the transport layer encryption
+by that, but the data/metadata itself. Transport layer encryption (e.g.
+when ssh is used as a transport) applies additionally.</dd>
+<dt>When backing up to remote servers, do I have to trust the remote server?</dt>
+<dd>Yes and No.
+No, as far as data confidentiality is concerned - all your files/dirs data
+and metadata are stored in their encrypted form into the repository.
+Yes, as an attacker with access to the remote server could delete (or
+otherwise make unavailable) all your backups.</dd>
+<dt>If a backup stops mid-way, does the already-backed-up data stay there? I.e. does <code class="docutils literal"><span class="pre">Borg</span></code> resume backups?</dt>
+<dd>Yes, during a backup a special checkpoint archive named <code class="docutils literal"><span class="pre">&lt;archive-name&gt;.checkpoint</span></code> is saved every 5 minutes
+containing all the data backed-up until that point. This means that at most 5 minutes worth of data needs to be
+retransmitted if a backup needs to be restarted.</dd>
+<dt>If it crashes with a UnicodeError, what can I do?</dt>
+<dd><p class="first">Check if your encoding is set correctly. For most POSIX-like systems, try:</p>
+<div class="last highlight-bash"><div class="highlight"><pre><span class="nb">export </span><span class="nv">LANG</span><span class="o">=</span>en_US.UTF-8  <span class="c"># or similar, important is correct charset</span>
+</pre></div>
+</div>
+</dd>
+<dt>If I want to run <code class="docutils literal"><span class="pre">Borg</span></code> on a ARM CPU older than ARM v6?</dt>
+<dd><p class="first">You need to enable the alignment trap handler to fixup misaligned accesses:</p>
+<div class="last highlight-bash"><div class="highlight"><pre><span class="nb">echo</span> <span class="s2">&quot;2&quot;</span> &gt; /proc/cpu/alignment
+</pre></div>
+</div>
+</dd>
+<dt>Why was Borg forked from Attic?</dt>
+<dd><p class="first">Borg was created in May 2015 in response to the difficulty of
+getting new code or larger changes incorporated into Attic and
+establishing a bigger developer community / more open development.</p>
+<p>More details can be found in <a class="reference external" href="https://github.com/jborg/attic/issues/217">ticket 217</a> that led to the fork.</p>
+<p>Borg intends to be:</p>
+<ul class="last simple">
+<li>simple:<ul>
+<li>as simple as possible, but no simpler</li>
+<li>do the right thing by default, but offer options</li>
+</ul>
+</li>
+<li>open:<ul>
+<li>welcome feature requests</li>
+<li>accept pull requests of good quality and coding style</li>
+<li>give feedback on PRs that can&#8217;t be accepted &#8220;as is&#8221;</li>
+<li>discuss openly, don&#8217;t work in the dark</li>
+</ul>
+</li>
+<li>changing:<ul>
+<li>Borg is not compatible with Attic</li>
+<li>do not break compatibility accidentally, without a good reason
+or without warning. allow compatibility breaking for other cases.</li>
+<li>if major version number changes, it may have incompatible changes</li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="sidebarlogo">
+  <a href="index.html">
+  <div class="title">Borg</div>
+</a>
+</div>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="usage.html"
+                        title="previous chapter">Usage</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="internals.html"
+                        title="next chapter">Internals</a></p><a href="https://github.com/borgbackup/borg"><img style="position: fixed; top: 0; right: 0; border: 0;"
+  src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub"></a>
+
+<h3>Useful Links</h3>
+<ul>
+  <li><a href="https://borgbackup.github.io/">Main Web Site</a></li>
+  <li><a href="https://pypi.python.org/pypi/borgbackup">PyPI packages</a></li>
+  <li><a href="https://github.com/borgbackup/borg">GitHub</a></li>
+  <li><a href="https://github.com/borgbackup/borg/issues">Issue Tracker</a></li>
+  <li><a href="http://librelist.com/browser/borgbackup/">Mailing List</a></li>
+</ul>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="internals.html" title="Internals"
+             >next</a></li>
+        <li class="right" >
+          <a href="usage.html" title="Usage"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.23.0+6.g9eaaaed documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    </div>
+  </body>
+</html>

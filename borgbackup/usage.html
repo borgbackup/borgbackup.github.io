@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Usage &mdash; Borg - Deduplicating Archiver 0.23.0+6.g9eaaaed.dirty documentation</title>
+    <title>Usage &mdash; Borg - Deduplicating Archiver 0.23.0+26.g9ead409 documentation</title>
     
     <link rel="stylesheet" href="_static/local.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.23.0+6.g9eaaaed.dirty',
+        VERSION:     '0.23.0+26.g9ead409',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="Borg - Deduplicating Archiver 0.23.0+6.g9eaaaed.dirty documentation" href="index.html" />
+    <link rel="top" title="Borg - Deduplicating Archiver 0.23.0+26.g9ead409 documentation" href="index.html" />
     <link rel="next" title="Frequently asked questions" href="faq.html" />
     <link rel="prev" title="Quick Start" href="quickstart.html" /> 
   </head>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="quickstart.html" title="Quick Start"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.23.0+6.g9eaaaed.dirty documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.23.0+26.g9ead409 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -101,6 +101,8 @@ Encryption can be enabled at repository init time.</p>
                    <span class="o">[</span>--exclude-from EXCLUDEFILE<span class="o">]</span> <span class="o">[</span>--exclude-caches<span class="o">]</span>
                    <span class="o">[</span>-c SECONDS<span class="o">]</span> <span class="o">[</span>--do-not-cross-mountpoints<span class="o">]</span> <span class="o">[</span>--numeric-owner<span class="o">]</span>
                    <span class="o">[</span>--timestamp yyyy-mm-ddThh:mm:ss<span class="o">]</span>
+                   <span class="o">[</span>--chunker-params CHUNK_MIN_EXP,CHUNK_MAX_EXP,HASH_MASK_BITS,HASH_WINDOW_SIZE<span class="o">]</span>
+                   <span class="o">[</span>-C N<span class="o">]</span>
                    ARCHIVE PATH <span class="o">[</span>PATH ...<span class="o">]</span>
 
 Create new archive
@@ -129,6 +131,13 @@ optional arguments:
   --timestamp yyyy-mm-ddThh:mm:ss
                         manually specify the archive creation date/time <span class="o">(</span>UTC<span class="o">)</span>.
                         alternatively, give a reference file/directory.
+  --chunker-params CHUNK_MIN_EXP,CHUNK_MAX_EXP,HASH_MASK_BITS,HASH_WINDOW_SIZE
+                        specify the chunker parameters. default: 10,23,16,4095
+  -C N, --compression N
+                        <span class="k">select</span> compression algorithm and level. 0..9 is
+                        supported and means zlib level <span class="m">0</span> <span class="o">(</span>no compression,
+                        fast, default<span class="o">)</span> .. zlib level <span class="m">9</span> <span class="o">(</span>high compression,
+                        slow<span class="o">)</span>.
 </pre></div>
 </div>
 <div class="section" id="id3">
@@ -136,7 +145,7 @@ optional arguments:
 <p>This command creates a backup archive containing all files found while recursively
 traversing all paths specified. The archive will consume almost no disk space for
 files or parts of files that have already been stored in other archives.</p>
-<p>See &#8220;borg help patterns&#8221; for more help on exclude patterns.</p>
+<p>See the output of the &#8220;borg help patterns&#8221; command for more help on exclude patterns.</p>
 </div>
 <div class="section" id="id4">
 <h3>Examples<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
@@ -152,6 +161,9 @@ files or parts of files that have already been stored in other archives.</p>
 <span class="c"># Backup the root filesystem into an archive named &quot;root-YYYY-MM-DD&quot;</span>
 <span class="nv">NAME</span><span class="o">=</span><span class="s2">&quot;root-`date +%Y-%m-%d`&quot;</span>
 <span class="nv">$ </span>borg create /mnt/backup::<span class="nv">$NAME</span> / --do-not-cross-mountpoints
+
+<span class="c"># Backup huge files with little chunk management overhead</span>
+<span class="nv">$ </span>borg create --chunker-params 19,23,21,4095 /mnt/backup::VMs /srv/VMs
 </pre></div>
 </div>
 </div>
@@ -194,7 +206,7 @@ optional arguments:
 archive is extracted but a subset of files and directories can be selected
 by passing a list of <code class="docutils literal"><span class="pre">PATHs</span></code> as arguments. The file selection can further
 be restricted by using the <code class="docutils literal"><span class="pre">--exclude</span></code> option.</p>
-<p>See &#8220;borg help patterns&#8221; for more help on exclude patterns.</p>
+<p>See the output of the &#8220;borg help patterns&#8221; command for more help on exclude patterns.</p>
 </div>
 <div class="section" id="id7">
 <h3>Examples<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
@@ -604,17 +616,13 @@ optional arguments:
                         title="next chapter">Frequently asked questions</a></p><a href="https://github.com/borgbackup/borg"><img style="position: fixed; top: 0; right: 0; border: 0;"
   src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub"></a>
 
-<h3>Borg Backup Links</h3>
+<h3>Useful Links</h3>
 <ul>
+  <li><a href="https://borgbackup.github.io/">Main Web Site</a></li>
   <li><a href="https://pypi.python.org/pypi/borgbackup">PyPI packages</a></li>
-  <li><a href="http://librelist.com/browser/borgbackup/">Mailing List</a></li>
   <li><a href="https://github.com/borgbackup/borg">GitHub</a></li>
   <li><a href="https://github.com/borgbackup/borg/issues">Issue Tracker</a></li>
-</ul>
-
-<h3>Other Borg Stuff</h3>
-<ul>
-  <li><a href="/borgweb">Borg Web</a></li>
+  <li><a href="http://librelist.com/browser/borgbackup/">Mailing List</a></li>
 </ul>
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
@@ -642,7 +650,7 @@ optional arguments:
         <li class="right" >
           <a href="quickstart.html" title="Quick Start"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.23.0+6.g9eaaaed.dirty documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.23.0+26.g9ead409 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Foreword &mdash; Borg - Deduplicating Archiver 0.23.0+27.g77577b7 documentation</title>
+    <title>Foreword &mdash; Borg - Deduplicating Archiver 0.23.0+68.g2907dd0 documentation</title>
     
     <link rel="stylesheet" href="_static/local.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.23.0+27.g77577b7',
+        VERSION:     '0.23.0+68.g2907dd0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="Borg - Deduplicating Archiver 0.23.0+27.g77577b7 documentation" href="index.html" />
+    <link rel="top" title="Borg - Deduplicating Archiver 0.23.0+68.g2907dd0 documentation" href="index.html" />
     <link rel="next" title="Installation" href="installation.html" />
     <link rel="prev" title="Welcome to Borg" href="index.html" /> 
   </head>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="index.html" title="Welcome to Borg"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.23.0+27.g77577b7 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.23.0+68.g2907dd0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -58,13 +58,16 @@ modified data is stored.</p>
 <dd>Variable block size <a class="reference external" href="https://en.wikipedia.org/wiki/Data_deduplication">deduplication</a> is used to reduce the number of bytes
 stored by detecting redundant data. Each file is split into a number of
 variable length chunks and only chunks that have never been seen before
-are compressed and added to the repository.</dd>
+are added to the repository (and optionally compressed).</dd>
 <dt>Optional data encryption</dt>
 <dd>All data can be protected using 256-bit <a class="reference external" href="https://en.wikipedia.org/wiki/Advanced_Encryption_Standard">AES</a> encryption and data integrity
 and authenticity is verified using <a class="reference external" href="http://en.wikipedia.org/wiki/HMAC">HMAC-SHA256</a>.</dd>
 <dt>Off-site backups</dt>
 <dd><code class="docutils literal"><span class="pre">Borg</span></code> can store data on any remote host accessible over SSH as
-long as <code class="docutils literal"><span class="pre">Borg</span></code> is installed.</dd>
+long as <code class="docutils literal"><span class="pre">Borg</span></code> is installed. If you don&#8217;t have <code class="docutils literal"><span class="pre">Borg</span></code>
+installed there, you can use some network filesytem (sshfs, nfs, ...)
+to mount a filesystem located on your remote host and use it like it was
+local (but that will be slower).</dd>
 <dt>Backups mountable as filesystems</dt>
 <dd>Backup archives are <a class="reference internal" href="usage.html#borg-mount"><span>mountable</span></a> as
 <a class="reference external" href="https://en.wikipedia.org/wiki/Filesystem_in_Userspace">userspace filesystems</a> for easy backup verification and restores.</dd>
@@ -132,6 +135,7 @@ since the repository data is totally inaccessible without it.</dd>
   <li><a href="https://pypi.python.org/pypi/borgbackup">PyPI packages</a></li>
   <li><a href="https://github.com/borgbackup/borg">GitHub</a></li>
   <li><a href="https://github.com/borgbackup/borg/issues">Issue Tracker</a></li>
+  <li><a href="https://www.bountysource.com/teams/borgbackup">Bounties &amp; Fundraisers</a></li>
   <li><a href="http://librelist.com/browser/borgbackup/">Mailing List</a></li>
 </ul>
 
@@ -166,7 +170,7 @@ since the repository data is totally inaccessible without it.</dd>
         <li class="right" >
           <a href="index.html" title="Welcome to Borg"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.23.0+27.g77577b7 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.23.0+68.g2907dd0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

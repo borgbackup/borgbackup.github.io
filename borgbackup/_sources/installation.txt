@@ -147,4 +147,11 @@ You can then install ``pip`` and ``virtualenv``:
     easy_install pip
     pip install virtualenv
 
+Troubleshooting on Cygwin setup-x86_64.exe v2.1.0
+
+::
+
+    instead of "easy_install pip"  use  "easy_install-3.4 pip"
+    if virtualenv fails, delete /usr/lib/python3.4/__pycache__/platform.cpython-34.pyc
+
 And now continue as for Linux (see above).

@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Usage &mdash; Borg - Deduplicating Archiver 0.23.0+68.g2907dd0 documentation</title>
+    <title>Usage &mdash; Borg - Deduplicating Archiver 0.23.0+95.gd65ca51 documentation</title>
     
     <link rel="stylesheet" href="_static/local.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.23.0+68.g2907dd0',
+        VERSION:     '0.23.0+95.gd65ca51',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="Borg - Deduplicating Archiver 0.23.0+68.g2907dd0 documentation" href="index.html" />
+    <link rel="top" title="Borg - Deduplicating Archiver 0.23.0+95.gd65ca51 documentation" href="index.html" />
     <link rel="next" title="Frequently asked questions" href="faq.html" />
     <link rel="prev" title="Quick Start" href="quickstart.html" /> 
   </head>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="quickstart.html" title="Quick Start"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.23.0+68.g2907dd0 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.23.0+95.gd65ca51 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -86,10 +86,14 @@ Some <span class="s2">&quot;yes&quot;</span> sayers <span class="o">(</span><spa
 
 Directories:
     BORG_KEYS_DIR : Default to <span class="s1">&#39;~/.borg/keys&#39;</span>. This directory contains keys <span class="k">for</span> encrypted repositories.
-    BORG_CACHE_DIR : Default to <span class="s1">&#39;~/.cache/borg&#39;</span>. This directory contains the <span class="nb">local </span>cache.
+    BORG_CACHE_DIR : Default to <span class="s1">&#39;~/.cache/borg&#39;</span>. This directory contains the <span class="nb">local </span>cache and might need a lot
+                     of space <span class="k">for</span> dealing with big repositories<span class="o">)</span>.
 
 Building:
     BORG_OPENSSL_PREFIX : Adds given OpenSSL header file directory to the default locations <span class="o">(</span>setup.py<span class="o">)</span>.
+
+General:
+    TMPDIR : where temporary files are stored <span class="o">(</span>might need a lot of temporary space <span class="k">for</span> some operations<span class="o">)</span>
 </pre></div>
 </div>
 <p>Please note:</p>
@@ -99,9 +103,32 @@ Building:
 (e.g. mode 600, root:root).</li>
 </ul>
 </div>
+<div class="section" id="resource-usage">
+<h2>Resource Usage<a class="headerlink" href="#resource-usage" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal"><span class="pre">Borg</span></code> might use a lot of resources depending on the size of the data set it is dealing with.</p>
+<p>CPU: it won&#8217;t go beyond 100% of 1 core as the code is currently single-threaded.</p>
+<p>Memory (RAM): the chunks index and the files index are read into memory for performance reasons.</p>
+<dl class="docutils">
+<dt>Temporary files: reading data and metadata from a FUSE mounted repository will consume about the same space as the</dt>
+<dd>deduplicated chunks used to represent them in the repository.</dd>
+</dl>
+<p>Cache files: chunks index and files index (plus a compressed collection of single-archive chunk indexes).</p>
+<dl class="docutils">
+<dt>Chunks index: proportional to the amount of data chunks in your repo. lots of small chunks in your repo implies a big</dt>
+<dd>chunks index. you may need to tweak the chunker params (see create options) if you have a lot of data and
+you want to keep the chunks index at some reasonable size.</dd>
+<dt>Files index: proportional to the amount of files in your last backup. can be switched off (see create options), but</dt>
+<dd>next backup will be much slower if you do.</dd>
+<dt>Network: if your repository is remote, all deduplicated (and optionally compressed/encrypted) data of course has to go</dt>
+<dd>over the connection (ssh: repo url). if you use a locally mounted network filesystem, additionally some copy
+operations used for transaction support also go over the connection. if you backup multiple sources to one
+target repository, additional traffic happens for cache resynchronization.</dd>
+</dl>
+<p>In case you are interested in more details, please read the internals documentation.</p>
+</div>
 <div class="section" id="borg-init">
 <span id="id1"></span><h2>borg init<a class="headerlink" href="#borg-init" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-bash"><div class="highlight"><pre>usage: borg init <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>-v<span class="o">]</span> <span class="o">[</span>--no-files-cache<span class="o">]</span>
+<div class="highlight-bash"><div class="highlight"><pre>usage: borg init <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>-v<span class="o">]</span> <span class="o">[</span>--no-files-cache<span class="o">]</span> <span class="o">[</span>--umask M<span class="o">]</span> <span class="o">[</span>--remote-path PATH<span class="o">]</span>
                  <span class="o">[</span>-e <span class="o">{</span>none,passphrase,keyfile,repokey<span class="o">}]</span>
                  REPOSITORY
 
@@ -114,6 +141,8 @@ optional arguments:
   -h, --help            show this <span class="nb">help </span>message and <span class="nb">exit</span>
   -v, --verbose         verbose output
   --no-files-cache
+  --umask M             <span class="nb">set umask </span>to M <span class="o">(</span><span class="nb">local </span>and remote, default: 0o077<span class="o">)</span>
+  --remote-path PATH    <span class="nb">set </span>remote path to executable <span class="o">(</span>default: <span class="s2">&quot;borg&quot;</span><span class="o">)</span>
   -e <span class="o">{</span>none,passphrase,keyfile,repokey<span class="o">}</span>, --encryption <span class="o">{</span>none,passphrase,keyfile,repokey<span class="o">}</span>
                         <span class="k">select</span> encryption method
 </pre></div>
@@ -167,7 +196,8 @@ for existing repos.</p>
 </div>
 <div class="section" id="borg-create">
 <span id="id2"></span><h2>borg create<a class="headerlink" href="#borg-create" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-bash"><div class="highlight"><pre>usage: borg create <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>-v<span class="o">]</span> <span class="o">[</span>--no-files-cache<span class="o">]</span> <span class="o">[</span>-s<span class="o">]</span> <span class="o">[</span>-p<span class="o">]</span> <span class="o">[</span>-e PATTERN<span class="o">]</span>
+<div class="highlight-bash"><div class="highlight"><pre>usage: borg create <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>-v<span class="o">]</span> <span class="o">[</span>--no-files-cache<span class="o">]</span> <span class="o">[</span>--umask M<span class="o">]</span>
+                   <span class="o">[</span>--remote-path PATH<span class="o">]</span> <span class="o">[</span>-s<span class="o">]</span> <span class="o">[</span>-p<span class="o">]</span> <span class="o">[</span>-e PATTERN<span class="o">]</span>
                    <span class="o">[</span>--exclude-from EXCLUDEFILE<span class="o">]</span> <span class="o">[</span>--exclude-caches<span class="o">]</span>
                    <span class="o">[</span>-c SECONDS<span class="o">]</span> <span class="o">[</span>--do-not-cross-mountpoints<span class="o">]</span> <span class="o">[</span>--numeric-owner<span class="o">]</span>
                    <span class="o">[</span>--timestamp yyyy-mm-ddThh:mm:ss<span class="o">]</span>
@@ -185,6 +215,8 @@ optional arguments:
   -h, --help            show this <span class="nb">help </span>message and <span class="nb">exit</span>
   -v, --verbose         verbose output
   --no-files-cache
+  --umask M             <span class="nb">set umask </span>to M <span class="o">(</span><span class="nb">local </span>and remote, default: 0o077<span class="o">)</span>
+  --remote-path PATH    <span class="nb">set </span>remote path to executable <span class="o">(</span>default: <span class="s2">&quot;borg&quot;</span><span class="o">)</span>
   -s, --stats           print statistics <span class="k">for</span> the created archive
   -p, --progress        print progress <span class="k">while</span> creating the archive
   -e PATTERN, --exclude PATTERN
@@ -234,13 +266,17 @@ files or parts of files that have already been stored in other archives.</p>
 
 <span class="c"># Backup huge files with little chunk management overhead</span>
 <span class="nv">$ </span>borg create --chunker-params 19,23,21,4095 /mnt/backup::VMs /srv/VMs
+
+<span class="c"># Backup a raw device (must not be active/in use/mounted at that time)</span>
+<span class="nv">$ </span>dd <span class="k">if</span><span class="o">=</span>/dev/sda <span class="nv">bs</span><span class="o">=</span>10M <span class="p">|</span> borg create /mnt/backup::my-sda -
 </pre></div>
 </div>
 </div>
 </div>
 <div class="section" id="borg-extract">
 <span id="id5"></span><h2>borg extract<a class="headerlink" href="#borg-extract" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-bash"><div class="highlight"><pre>usage: borg extract <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>-v<span class="o">]</span> <span class="o">[</span>--no-files-cache<span class="o">]</span> <span class="o">[</span>-n<span class="o">]</span> <span class="o">[</span>-e PATTERN<span class="o">]</span>
+<div class="highlight-bash"><div class="highlight"><pre>usage: borg extract <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>-v<span class="o">]</span> <span class="o">[</span>--no-files-cache<span class="o">]</span> <span class="o">[</span>--umask M<span class="o">]</span>
+                    <span class="o">[</span>--remote-path PATH<span class="o">]</span> <span class="o">[</span>-n<span class="o">]</span> <span class="o">[</span>-e PATTERN<span class="o">]</span>
                     <span class="o">[</span>--exclude-from EXCLUDEFILE<span class="o">]</span> <span class="o">[</span>--numeric-owner<span class="o">]</span>
                     <span class="o">[</span>--strip-components NUMBER<span class="o">]</span> <span class="o">[</span>--stdout<span class="o">]</span> <span class="o">[</span>--sparse<span class="o">]</span>
                     ARCHIVE <span class="o">[</span>PATH <span class="o">[</span>PATH ...<span class="o">]]</span>
@@ -255,6 +291,8 @@ optional arguments:
   -h, --help            show this <span class="nb">help </span>message and <span class="nb">exit</span>
   -v, --verbose         verbose output
   --no-files-cache
+  --umask M             <span class="nb">set umask </span>to M <span class="o">(</span><span class="nb">local </span>and remote, default: 0o077<span class="o">)</span>
+  --remote-path PATH    <span class="nb">set </span>remote path to executable <span class="o">(</span>default: <span class="s2">&quot;borg&quot;</span><span class="o">)</span>
   -n, --dry-run         <span class="k">do</span> not actually change any files
   -e PATTERN, --exclude PATTERN
                         exclude paths matching PATTERN
@@ -301,23 +339,26 @@ be restricted by using the <code class="docutils literal"><span class="pre">--ex
 </div>
 <div class="section" id="borg-check">
 <span id="id8"></span><h2>borg check<a class="headerlink" href="#borg-check" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-bash"><div class="highlight"><pre>usage: borg check <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>-v<span class="o">]</span> <span class="o">[</span>--no-files-cache<span class="o">]</span> <span class="o">[</span>--repository-only<span class="o">]</span>
-                  <span class="o">[</span>--archives-only<span class="o">]</span> <span class="o">[</span>--repair<span class="o">]</span> <span class="o">[</span>--last N<span class="o">]</span>
+<div class="highlight-bash"><div class="highlight"><pre>usage: borg check <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>-v<span class="o">]</span> <span class="o">[</span>--no-files-cache<span class="o">]</span> <span class="o">[</span>--umask M<span class="o">]</span>
+                  <span class="o">[</span>--remote-path PATH<span class="o">]</span> <span class="o">[</span>--repository-only<span class="o">]</span> <span class="o">[</span>--archives-only<span class="o">]</span>
+                  <span class="o">[</span>--repair<span class="o">]</span> <span class="o">[</span>--last N<span class="o">]</span>
                   REPOSITORY
 
 Check repository consistency
 
 positional arguments:
-  REPOSITORY         repository to check consistency of
+  REPOSITORY          repository to check consistency of
 
 optional arguments:
-  -h, --help         show this <span class="nb">help </span>message and <span class="nb">exit</span>
-  -v, --verbose      verbose output
+  -h, --help          show this <span class="nb">help </span>message and <span class="nb">exit</span>
+  -v, --verbose       verbose output
   --no-files-cache
-  --repository-only  only perform repository checks
-  --archives-only    only perform archives checks
-  --repair           attempt to repair any inconsistencies found
-  --last N           only check last N archives <span class="o">(</span>Default: all<span class="o">)</span>
+  --umask M           <span class="nb">set umask </span>to M <span class="o">(</span><span class="nb">local </span>and remote, default: 0o077<span class="o">)</span>
+  --remote-path PATH  <span class="nb">set </span>remote path to executable <span class="o">(</span>default: <span class="s2">&quot;borg&quot;</span><span class="o">)</span>
+  --repository-only   only perform repository checks
+  --archives-only     only perform archives checks
+  --repair            attempt to repair any inconsistencies found
+  --last N            only check last N archives <span class="o">(</span>Default: all<span class="o">)</span>
 </pre></div>
 </div>
 <div class="section" id="id9">
@@ -333,18 +374,22 @@ the &#8211;repository-only option.</p>
 </div>
 <div class="section" id="borg-delete">
 <span id="id10"></span><h2>borg delete<a class="headerlink" href="#borg-delete" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-bash"><div class="highlight"><pre>usage: borg delete <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>-v<span class="o">]</span> <span class="o">[</span>--no-files-cache<span class="o">]</span> <span class="o">[</span>-s<span class="o">]</span> TARGET
+<div class="highlight-bash"><div class="highlight"><pre>usage: borg delete <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>-v<span class="o">]</span> <span class="o">[</span>--no-files-cache<span class="o">]</span> <span class="o">[</span>--umask M<span class="o">]</span>
+                   <span class="o">[</span>--remote-path PATH<span class="o">]</span> <span class="o">[</span>-s<span class="o">]</span>
+                   TARGET
 
 Delete an existing repository or archive
 
 positional arguments:
-  TARGET            archive or repository to delete
+  TARGET              archive or repository to delete
 
 optional arguments:
-  -h, --help        show this <span class="nb">help </span>message and <span class="nb">exit</span>
-  -v, --verbose     verbose output
+  -h, --help          show this <span class="nb">help </span>message and <span class="nb">exit</span>
+  -v, --verbose       verbose output
   --no-files-cache
-  -s, --stats       print statistics <span class="k">for</span> the deleted archive
+  --umask M           <span class="nb">set umask </span>to M <span class="o">(</span><span class="nb">local </span>and remote, default: 0o077<span class="o">)</span>
+  --remote-path PATH  <span class="nb">set </span>remote path to executable <span class="o">(</span>default: <span class="s2">&quot;borg&quot;</span><span class="o">)</span>
+  -s, --stats         print statistics <span class="k">for</span> the deleted archive
 </pre></div>
 </div>
 <div class="section" id="id11">
@@ -356,7 +401,8 @@ local cache for it (if any) is also deleted.</p>
 </div>
 <div class="section" id="borg-list">
 <span id="id12"></span><h2>borg list<a class="headerlink" href="#borg-list" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-bash"><div class="highlight"><pre>usage: borg list <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>-v<span class="o">]</span> <span class="o">[</span>--no-files-cache<span class="o">]</span> REPOSITORY_OR_ARCHIVE
+<div class="highlight-bash"><div class="highlight"><pre>usage: borg list <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>-v<span class="o">]</span> <span class="o">[</span>--no-files-cache<span class="o">]</span> <span class="o">[</span>--umask M<span class="o">]</span> <span class="o">[</span>--remote-path PATH<span class="o">]</span>
+                 REPOSITORY_OR_ARCHIVE
 
 List archive or repository contents
 
@@ -368,6 +414,8 @@ optional arguments:
   -h, --help            show this <span class="nb">help </span>message and <span class="nb">exit</span>
   -v, --verbose         verbose output
   --no-files-cache
+  --umask M             <span class="nb">set umask </span>to M <span class="o">(</span><span class="nb">local </span>and remote, default: 0o077<span class="o">)</span>
+  --remote-path PATH    <span class="nb">set </span>remote path to executable <span class="o">(</span>default: <span class="s2">&quot;borg&quot;</span><span class="o">)</span>
 </pre></div>
 </div>
 <div class="section" id="id13">
@@ -396,9 +444,10 @@ drwxr-xr-x root   root          <span class="m">0</span> Jul <span class="m">15<
 </div>
 <div class="section" id="borg-prune">
 <span id="id15"></span><h2>borg prune<a class="headerlink" href="#borg-prune" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-bash"><div class="highlight"><pre>usage: borg prune <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>-v<span class="o">]</span> <span class="o">[</span>--no-files-cache<span class="o">]</span> <span class="o">[</span>-n<span class="o">]</span> <span class="o">[</span>-s<span class="o">]</span>
-                  <span class="o">[</span>--keep-within WITHIN<span class="o">]</span> <span class="o">[</span>-H HOURLY<span class="o">]</span> <span class="o">[</span>-d DAILY<span class="o">]</span> <span class="o">[</span>-w WEEKLY<span class="o">]</span>
-                  <span class="o">[</span>-m MONTHLY<span class="o">]</span> <span class="o">[</span>-y YEARLY<span class="o">]</span> <span class="o">[</span>-p PREFIX<span class="o">]</span>
+<div class="highlight-bash"><div class="highlight"><pre>usage: borg prune <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>-v<span class="o">]</span> <span class="o">[</span>--no-files-cache<span class="o">]</span> <span class="o">[</span>--umask M<span class="o">]</span>
+                  <span class="o">[</span>--remote-path PATH<span class="o">]</span> <span class="o">[</span>-n<span class="o">]</span> <span class="o">[</span>-s<span class="o">]</span> <span class="o">[</span>--keep-within WITHIN<span class="o">]</span>
+                  <span class="o">[</span>-H HOURLY<span class="o">]</span> <span class="o">[</span>-d DAILY<span class="o">]</span> <span class="o">[</span>-w WEEKLY<span class="o">]</span> <span class="o">[</span>-m MONTHLY<span class="o">]</span> <span class="o">[</span>-y YEARLY<span class="o">]</span>
+                  <span class="o">[</span>-p PREFIX<span class="o">]</span>
                   REPOSITORY
 
 Prune repository archives according to specified rules
@@ -410,6 +459,8 @@ optional arguments:
   -h, --help            show this <span class="nb">help </span>message and <span class="nb">exit</span>
   -v, --verbose         verbose output
   --no-files-cache
+  --umask M             <span class="nb">set umask </span>to M <span class="o">(</span><span class="nb">local </span>and remote, default: 0o077<span class="o">)</span>
+  --remote-path PATH    <span class="nb">set </span>remote path to executable <span class="o">(</span>default: <span class="s2">&quot;borg&quot;</span><span class="o">)</span>
   -n, --dry-run         <span class="k">do</span> not change repository
   -s, --stats           print statistics <span class="k">for</span> the deleted archive
   --keep-within WITHIN  keep all archives within this <span class="nb">time </span>interval
@@ -469,17 +520,20 @@ specified by the rules.</p>
 </div>
 <div class="section" id="borg-info">
 <span id="id18"></span><h2>borg info<a class="headerlink" href="#borg-info" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-bash"><div class="highlight"><pre>usage: borg info <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>-v<span class="o">]</span> <span class="o">[</span>--no-files-cache<span class="o">]</span> ARCHIVE
+<div class="highlight-bash"><div class="highlight"><pre>usage: borg info <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>-v<span class="o">]</span> <span class="o">[</span>--no-files-cache<span class="o">]</span> <span class="o">[</span>--umask M<span class="o">]</span> <span class="o">[</span>--remote-path PATH<span class="o">]</span>
+                 ARCHIVE
 
 Show archive details such as disk space used
 
 positional arguments:
-  ARCHIVE           archive to display information about
+  ARCHIVE             archive to display information about
 
 optional arguments:
-  -h, --help        show this <span class="nb">help </span>message and <span class="nb">exit</span>
-  -v, --verbose     verbose output
+  -h, --help          show this <span class="nb">help </span>message and <span class="nb">exit</span>
+  -v, --verbose       verbose output
   --no-files-cache
+  --umask M           <span class="nb">set umask </span>to M <span class="o">(</span><span class="nb">local </span>and remote, default: 0o077<span class="o">)</span>
+  --remote-path PATH  <span class="nb">set </span>remote path to executable <span class="o">(</span>default: <span class="s2">&quot;borg&quot;</span><span class="o">)</span>
 </pre></div>
 </div>
 <div class="section" id="id19">
@@ -505,7 +559,8 @@ Unique data: <span class="m">64805454</span> <span class="o">(</span>61.80 MB<sp
 </div>
 <div class="section" id="borg-mount">
 <span id="id21"></span><h2>borg mount<a class="headerlink" href="#borg-mount" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-bash"><div class="highlight"><pre>usage: borg mount <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>-v<span class="o">]</span> <span class="o">[</span>--no-files-cache<span class="o">]</span> <span class="o">[</span>-f<span class="o">]</span> <span class="o">[</span>-o OPTIONS<span class="o">]</span>
+<div class="highlight-bash"><div class="highlight"><pre>usage: borg mount <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>-v<span class="o">]</span> <span class="o">[</span>--no-files-cache<span class="o">]</span> <span class="o">[</span>--umask M<span class="o">]</span>
+                  <span class="o">[</span>--remote-path PATH<span class="o">]</span> <span class="o">[</span>-f<span class="o">]</span> <span class="o">[</span>-o OPTIONS<span class="o">]</span>
                   REPOSITORY_OR_ARCHIVE MOUNTPOINT
 
 Mount archive or an entire repository as a FUSE fileystem
@@ -519,6 +574,8 @@ optional arguments:
   -h, --help            show this <span class="nb">help </span>message and <span class="nb">exit</span>
   -v, --verbose         verbose output
   --no-files-cache
+  --umask M             <span class="nb">set umask </span>to M <span class="o">(</span><span class="nb">local </span>and remote, default: 0o077<span class="o">)</span>
+  --remote-path PATH    <span class="nb">set </span>remote path to executable <span class="o">(</span>default: <span class="s2">&quot;borg&quot;</span><span class="o">)</span>
   -f, --foreground      stay in foreground, <span class="k">do</span> not daemonize
   -o OPTIONS            Extra mount options
 </pre></div>
@@ -542,7 +599,9 @@ bin  boot  etc  lib  lib64  mnt  opt  root  sbin  srv  usr  var
 </div>
 <div class="section" id="borg-change-passphrase">
 <span id="id24"></span><h2>borg change-passphrase<a class="headerlink" href="#borg-change-passphrase" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-bash"><div class="highlight"><pre>usage: borg change-passphrase <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>-v<span class="o">]</span> <span class="o">[</span>--no-files-cache<span class="o">]</span> REPOSITORY
+<div class="highlight-bash"><div class="highlight"><pre>usage: borg change-passphrase <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>-v<span class="o">]</span> <span class="o">[</span>--no-files-cache<span class="o">]</span> <span class="o">[</span>--umask M<span class="o">]</span>
+                              <span class="o">[</span>--remote-path PATH<span class="o">]</span>
+                              REPOSITORY
 
 Change repository key file passphrase
 
@@ -550,9 +609,11 @@ positional arguments:
   REPOSITORY
 
 optional arguments:
-  -h, --help        show this <span class="nb">help </span>message and <span class="nb">exit</span>
-  -v, --verbose     verbose output
+  -h, --help          show this <span class="nb">help </span>message and <span class="nb">exit</span>
+  -v, --verbose       verbose output
   --no-files-cache
+  --umask M           <span class="nb">set umask </span>to M <span class="o">(</span><span class="nb">local </span>and remote, default: 0o077<span class="o">)</span>
+  --remote-path PATH  <span class="nb">set </span>remote path to executable <span class="o">(</span>default: <span class="s2">&quot;borg&quot;</span><span class="o">)</span>
 </pre></div>
 </div>
 <div class="section" id="id25">
@@ -582,7 +643,8 @@ Key file <span class="s2">&quot;/home/USER/.borg/keys/mnt_backup&quot;</span> up
 </div>
 <div class="section" id="borg-serve">
 <span id="id27"></span><h2>borg serve<a class="headerlink" href="#borg-serve" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-bash"><div class="highlight"><pre>usage: borg serve <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>-v<span class="o">]</span> <span class="o">[</span>--no-files-cache<span class="o">]</span> <span class="o">[</span>--restrict-to-path PATH<span class="o">]</span>
+<div class="highlight-bash"><div class="highlight"><pre>usage: borg serve <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>-v<span class="o">]</span> <span class="o">[</span>--no-files-cache<span class="o">]</span> <span class="o">[</span>--umask M<span class="o">]</span>
+                  <span class="o">[</span>--remote-path PATH<span class="o">]</span> <span class="o">[</span>--restrict-to-path PATH<span class="o">]</span>
 
 Start in server mode. This <span class="nb">command </span>is usually not used manually.
 
@@ -591,6 +653,8 @@ optional arguments:
   -h, --help            show this <span class="nb">help </span>message and <span class="nb">exit</span>
   -v, --verbose         verbose output
   --no-files-cache
+  --umask M             <span class="nb">set umask </span>to M <span class="o">(</span><span class="nb">local </span>and remote, default: 0o077<span class="o">)</span>
+  --remote-path PATH    <span class="nb">set </span>remote path to executable <span class="o">(</span>default: <span class="s2">&quot;borg&quot;</span><span class="o">)</span>
   --restrict-to-path PATH
                         restrict repository access to PATH
 </pre></div>
@@ -627,6 +691,7 @@ optional arguments:
 <li><a class="reference internal" href="#quiet-by-default">Quiet by default</a></li>
 <li><a class="reference internal" href="#return-codes">Return codes</a></li>
 <li><a class="reference internal" href="#environment-variables">Environment Variables</a></li>
+<li><a class="reference internal" href="#resource-usage">Resource Usage</a></li>
 <li><a class="reference internal" href="#borg-init">borg init</a><ul>
 <li><a class="reference internal" href="#description">Description</a></li>
 <li><a class="reference internal" href="#examples">Examples</a></li>
@@ -733,7 +798,7 @@ optional arguments:
         <li class="right" >
           <a href="quickstart.html" title="Quick Start"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.23.0+68.g2907dd0 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.23.0+95.gd65ca51 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Welcome to Borg &mdash; Borg - Deduplicating Archiver 0.23.0+68.g2907dd0 documentation</title>
+    <title>Borg Documentation &mdash; Borg - Deduplicating Archiver 0.23.0+95.gd65ca51 documentation</title>
     
     <link rel="stylesheet" href="_static/local.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.23.0+68.g2907dd0',
+        VERSION:     '0.23.0+95.gd65ca51',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,17 +23,17 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="Borg - Deduplicating Archiver 0.23.0+68.g2907dd0 documentation" href="#" />
-    <link rel="next" title="Foreword" href="foreword.html" /> 
+    <link rel="top" title="Borg - Deduplicating Archiver 0.23.0+95.gd65ca51 documentation" href="#" />
+    <link rel="next" title="Introduction" href="intro.html" /> 
   </head>
   <body role="document">
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
-          <a href="foreword.html" title="Foreword"
+          <a href="intro.html" title="Introduction"
              accesskey="N">next</a></li>
-        <li class="nav-item nav-item-0"><a href="#">Borg - Deduplicating Archiver 0.23.0+68.g2907dd0 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="#">Borg - Deduplicating Archiver 0.23.0+95.gd65ca51 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -42,52 +42,14 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="welcome-to-borg">
-<h1>Welcome to Borg<a class="headerlink" href="#welcome-to-borg" title="Permalink to this headline">¶</a></h1>
-<p><code class="docutils literal"><span class="pre">Borg</span></code> is a deduplicating backup program.
-Optionally, it also supports compression and authenticated encryption.</p>
-<p>The main goal of <code class="docutils literal"><span class="pre">Borg</span></code> is to provide an efficient and secure way
-to backup data. The data deduplication technique used makes <code class="docutils literal"><span class="pre">Borg</span></code>
-suitable for daily backups since only the changes are stored. The authenticated
-encryption makes it suitable for backups to not fully trusted targets.</p>
-<p><code class="docutils literal"><span class="pre">Borg</span></code> is written in Python (with a little bit of Cython and C for
-the performance critical parts).</p>
-<div class="section" id="easy-to-use">
-<h2>Easy to use<a class="headerlink" href="#easy-to-use" title="Permalink to this headline">¶</a></h2>
-<p>Initialize a new backup <a class="reference internal" href="foreword.html#repository-def"><span>repository</span></a> and create your
-first backup <a class="reference internal" href="foreword.html#archive-def"><span>archive</span></a> in two lines:</p>
-<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>borg init /mnt/backup
-<span class="nv">$ </span>borg create /mnt/backup::Monday ~/Documents
-<span class="nv">$ </span>borg create --stats /mnt/backup::Tuesday ~/Documents
-Archive name: Tuesday
-Archive fingerprint: 387a5e3f9b0e792e91ce87134b0f4bfe17677d9248cb5337f3fbf3a8e157942a
-Start <span class="nb">time</span>: Tue Mar <span class="m">25</span> 12:00:10 2014
-End <span class="nb">time</span>:   Tue Mar <span class="m">25</span> 12:00:10 2014
-Duration: 0.08 seconds
-Number of files: 358
-                       Original size      Compressed size    Deduplicated size
-This archive:               57.16 MB             46.78 MB            151.67 kB
-All archives:              114.02 MB             93.46 MB             44.81 MB
-</pre></div>
-</div>
-<p>See the <a class="reference internal" href="quickstart.html#quickstart"><span>Quick Start</span></a> chapter for a more detailed example.</p>
-</div>
-<div class="section" id="easy-installation">
-<h2>Easy installation<a class="headerlink" href="#easy-installation" title="Permalink to this headline">¶</a></h2>
-<p>You can use pip to install <code class="docutils literal"><span class="pre">Borg</span></code> quickly and easily:</p>
-<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>pip3 install borgbackup
-</pre></div>
-</div>
-<p>Need more help with installing? See <a class="reference internal" href="installation.html#installation"><span>Installation</span></a>.</p>
-</div>
-</div>
-<div class="section" id="user-s-guide">
-<h1>User&#8217;s Guide<a class="headerlink" href="#user-s-guide" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="borg-documentation">
+<h1>Borg Documentation<a class="headerlink" href="#borg-documentation" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="foreword.html">Foreword</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="foreword.html#features">Features</a></li>
-<li class="toctree-l2"><a class="reference internal" href="foreword.html#glossary">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="intro.html#what-is-borg">What is Borg?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="intro.html#how-to-proceed-from-here">How to proceed from here</a></li>
+<li class="toctree-l2"><a class="reference internal" href="intro.html#notes">Notes</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
@@ -109,6 +71,7 @@ All archives:              114.02 MB             93.46 MB             44.81 MB
 <li class="toctree-l2"><a class="reference internal" href="usage.html#quiet-by-default">Quiet by default</a></li>
 <li class="toctree-l2"><a class="reference internal" href="usage.html#return-codes">Return codes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="usage.html#environment-variables">Environment Variables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#resource-usage">Resource Usage</a></li>
 <li class="toctree-l2"><a class="reference internal" href="usage.html#borg-init">borg init</a></li>
 <li class="toctree-l2"><a class="reference internal" href="usage.html#borg-create">borg create</a></li>
 <li class="toctree-l2"><a class="reference internal" href="usage.html#borg-extract">borg extract</a></li>
@@ -123,6 +86,34 @@ All archives:              114.02 MB             93.46 MB             44.81 MB
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="support.html">Support</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="support.html#id2">Issue Tracker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="support.html#irc">IRC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="support.html#mailing-list">Mailing list</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="changes.html">Borg Changelog</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="changes.html#version-0-24-0">Version 0.24.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changes.html#version-0-23-0">Version 0.23.0</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="changes.html#attic-changelog">Attic Changelog</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="changes.html#version-0-17">Version 0.17</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changes.html#version-0-16">Version 0.16</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changes.html#version-0-15">Version 0.15</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changes.html#version-0-14">Version 0.14</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changes.html#version-0-13">Version 0.13</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changes.html#version-0-12">Version 0.12</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changes.html#version-0-11">Version 0.11</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changes.html#version-0-10">Version 0.10</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changes.html#version-0-9">Version 0.9</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changes.html#version-0-8-1">Version 0.8.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changes.html#version-0-8">Version 0.8</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changes.html#version-0-7">Version 0.7</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changes.html#version-0-6-1">Version 0.6.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changes.html#version-0-6">Version 0.6</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="internals.html">Internals</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="internals.html#repository-and-archives">Repository and Archives</a></li>
 <li class="toctree-l2"><a class="reference internal" href="internals.html#config-file">Config file</a></li>
@@ -137,28 +128,13 @@ All archives:              114.02 MB             93.46 MB             44.81 MB
 <li class="toctree-l2"><a class="reference internal" href="internals.html#compression">Compression</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="development.html">Development</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="development.html#building-a-development-environment">Building a development environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development.html#running-the-tests">Running the tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development.html#building-the-docs-with-sphinx">Building the docs with Sphinx</a></li>
 </ul>
-</div>
-</div>
-<div class="section" id="getting-help">
-<h1>Getting help<a class="headerlink" href="#getting-help" title="Permalink to this headline">¶</a></h1>
-<p>If you&#8217;ve found a bug or have a concrete feature request, please create a new
-ticket on the project&#8217;s <a class="reference external" href="https://github.com/borgbackup/borg/issues">issue tracker</a> (after checking whether someone else
-already has reported the same thing).</p>
-<p>For more general questions or discussions, IRC or mailing list are preferred.</p>
-<div class="section" id="irc">
-<h2>IRC<a class="headerlink" href="#irc" title="Permalink to this headline">¶</a></h2>
-<p>Join us on channel #borgbackup on chat.freenode.net. As usual on IRC, just
-ask or tell directly and then patiently wait for replies. Stay connected.</p>
-</div>
-<div class="section" id="mailing-list">
-<h2>Mailing list<a class="headerlink" href="#mailing-list" title="Permalink to this headline">¶</a></h2>
-<p>There is a mailing list for Borg on <a class="reference external" href="http://librelist.com/">librelist</a> that you can use for feature
-requests and general discussions about Borg. A mailing list archive is
-available <a class="reference external" href="http://librelist.com/browser/borgbackup/">here</a>.</p>
-<p>To subscribe to the list, send an email to <a class="reference external" href="mailto:borgbackup&#37;&#52;&#48;librelist&#46;com">borgbackup<span>&#64;</span>librelist<span>&#46;</span>com</a> and reply
-to the confirmation mail. Likewise, to unsubscribe, send an email to
-<a class="reference external" href="mailto:borgbackup-unsubscribe&#37;&#52;&#48;librelist&#46;com">borgbackup-unsubscribe<span>&#64;</span>librelist<span>&#46;</span>com</a> and reply to the confirmation mail.</p>
+</li>
+</ul>
 </div>
 </div>
 
@@ -210,9 +186,9 @@ to the confirmation mail. Likewise, to unsubscribe, send an email to
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
-          <a href="foreword.html" title="Foreword"
+          <a href="intro.html" title="Introduction"
              >next</a></li>
-        <li class="nav-item nav-item-0"><a href="#">Borg - Deduplicating Archiver 0.23.0+68.g2907dd0 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="#">Borg - Deduplicating Archiver 0.23.0+95.gd65ca51 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

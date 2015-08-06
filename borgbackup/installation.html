@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Installation &mdash; Borg - Deduplicating Archiver 0.23.0+68.g2907dd0 documentation</title>
+    <title>Installation &mdash; Borg - Deduplicating Archiver 0.23.0+95.gd65ca51 documentation</title>
     
     <link rel="stylesheet" href="_static/local.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.23.0+68.g2907dd0',
+        VERSION:     '0.23.0+95.gd65ca51',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,9 +23,9 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="Borg - Deduplicating Archiver 0.23.0+68.g2907dd0 documentation" href="index.html" />
+    <link rel="top" title="Borg - Deduplicating Archiver 0.23.0+95.gd65ca51 documentation" href="index.html" />
     <link rel="next" title="Quick Start" href="quickstart.html" />
-    <link rel="prev" title="Foreword" href="foreword.html" /> 
+    <link rel="prev" title="Introduction" href="intro.html" /> 
   </head>
   <body role="document">
     <div class="related" role="navigation" aria-label="related navigation">
@@ -35,9 +35,9 @@
           <a href="quickstart.html" title="Quick Start"
              accesskey="N">next</a></li>
         <li class="right" >
-          <a href="foreword.html" title="Foreword"
+          <a href="intro.html" title="Introduction"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.23.0+68.g2907dd0 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.23.0+95.gd65ca51 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -61,6 +61,11 @@
 usually available as an optional install.</p>
 <p><a class="reference external" href="https://pypi.python.org/pypi/virtualenv/">Virtualenv</a> can be used to build and install <code class="docutils literal"><span class="pre">Borg</span></code> without affecting
 the system Python or requiring root access.</p>
+<p>Important:
+if you install into a virtual environment, you need to activate
+the virtual env first (<code class="docutils literal"><span class="pre">source</span> <span class="pre">borg-env/bin/activate</span></code>).
+Alternatively, directly run <code class="docutils literal"><span class="pre">borg-env/bin/borg</span></code> (or symlink that into some
+directory that is in your PATH so you can just run <code class="docutils literal"><span class="pre">borg</span></code>).</p>
 <p>The <a class="reference external" href="https://pypi.python.org/pypi/llfuse/">llfuse</a> python package is also required if you wish to mount an
 archive as a FUSE filesystem. Only FUSE &gt;= 2.8.0 can support llfuse.</p>
 <p>You only need Cython to compile the .pyx files to the respective .c files
@@ -92,6 +97,11 @@ apt-get install libacl1-dev libacl1
 apt-get install build-essential
 
 # optional: lowlevel FUSE py binding - to mount backup archives
+# in case you get complaints about permission denied on /etc/fuse.conf:
+# on ubuntu this means your user is not in the &quot;fuse&quot; group. just add
+# yourself there, log out and log in again.
+# if it complains about not being able to find llfuse: make a symlink
+# borg-env/lib/python3.4/site-packages/llfuse -&gt; /usr/lib/python3/dist-packages/llfuse
 apt-get install python3-llfuse fuse
 
 # optional: for unit testing
@@ -156,7 +166,8 @@ fakeroot -u tox
 </div>
 <div class="section" id="cygwin-from-git">
 <h2>Cygwin (from git)<a class="headerlink" href="#cygwin-from-git" title="Permalink to this headline">¶</a></h2>
-<p>Please note that running under cygwin is rather experimental.</p>
+<p>Please note that running under cygwin is rather experimental, stuff has been
+tested with CygWin (x86-64) v2.1.0.</p>
 <p>You&#8217;ll need at least (use the cygwin installer to fetch/install these):</p>
 <div class="highlight-bash"><div class="highlight"><pre>python3
 python3-setuptools
@@ -171,11 +182,15 @@ openssl-devel
 </pre></div>
 </div>
 <p>You can then install <code class="docutils literal"><span class="pre">pip</span></code> and <code class="docutils literal"><span class="pre">virtualenv</span></code>:</p>
-<div class="highlight-bash"><div class="highlight"><pre>easy_install pip
+<div class="highlight-bash"><div class="highlight"><pre>easy_install-3.4 pip
 pip install virtualenv
 </pre></div>
 </div>
 <p>And now continue as for Linux (see above).</p>
+<p>In case that creation of the virtual env fails, try deleting this file:</p>
+<div class="highlight-bash"><div class="highlight"><pre>/usr/lib/python3.4/__pycache__/platform.cpython-34.pyc
+</pre></div>
+</div>
 </div>
 </div>
 
@@ -202,8 +217,8 @@ pip install virtualenv
 </ul>
 
   <h4>Previous topic</h4>
-  <p class="topless"><a href="foreword.html"
-                        title="previous chapter">Foreword</a></p>
+  <p class="topless"><a href="intro.html"
+                        title="previous chapter">Introduction</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="quickstart.html"
                         title="next chapter">Quick Start</a></p><a href="https://github.com/borgbackup/borg"><img style="position: fixed; top: 0; right: 0; border: 0;"
@@ -248,9 +263,9 @@ pip install virtualenv
           <a href="quickstart.html" title="Quick Start"
              >next</a></li>
         <li class="right" >
-          <a href="foreword.html" title="Foreword"
+          <a href="intro.html" title="Introduction"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.23.0+68.g2907dd0 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.23.0+95.gd65ca51 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

@@ -1,0 +1,171 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Development &mdash; Borg - Deduplicating Archiver 0.23.0+95.gd65ca51 documentation</title>
+    
+    <link rel="stylesheet" href="_static/local.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.23.0+95.gd65ca51',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Borg - Deduplicating Archiver 0.23.0+95.gd65ca51 documentation" href="index.html" />
+    <link rel="prev" title="Internals" href="internals.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="internals.html" title="Internals"
+             accesskey="P">previous</a></li>
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.23.0+95.gd65ca51 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="development">
+<span id="id1"></span><h1>Development<a class="headerlink" href="#development" title="Permalink to this headline">¶</a></h1>
+<p>This chapter will get you started with <code class="docutils literal"><span class="pre">Borg</span></code>&#8216; development.</p>
+<p><code class="docutils literal"><span class="pre">Borg</span></code> is written in Python (with a little bit of Cython and C for
+the performance critical parts).</p>
+<div class="section" id="building-a-development-environment">
+<h2>Building a development environment<a class="headerlink" href="#building-a-development-environment" title="Permalink to this headline">¶</a></h2>
+<p>First, just install borg into a virtual env as described before.</p>
+<p>To install some additional packages needed for running the tests, activate your
+virtual env and run:</p>
+<div class="highlight-bash"><div class="highlight"><pre>pip install -r requirements.d/development.txt
+</pre></div>
+</div>
+</div>
+<div class="section" id="running-the-tests">
+<h2>Running the tests<a class="headerlink" href="#running-the-tests" title="Permalink to this headline">¶</a></h2>
+<p>The tests are in the borg/testsuite package.</p>
+<p>To run them, you need to have fakeroot, tox and pytest installed.</p>
+<p>To run the test suite use the following command:</p>
+<div class="highlight-bash"><div class="highlight"><pre>fakeroot -u tox  <span class="c"># run all tests</span>
+</pre></div>
+</div>
+<p>Some more advanced examples:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="c"># verify a changed tox.ini (run this after any change to tox.ini):</span>
+fakeroot -u tox --recreate
+
+fakeroot -u tox -e py32  <span class="c"># run all tests, but only on python 3.2</span>
+
+fakeroot -u tox borg.testsuite.locking  <span class="c"># only run 1 test module</span>
+
+fakeroot -u tox borg.testsuite.locking -- -k <span class="s1">&#39;&quot;not Timer&quot;&#39;</span>  <span class="c"># exclude some tests</span>
+
+fakeroot -u tox borg.testsuite -- -v  <span class="c"># verbose py.test</span>
+</pre></div>
+</div>
+<p>Important notes:</p>
+<ul class="simple">
+<li>Without fakeroot -u some tests will fail.</li>
+<li>When using &#8211; to give options to py.test, you MUST also give borg.testsuite[.module].</li>
+</ul>
+</div>
+<div class="section" id="building-the-docs-with-sphinx">
+<h2>Building the docs with Sphinx<a class="headerlink" href="#building-the-docs-with-sphinx" title="Permalink to this headline">¶</a></h2>
+<p>The documentation (in reStructuredText format, .rst) is in docs/.</p>
+<p>To build the html version of it, you need to have sphinx installed:</p>
+<div class="highlight-bash"><div class="highlight"><pre>pip3 install sphinx
+</pre></div>
+</div>
+<p>Now run:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="nb">cd </span>docs/
+make html
+</pre></div>
+</div>
+<p>Then point a web browser at docs/_build/html/index.html.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="sidebarlogo">
+  <a href="index.html">
+  <div class="title">Borg</div>
+</a>
+</div>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Development</a><ul>
+<li><a class="reference internal" href="#building-a-development-environment">Building a development environment</a></li>
+<li><a class="reference internal" href="#running-the-tests">Running the tests</a></li>
+<li><a class="reference internal" href="#building-the-docs-with-sphinx">Building the docs with Sphinx</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="internals.html"
+                        title="previous chapter">Internals</a></p><a href="https://github.com/borgbackup/borg"><img style="position: fixed; top: 0; right: 0; border: 0;"
+  src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub"></a>
+
+<h3>Useful Links</h3>
+<ul>
+  <li><a href="https://borgbackup.github.io/borgbackup/">Main Web Site</a></li>
+  <li><a href="https://pypi.python.org/pypi/borgbackup">PyPI packages</a></li>
+  <li><a href="https://github.com/borgbackup/borg">GitHub</a></li>
+  <li><a href="https://github.com/borgbackup/borg/issues">Issue Tracker</a></li>
+  <li><a href="https://www.bountysource.com/teams/borgbackup">Bounties &amp; Fundraisers</a></li>
+  <li><a href="http://librelist.com/browser/borgbackup/">Mailing List</a></li>
+</ul>
+
+<h3>Related Projects</h3>
+<ul>
+  <li><a href="https://borgbackup.github.io/borgweb/">BorgWeb</a></li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="internals.html" title="Internals"
+             >previous</a></li>
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.23.0+95.gd65ca51 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    </div>
+  </body>
+</html>

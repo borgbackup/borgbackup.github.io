@@ -1,0 +1,239 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Introduction &mdash; Borg - Deduplicating Archiver 0.23.0+95.gd65ca51 documentation</title>
+    
+    <link rel="stylesheet" href="_static/local.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.23.0+95.gd65ca51',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Borg - Deduplicating Archiver 0.23.0+95.gd65ca51 documentation" href="index.html" />
+    <link rel="next" title="Installation" href="installation.html" />
+    <link rel="prev" title="Borg Documentation" href="index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="installation.html" title="Installation"
+             accesskey="N">next</a></li>
+        <li class="right" >
+          <a href="index.html" title="Borg Documentation"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.23.0+95.gd65ca51 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="introduction">
+<span id="foreword"></span><h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="what-is-borg">
+<h2>What is Borg?<a class="headerlink" href="#what-is-borg" title="Permalink to this headline">¶</a></h2>
+<p>Borg is a deduplicating backup program.
+Optionally, it also supports compression and authenticated encryption.</p>
+<p>The main goal of Borg is to provide an efficient and secure way to backup data.
+The data deduplication technique used makes Borg suitable for daily backups
+since only changes are stored.
+The authenticated encryption technique makes it suitable for backups to not
+fully trusted targets.</p>
+<div class="section" id="main-features">
+<h3>Main features<a class="headerlink" href="#main-features" title="Permalink to this headline">¶</a></h3>
+<dl class="docutils">
+<dt>Space efficient storage</dt>
+<dd><p class="first">Variable block size deduplication is used to reduce the number of bytes
+stored by detecting redundant data. Each file is split into a number of
+variable length chunks and only chunks that have never been seen before are
+added to the repository.</p>
+<p>The content-defined chunking based deduplication is applied to remove
+duplicate chunks within:</p>
+<ul class="simple">
+<li>the current backup data set (even inside single files / streams)</li>
+<li>current and previous backups of same machine</li>
+<li>all the chunks in the same repository, even if coming from other machines</li>
+</ul>
+<p>This advanced deduplication method does NOT depend on:</p>
+<ul class="last simple">
+<li>file/directory names staying the same (so you can move your stuff around
+without killing the deduplication, even between machines sharing a repo)</li>
+<li>complete files or time stamps staying the same (if a big file changes a
+little, only a few new chunks will be stored - this is great for VMs or
+raw disks)</li>
+<li>the absolute position of a data chunk inside a file (stuff may get shifted
+and will still be found by the deduplication algorithm)</li>
+</ul>
+</dd>
+<dt>Optional data encryption</dt>
+<dd>All data can be protected using 256-bit AES encryption and data integrity
+and authenticity is verified using HMAC-SHA256.</dd>
+<dt>Optional compression</dt>
+<dd>All data can be compressed (by zlib, level 0-9).</dd>
+<dt>Off-site backups</dt>
+<dd>Borg can store data on any remote host accessible over SSH.  This is
+most efficient if Borg is also installed on the remote host. If you can&#8217;t
+install Borg there, you can also use some network filesystem (sshfs, nfs,
+...), but it will be less efficient.</dd>
+<dt>Backups mountable as filesystems</dt>
+<dd>Backup archives are mountable as userspace filesystems for easy backup
+verification and restores.</dd>
+<dt>Platforms Borg works on</dt>
+<dd><ul class="first last simple">
+<li>Linux</li>
+<li>FreeBSD</li>
+<li>Mac OS X</li>
+<li>Cygwin (unsupported)</li>
+</ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="easy-to-use">
+<h3>Easy to use<a class="headerlink" href="#easy-to-use" title="Permalink to this headline">¶</a></h3>
+<p>Initialize a new backup repository and create a backup archive:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>borg init /mnt/backup
+<span class="nv">$ </span>borg create /mnt/backup::Monday ~/Documents
+</pre></div>
+</div>
+<p>Now doing another backup, just to show off the great deduplication:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>borg create --stats /mnt/backup::Tuesday ~/Documents
+
+Archive name: Tuesday
+Archive fingerprint: 387a5e3f9b0e792e91ce87134b0f4bfe17677d9248cb5337f3fbf3a8e157942a
+Start <span class="nb">time</span>: Tue Mar <span class="m">25</span> 12:00:10 2014
+End <span class="nb">time</span>:   Tue Mar <span class="m">25</span> 12:00:10 2014
+Duration: 0.08 seconds
+Number of files: 358
+                       Original size      Compressed size    Deduplicated size
+This archive:               57.16 MB             46.78 MB            151.67 kB
+All archives:              114.02 MB             93.46 MB             44.81 MB
+</pre></div>
+</div>
+<p>For a graphical frontend refer to our complementary project
+<a class="reference external" href="https://github.com/borgbackup/borgweb">BorgWeb</a>.</p>
+</div>
+</div>
+<div class="section" id="how-to-proceed-from-here">
+<h2>How to proceed from here<a class="headerlink" href="#how-to-proceed-from-here" title="Permalink to this headline">¶</a></h2>
+<p>Everything about requirements, installation, getting a quick start, usage
+reference, FAQ, support info, internals and developer infos is in our
+documentation:</p>
+<p>See <a class="reference external" href="https://borgbackup.github.io/">our online documentation</a>
+or alternatively read it in raw text form in the <cite>docs/*.rst</cite> files.</p>
+</div>
+<div class="section" id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Permalink to this headline">¶</a></h2>
+<p>Build status:
+<a class="reference external" href="https://travis-ci.org/borgbackup/borg"><img alt="Build Status" src="https://travis-ci.org/borgbackup/borg.svg" /></a></p>
+<p>Borg is a fork of <a class="reference external" href="https://github.com/jborg/attic">Attic</a> and maintained by
+&#8220;<a class="reference external" href="https://github.com/borgbackup/borg/blob/master/AUTHORS">The Borg Collective</a>&#8221;.</p>
+<p>BORG IS NOT COMPATIBLE WITH ORIGINAL ATTIC.
+EXPECT THAT WE WILL BREAK COMPATIBILITY REPEATEDLY WHEN MAJOR RELEASE NUMBER
+CHANGES (like when going from 0.x.y to 1.0.0). Please read CHANGES document.</p>
+<p>NOT RELEASED DEVELOPMENT VERSIONS HAVE UNKNOWN COMPATIBILITY PROPERTIES.</p>
+<p>THIS IS SOFTWARE IN DEVELOPMENT, DECIDE YOURSELF WHETHER IT FITS YOUR NEEDS.</p>
+<p>Read <a class="reference external" href="https://github.com/borgbackup/borg/issues/1">issue #1</a> on the issue
+tracker, goals are being defined there.</p>
+<p>For more information, please also see the
+<a class="reference external" href="https://github.com/borgbackup/borg/blob/master/LICENSE">LICENSE</a>.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="sidebarlogo">
+  <a href="index.html">
+  <div class="title">Borg</div>
+</a>
+</div>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Introduction</a><ul>
+<li><a class="reference internal" href="#what-is-borg">What is Borg?</a><ul>
+<li><a class="reference internal" href="#main-features">Main features</a></li>
+<li><a class="reference internal" href="#easy-to-use">Easy to use</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#how-to-proceed-from-here">How to proceed from here</a></li>
+<li><a class="reference internal" href="#notes">Notes</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Borg Documentation</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="installation.html"
+                        title="next chapter">Installation</a></p><a href="https://github.com/borgbackup/borg"><img style="position: fixed; top: 0; right: 0; border: 0;"
+  src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub"></a>
+
+<h3>Useful Links</h3>
+<ul>
+  <li><a href="https://borgbackup.github.io/borgbackup/">Main Web Site</a></li>
+  <li><a href="https://pypi.python.org/pypi/borgbackup">PyPI packages</a></li>
+  <li><a href="https://github.com/borgbackup/borg">GitHub</a></li>
+  <li><a href="https://github.com/borgbackup/borg/issues">Issue Tracker</a></li>
+  <li><a href="https://www.bountysource.com/teams/borgbackup">Bounties &amp; Fundraisers</a></li>
+  <li><a href="http://librelist.com/browser/borgbackup/">Mailing List</a></li>
+</ul>
+
+<h3>Related Projects</h3>
+<ul>
+  <li><a href="https://borgbackup.github.io/borgweb/">BorgWeb</a></li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="installation.html" title="Installation"
+             >next</a></li>
+        <li class="right" >
+          <a href="index.html" title="Borg Documentation"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.23.0+95.gd65ca51 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    </div>
+  </body>
+</html>

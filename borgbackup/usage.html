@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Usage &mdash; Borg - Deduplicating Archiver 0.23.0+99.g7e21d95 documentation</title>
+    <title>Usage &mdash; Borg - Deduplicating Archiver 0.24.0 documentation</title>
     
     <link rel="stylesheet" href="_static/local.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.23.0+99.g7e21d95',
+        VERSION:     '0.24.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="Borg - Deduplicating Archiver 0.23.0+99.g7e21d95 documentation" href="index.html" />
+    <link rel="top" title="Borg - Deduplicating Archiver 0.24.0 documentation" href="index.html" />
     <link rel="next" title="Frequently asked questions" href="faq.html" />
     <link rel="prev" title="Quick Start" href="quickstart.html" /> 
   </head>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="quickstart.html" title="Quick Start"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.23.0+99.g7e21d95 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.24.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -129,7 +129,7 @@ target repository, additional traffic happens for cache resynchronization.</dd>
 <div class="section" id="borg-init">
 <span id="id1"></span><h2>borg init<a class="headerlink" href="#borg-init" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-bash"><div class="highlight"><pre>usage: borg init <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>-v<span class="o">]</span> <span class="o">[</span>--no-files-cache<span class="o">]</span> <span class="o">[</span>--umask M<span class="o">]</span> <span class="o">[</span>--remote-path PATH<span class="o">]</span>
-                 <span class="o">[</span>-e <span class="o">{</span>none,passphrase,keyfile,repokey<span class="o">}]</span>
+                 <span class="o">[</span>-e <span class="o">{</span>none,keyfile,repokey,passphrase<span class="o">}]</span>
                  REPOSITORY
 
 Initialize an empty repository
@@ -140,18 +140,21 @@ positional arguments:
 optional arguments:
   -h, --help            show this <span class="nb">help </span>message and <span class="nb">exit</span>
   -v, --verbose         verbose output
-  --no-files-cache
+  --no-files-cache      <span class="k">do</span> not load/update the file metadata cache used to
+                        detect unchanged files
   --umask M             <span class="nb">set umask </span>to M <span class="o">(</span><span class="nb">local </span>and remote, default: 0o077<span class="o">)</span>
   --remote-path PATH    <span class="nb">set </span>remote path to executable <span class="o">(</span>default: <span class="s2">&quot;borg&quot;</span><span class="o">)</span>
-  -e <span class="o">{</span>none,passphrase,keyfile,repokey<span class="o">}</span>, --encryption <span class="o">{</span>none,passphrase,keyfile,repokey<span class="o">}</span>
-                        <span class="k">select</span> encryption method
+  -e <span class="o">{</span>none,keyfile,repokey,passphrase<span class="o">}</span>, --encryption <span class="o">{</span>none,keyfile,repokey,passphrase<span class="o">}</span>
+                        <span class="k">select</span> encryption key mode
 </pre></div>
 </div>
 <div class="section" id="description">
 <h3>Description<a class="headerlink" href="#description" title="Permalink to this headline">¶</a></h3>
 <p>This command initializes an empty repository. A repository is a filesystem
 directory containing the deduplicated data from zero or more archives.
-Encryption can be enabled at repository init time.</p>
+Encryption can be enabled at repository init time.
+Please note that the &#8216;passphrase&#8217; encryption mode is DEPRECATED (instead of it,
+consider using &#8216;repokey&#8217;).</p>
 </div>
 <div class="section" id="examples">
 <h3>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h3>
@@ -214,7 +217,8 @@ positional arguments:
 optional arguments:
   -h, --help            show this <span class="nb">help </span>message and <span class="nb">exit</span>
   -v, --verbose         verbose output
-  --no-files-cache
+  --no-files-cache      <span class="k">do</span> not load/update the file metadata cache used to
+                        detect unchanged files
   --umask M             <span class="nb">set umask </span>to M <span class="o">(</span><span class="nb">local </span>and remote, default: 0o077<span class="o">)</span>
   --remote-path PATH    <span class="nb">set </span>remote path to executable <span class="o">(</span>default: <span class="s2">&quot;borg&quot;</span><span class="o">)</span>
   -s, --stats           print statistics <span class="k">for</span> the created archive
@@ -290,7 +294,8 @@ positional arguments:
 optional arguments:
   -h, --help            show this <span class="nb">help </span>message and <span class="nb">exit</span>
   -v, --verbose         verbose output
-  --no-files-cache
+  --no-files-cache      <span class="k">do</span> not load/update the file metadata cache used to
+                        detect unchanged files
   --umask M             <span class="nb">set umask </span>to M <span class="o">(</span><span class="nb">local </span>and remote, default: 0o077<span class="o">)</span>
   --remote-path PATH    <span class="nb">set </span>remote path to executable <span class="o">(</span>default: <span class="s2">&quot;borg&quot;</span><span class="o">)</span>
   -n, --dry-run         <span class="k">do</span> not actually change any files
@@ -342,34 +347,65 @@ be restricted by using the <code class="docutils literal"><span class="pre">--ex
 <div class="highlight-bash"><div class="highlight"><pre>usage: borg check <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>-v<span class="o">]</span> <span class="o">[</span>--no-files-cache<span class="o">]</span> <span class="o">[</span>--umask M<span class="o">]</span>
                   <span class="o">[</span>--remote-path PATH<span class="o">]</span> <span class="o">[</span>--repository-only<span class="o">]</span> <span class="o">[</span>--archives-only<span class="o">]</span>
                   <span class="o">[</span>--repair<span class="o">]</span> <span class="o">[</span>--last N<span class="o">]</span>
-                  REPOSITORY
+                  REPOSITORY_OR_ARCHIVE
 
 Check repository consistency
 
 positional arguments:
-  REPOSITORY          repository to check consistency of
+  REPOSITORY_OR_ARCHIVE
+                        repository or archive to check consistency of
 
 optional arguments:
-  -h, --help          show this <span class="nb">help </span>message and <span class="nb">exit</span>
-  -v, --verbose       verbose output
-  --no-files-cache
-  --umask M           <span class="nb">set umask </span>to M <span class="o">(</span><span class="nb">local </span>and remote, default: 0o077<span class="o">)</span>
-  --remote-path PATH  <span class="nb">set </span>remote path to executable <span class="o">(</span>default: <span class="s2">&quot;borg&quot;</span><span class="o">)</span>
-  --repository-only   only perform repository checks
-  --archives-only     only perform archives checks
-  --repair            attempt to repair any inconsistencies found
-  --last N            only check last N archives <span class="o">(</span>Default: all<span class="o">)</span>
+  -h, --help            show this <span class="nb">help </span>message and <span class="nb">exit</span>
+  -v, --verbose         verbose output
+  --no-files-cache      <span class="k">do</span> not load/update the file metadata cache used to
+                        detect unchanged files
+  --umask M             <span class="nb">set umask </span>to M <span class="o">(</span><span class="nb">local </span>and remote, default: 0o077<span class="o">)</span>
+  --remote-path PATH    <span class="nb">set </span>remote path to executable <span class="o">(</span>default: <span class="s2">&quot;borg&quot;</span><span class="o">)</span>
+  --repository-only     only perform repository checks
+  --archives-only       only perform archives checks
+  --repair              attempt to repair any inconsistencies found
+  --last N              only check last N archives <span class="o">(</span>Default: all<span class="o">)</span>
 </pre></div>
 </div>
 <div class="section" id="id9">
 <h3>Description<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h3>
-<p>The check command verifies the consistency of a repository and the corresponding
-archives. The underlying repository data files are first checked to detect bit rot
-and other types of damage. After that the consistency and correctness of the archive
-metadata is verified.</p>
-<p>The archive metadata checks can be time consuming and requires access to the key
-file and/or passphrase if encryption is enabled. These checks can be skipped using
-the &#8211;repository-only option.</p>
+<p>The check command verifies the consistency of a repository and the corresponding archives.</p>
+<p>First, the underlying repository data files are checked:
+- For all segments the segment magic (header) is checked
+- For all objects stored in the segments, all metadata (e.g. crc and size) and</p>
+<blockquote>
+<div>all data is read. The read data is checked by size and CRC. Bit rot and other
+types of accidental damage can be detected this way.</div></blockquote>
+<ul class="simple">
+<li>If we are in repair mode and a integrity error is detected for a segment,
+we try to recover as many objects from the segment as possible.</li>
+<li>In repair mode, it makes sure that the index is consistent with the data
+stored in the segments.</li>
+<li>If you use a remote repo server via ssh:, the repo check is executed on the
+repo server without causing significant network traffic.</li>
+<li>The repository check can be skipped using the &#8211;archives-only option.</li>
+</ul>
+<p>Second, the consistency and correctness of the archive metadata is verified:
+- Is the repo manifest present? If not, it is rebuilt from archive metadata</p>
+<blockquote>
+<div>chunks (this requires reading and decrypting of all metadata and data).</div></blockquote>
+<ul class="simple">
+<li>Check if archive metadata chunk is present. if not, remove archive from
+manifest.</li>
+<li>For all files (items) in the archive, for all chunks referenced by these
+files, check if chunk is present (if not and we are in repair mode, replace
+it with a same-size chunk of zeros). This requires reading of archive and
+file metadata, but not data.</li>
+<li>If we are in repair mode and we checked all the archives: delete orphaned
+chunks from the repo.</li>
+<li>if you use a remote repo server via ssh:, the archive check is executed on
+the client machine (because if encryption is enabled, the checks will require
+decryption and this is always done client-side, because key access will be
+required).</li>
+<li>The archive checks can be time consuming, they can be skipped using the
+&#8211;repository-only option.</li>
+</ul>
 </div>
 </div>
 <div class="section" id="borg-delete">
@@ -386,7 +422,8 @@ positional arguments:
 optional arguments:
   -h, --help          show this <span class="nb">help </span>message and <span class="nb">exit</span>
   -v, --verbose       verbose output
-  --no-files-cache
+  --no-files-cache    <span class="k">do</span> not load/update the file metadata cache used to
+                      detect unchanged files
   --umask M           <span class="nb">set umask </span>to M <span class="o">(</span><span class="nb">local </span>and remote, default: 0o077<span class="o">)</span>
   --remote-path PATH  <span class="nb">set </span>remote path to executable <span class="o">(</span>default: <span class="s2">&quot;borg&quot;</span><span class="o">)</span>
   -s, --stats         print statistics <span class="k">for</span> the deleted archive
@@ -413,7 +450,8 @@ positional arguments:
 optional arguments:
   -h, --help            show this <span class="nb">help </span>message and <span class="nb">exit</span>
   -v, --verbose         verbose output
-  --no-files-cache
+  --no-files-cache      <span class="k">do</span> not load/update the file metadata cache used to
+                        detect unchanged files
   --umask M             <span class="nb">set umask </span>to M <span class="o">(</span><span class="nb">local </span>and remote, default: 0o077<span class="o">)</span>
   --remote-path PATH    <span class="nb">set </span>remote path to executable <span class="o">(</span>default: <span class="s2">&quot;borg&quot;</span><span class="o">)</span>
 </pre></div>
@@ -458,7 +496,8 @@ positional arguments:
 optional arguments:
   -h, --help            show this <span class="nb">help </span>message and <span class="nb">exit</span>
   -v, --verbose         verbose output
-  --no-files-cache
+  --no-files-cache      <span class="k">do</span> not load/update the file metadata cache used to
+                        detect unchanged files
   --umask M             <span class="nb">set umask </span>to M <span class="o">(</span><span class="nb">local </span>and remote, default: 0o077<span class="o">)</span>
   --remote-path PATH    <span class="nb">set </span>remote path to executable <span class="o">(</span>default: <span class="s2">&quot;borg&quot;</span><span class="o">)</span>
   -n, --dry-run         <span class="k">do</span> not change repository
@@ -531,7 +570,8 @@ positional arguments:
 optional arguments:
   -h, --help          show this <span class="nb">help </span>message and <span class="nb">exit</span>
   -v, --verbose       verbose output
-  --no-files-cache
+  --no-files-cache    <span class="k">do</span> not load/update the file metadata cache used to
+                      detect unchanged files
   --umask M           <span class="nb">set umask </span>to M <span class="o">(</span><span class="nb">local </span>and remote, default: 0o077<span class="o">)</span>
   --remote-path PATH  <span class="nb">set </span>remote path to executable <span class="o">(</span>default: <span class="s2">&quot;borg&quot;</span><span class="o">)</span>
 </pre></div>
@@ -573,7 +613,8 @@ positional arguments:
 optional arguments:
   -h, --help            show this <span class="nb">help </span>message and <span class="nb">exit</span>
   -v, --verbose         verbose output
-  --no-files-cache
+  --no-files-cache      <span class="k">do</span> not load/update the file metadata cache used to
+                        detect unchanged files
   --umask M             <span class="nb">set umask </span>to M <span class="o">(</span><span class="nb">local </span>and remote, default: 0o077<span class="o">)</span>
   --remote-path PATH    <span class="nb">set </span>remote path to executable <span class="o">(</span>default: <span class="s2">&quot;borg&quot;</span><span class="o">)</span>
   -f, --foreground      stay in foreground, <span class="k">do</span> not daemonize
@@ -611,7 +652,8 @@ positional arguments:
 optional arguments:
   -h, --help          show this <span class="nb">help </span>message and <span class="nb">exit</span>
   -v, --verbose       verbose output
-  --no-files-cache
+  --no-files-cache    <span class="k">do</span> not load/update the file metadata cache used to
+                      detect unchanged files
   --umask M           <span class="nb">set umask </span>to M <span class="o">(</span><span class="nb">local </span>and remote, default: 0o077<span class="o">)</span>
   --remote-path PATH  <span class="nb">set </span>remote path to executable <span class="o">(</span>default: <span class="s2">&quot;borg&quot;</span><span class="o">)</span>
 </pre></div>
@@ -652,7 +694,8 @@ Start in server mode. This <span class="nb">command </span>is usually not used m
 optional arguments:
   -h, --help            show this <span class="nb">help </span>message and <span class="nb">exit</span>
   -v, --verbose         verbose output
-  --no-files-cache
+  --no-files-cache      <span class="k">do</span> not load/update the file metadata cache used to
+                        detect unchanged files
   --umask M             <span class="nb">set umask </span>to M <span class="o">(</span><span class="nb">local </span>and remote, default: 0o077<span class="o">)</span>
   --remote-path PATH    <span class="nb">set </span>remote path to executable <span class="o">(</span>default: <span class="s2">&quot;borg&quot;</span><span class="o">)</span>
   --restrict-to-path PATH
@@ -798,7 +841,7 @@ optional arguments:
         <li class="right" >
           <a href="quickstart.html" title="Quick Start"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.23.0+99.g7e21d95 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.24.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

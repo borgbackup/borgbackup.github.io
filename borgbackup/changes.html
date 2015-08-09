@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Borg Changelog &mdash; Borg - Deduplicating Archiver 0.23.0+99.g7e21d95 documentation</title>
+    <title>Borg Changelog &mdash; Borg - Deduplicating Archiver 0.24.0 documentation</title>
     
     <link rel="stylesheet" href="_static/local.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.23.0+99.g7e21d95',
+        VERSION:     '0.24.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="Borg - Deduplicating Archiver 0.23.0+99.g7e21d95 documentation" href="index.html" />
+    <link rel="top" title="Borg - Deduplicating Archiver 0.24.0 documentation" href="index.html" />
     <link rel="next" title="Internals" href="internals.html" />
     <link rel="prev" title="Support" href="support.html" /> 
   </head>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="support.html" title="Support"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.23.0+99.g7e21d95 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.24.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -58,8 +58,13 @@ for remote repos as for local ones. Because of this, you must upgrade both
 server and client(s) to 0.24.</li>
 <li>the default umask is 077 now (if you do not specify via &#8211;umask) which might
 be a different one as you used previously. The default umask avoids that
-you accidentially give access permissions for group and/or others to files
+you accidentally give access permissions for group and/or others to files
 created by borg (e.g. the repository).</li>
+</ul>
+<p>Deprecations:</p>
+<ul class="simple">
+<li>&#8220;&#8211;encryption passphrase&#8221; mode is deprecated, see #85 and #97.
+See the new &#8220;&#8211;encryption repokey&#8221; mode for a replacement.</li>
 </ul>
 <p>New features:</p>
 <ul class="simple">
@@ -73,16 +78,20 @@ See docs/misc/create_chunker-params.txt for more information.</li>
 <li>borg create &#8211;compression 0..9 to select zlib compression level, fixes #66
 (attic #295).</li>
 <li>borg init &#8211;encryption repokey (to store the encryption key into the repo),
-deprecate &#8211;encryption passphrase, fixes #85</li>
+fixes #85</li>
 <li>improve at-end error logging, always log exceptions and set exit_code=1</li>
 <li>LoggedIO: better error checks / exceptions / exception handling</li>
 <li>implement &#8211;remote-path to allow non-default-path borg locations, #125</li>
 <li>implement &#8211;umask M and use 077 as default umask for better security, #117</li>
+<li>borg check: give a named single archive to it, fixes #139</li>
+<li>cache sync: show progress indication</li>
+<li>cache sync: reimplement the chunk index merging in C</li>
 </ul>
 <p>Bug fixes:</p>
 <ul class="simple">
 <li>fix segfault that happened for unreadable files (chunker: n needs to be a
 signed size_t), #116</li>
+<li>fix the repair mode, #144</li>
 <li>repo delete: add destroy to allowed rpc methods, fixes issue #114</li>
 <li>more compatible repository locking code (based on mkdir), maybe fixes #92
 (attic #317, attic #201).</li>
@@ -91,6 +100,7 @@ signed size_t), #116</li>
 fixes attic #326.</li>
 <li>fix Traceback when running check &#8211;repair, attic #232</li>
 <li>clarify help text, fixes #73.</li>
+<li>add help string for &#8211;no-files-cache, fixes #140</li>
 </ul>
 <p>Other changes:</p>
 <ul class="simple">
@@ -105,20 +115,25 @@ fixes attic #326.</li>
 <li>add FAQ entries about redundancy / integrity</li>
 <li>clarify that borg extract uses the cwd as extraction target</li>
 <li>update internals doc about chunker params, memory usage and compression</li>
-<li>add some words about resource usage</li>
-<li>document how to backup raw disk</li>
+<li>added docs about development</li>
+<li>add some words about resource usage in general</li>
+<li>document how to backup a raw disk</li>
 <li>add note about how to run borg from virtual env</li>
 <li>add solutions for (ll)fuse installation problems</li>
-<li>tested and updated cygwin docs</li>
+<li>document what borg check does, fixes #138</li>
+<li>reorganize borgbackup.github.io sidebar, prev/next at top</li>
+<li>deduplicate and refactor the docs / README.rst</li>
 </ul>
 </li>
 <li>use borg-tmp as prefix for temporary files / directories</li>
 <li>short prune options without &#8220;keep-&#8221; are deprecated, do not suggest them</li>
-<li>improved tox configuration, documented there how to invoke it</li>
+<li>improved tox configuration</li>
 <li>remove usage of unittest.mock, always use mock from pypi</li>
 <li>use entrypoints instead of scripts, for better use of the wheel format and
 modern installs</li>
 <li>add requirements.d/development.txt and modify tox.ini</li>
+<li>use travis-ci for testing based on Linux and (new) OS X</li>
+<li>use coverage.py, pytest-cov and codecov.io for test coverage support</li>
 </ul>
 <p>I forgot to list some stuff already implemented in 0.23.0, here they are:</p>
 <p>New features:</p>
@@ -451,7 +466,7 @@ not just the file name part (#5).</li>
         <li class="right" >
           <a href="support.html" title="Support"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.23.0+99.g7e21d95 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.24.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

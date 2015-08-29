@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Frequently asked questions &mdash; Borg - Deduplicating Archiver 0.24.0+1.g8223790 documentation</title>
+    <title>Frequently asked questions &mdash; Borg - Deduplicating Archiver 0.25.0 documentation</title>
     
     <link rel="stylesheet" href="_static/local.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.24.0+1.g8223790',
+        VERSION:     '0.25.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,8 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="Borg - Deduplicating Archiver 0.24.0+1.g8223790 documentation" href="index.html" />
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+    <link rel="top" title="Borg - Deduplicating Archiver 0.25.0 documentation" href="index.html" />
     <link rel="next" title="Support" href="support.html" />
     <link rel="prev" title="Usage" href="usage.html" /> 
   </head>
@@ -37,7 +38,7 @@
         <li class="right" >
           <a href="usage.html" title="Usage"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.24.0+1.g8223790 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.25.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -129,6 +130,18 @@ retransmitted if a backup needs to be restarted.</dd>
 </pre></div>
 </div>
 </dd>
+<dt>I can&#8217;t extract non-ascii filenames by giving them on the commandline on OS X!?</dt>
+<dd><p class="first">This is due to different ways to represent some characters in unicode.
+HFS+ likes the decomposed form while the commandline seems to be the composed
+form usually. If you run into that, for now maybe just try:</p>
+<ul class="simple">
+<li>avoiding the non-ascii characters on the commandline by e.g. extracting
+the parent directory (or even everything)</li>
+<li>try to enter the composed form on the commandline</li>
+<li>mount the repo using FUSE and use some file manager</li>
+</ul>
+<p class="last">See issue #143 on the issue tracker for more about this.</p>
+</dd>
 <dt>If I want to run <code class="docutils literal"><span class="pre">Borg</span></code> on a ARM CPU older than ARM v6?</dt>
 <dd><p class="first">You need to enable the alignment trap handler to fixup misaligned accesses:</p>
 <div class="last highlight-bash"><div class="highlight"><pre><span class="nb">echo</span> <span class="s2">&quot;2&quot;</span> &gt; /proc/cpu/alignment
@@ -140,7 +153,8 @@ retransmitted if a backup needs to be restarted.</dd>
 defect HDD sectors or SSD flash blocks, dealing with this in a reliable way needs a lot
 of low-level storage layout information and control which we do not have (and also can&#8217;t
 get, even if we wanted).</p>
-<p class="last">So, if you need that, consider RAID1 or a filesystems that offers redundant storage.</p>
+<p class="last">So, if you need that, consider RAID1 or a filesystem that offers redundant storage
+or just make 2 backups to different locations / different hardware.</p>
 </dd>
 <dt>Can <code class="docutils literal"><span class="pre">Borg</span></code> verify data integrity of a backup archive?</dt>
 <dd>Yes, if you want to detect accidental data damage (like bit rot), use the <code class="docutils literal"><span class="pre">check</span></code>
@@ -239,7 +253,7 @@ or without warning. allow compatibility breaking for other cases.</li>
         <li class="right" >
           <a href="usage.html" title="Usage"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.24.0+1.g8223790 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.25.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

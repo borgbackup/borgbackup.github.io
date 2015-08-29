@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Borg Changelog &mdash; Borg - Deduplicating Archiver 0.24.0+1.g8223790 documentation</title>
+    <title>Borg Changelog &mdash; Borg - Deduplicating Archiver 0.25.0 documentation</title>
     
     <link rel="stylesheet" href="_static/local.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.24.0+1.g8223790',
+        VERSION:     '0.25.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,8 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="Borg - Deduplicating Archiver 0.24.0+1.g8223790 documentation" href="index.html" />
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+    <link rel="top" title="Borg - Deduplicating Archiver 0.25.0 documentation" href="index.html" />
     <link rel="next" title="Internals" href="internals.html" />
     <link rel="prev" title="Support" href="support.html" /> 
   </head>
@@ -37,7 +38,7 @@
         <li class="right" >
           <a href="support.html" title="Support"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.24.0+1.g8223790 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.25.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -48,6 +49,73 @@
             
   <div class="section" id="borg-changelog">
 <span id="changelog"></span><h1>Borg Changelog<a class="headerlink" href="#borg-changelog" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="version-0-25-0">
+<h2>Version 0.25.0<a class="headerlink" href="#version-0-25-0" title="Permalink to this headline">¶</a></h2>
+<p>Compatibility notes:</p>
+<ul class="simple">
+<li>lz4 compression library (liblz4) is a new requirement (#156)</li>
+<li>the new compression code is very compatible: as long as you stay with zlib
+compression, older borg releases will still be able to read data from a
+repo/archive made with the new code (note: this is not the case for the
+default &#8220;none&#8221; compression, use &#8220;zlib,0&#8221; if you want a &#8220;no compression&#8221; mode
+that can be read by older borg). Also the new code is able to read repos and
+archives made with older borg versions (for all zlib levels  0..9).</li>
+</ul>
+<p>Deprecations:</p>
+<ul class="simple">
+<li>&#8211;compression N (with N being a number, as in 0.24) is deprecated.
+We keep the &#8211;compression 0..9 for now to not break scripts, but it is
+deprecated and will be removed later, so better fix your scripts now:
+&#8211;compression 0 (as in 0.24) is the same as &#8211;compression zlib,0 (now).
+BUT: if you do not want compression, you rather want &#8211;compression none
+(which is the default).
+&#8211;compression 1 (in 0.24) is the same as &#8211;compression zlib,1 (now)
+&#8211;compression 9 (in 0.24) is the same as &#8211;compression zlib,9 (now)</li>
+</ul>
+<p>New features:</p>
+<ul class="simple">
+<li>create &#8211;compression none (default, means: do not compress, just pass through
+data &#8220;as is&#8221;. this is more efficient than zlib level 0 as used in borg 0.24)</li>
+<li>create &#8211;compression lz4 (super-fast, but not very high compression)</li>
+<li>create &#8211;compression zlib,N (slower, higher compression, default for N is 6)</li>
+<li>create &#8211;compression lzma,N (slowest, highest compression, default N is 6)</li>
+<li>honor the nodump flag (UF_NODUMP) and do not backup such items</li>
+<li>list &#8211;short just outputs a simple list of the files/directories in an archive</li>
+</ul>
+<p>Bug fixes:</p>
+<ul class="simple">
+<li>fixed &#8211;chunker-params parameter order confusion / malfunction, fixes #154</li>
+<li>close fds of segments we delete (during compaction)</li>
+<li>close files which fell out the lrucache</li>
+<li>fadvise DONTNEED now is only called for the byte range actually read, not for
+the whole file, fixes #158.</li>
+<li>fix issue with negative &#8220;all archives&#8221; size, fixes #165</li>
+<li>restore_xattrs: ignore if setxattr fails with EACCES, fixes #162</li>
+</ul>
+<p>Other changes:</p>
+<ul class="simple">
+<li>remove fakeroot requirement for tests, tests run faster without fakeroot
+(test setup does not fail any more without fakeroot, so you can run with or
+without fakeroot), fixes #151 and #91.</li>
+<li>more tests for archiver</li>
+<li>recover_segment(): don&#8217;t assume we have an fd for segment</li>
+<li>lrucache refactoring / cleanup, add dispose function, py.test tests</li>
+<li>generalize hashindex code for any key length (less hardcoding)</li>
+<li>lock roster: catch file not found in remove() method and ignore it</li>
+<li>travis CI: use requirements file</li>
+<li>improved docs:<ul>
+<li>replace hack for llfuse with proper solution (install libfuse-dev)</li>
+<li>update docs about compression</li>
+<li>update development docs about fakeroot</li>
+<li>internals: add some words about lock files / locking system</li>
+<li>support: mention BountySource and for what it can be used</li>
+<li>theme: use a lighter green</li>
+<li>add pypi, wheel, dist package based install docs</li>
+<li>split install docs into system-specific preparations and generic instructions</li>
+</ul>
+</li>
+</ul>
+</div>
 <div class="section" id="version-0-24-0">
 <h2>Version 0.24.0<a class="headerlink" href="#version-0-24-0" title="Permalink to this headline">¶</a></h2>
 <p>Incompatible changes (compared to 0.23):</p>
@@ -413,6 +481,7 @@ not just the file name part (#5).</li>
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Borg Changelog</a><ul>
+<li><a class="reference internal" href="#version-0-25-0">Version 0.25.0</a></li>
 <li><a class="reference internal" href="#version-0-24-0">Version 0.24.0</a></li>
 <li><a class="reference internal" href="#version-0-23-0">Version 0.23.0</a></li>
 </ul>
@@ -468,7 +537,7 @@ not just the file name part (#5).</li>
         <li class="right" >
           <a href="support.html" title="Support"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.24.0+1.g8223790 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.25.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

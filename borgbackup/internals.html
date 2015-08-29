@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Internals &mdash; Borg - Deduplicating Archiver 0.24.0+1.g8223790 documentation</title>
+    <title>Internals &mdash; Borg - Deduplicating Archiver 0.25.0 documentation</title>
     
     <link rel="stylesheet" href="_static/local.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.24.0+1.g8223790',
+        VERSION:     '0.25.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,8 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="Borg - Deduplicating Archiver 0.24.0+1.g8223790 documentation" href="index.html" />
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+    <link rel="top" title="Borg - Deduplicating Archiver 0.25.0 documentation" href="index.html" />
     <link rel="next" title="Development" href="development.html" />
     <link rel="prev" title="Borg Changelog" href="changes.html" /> 
   </head>
@@ -37,7 +38,7 @@
         <li class="right" >
           <a href="changes.html" title="Borg Changelog"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.24.0+1.g8223790 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.25.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -51,7 +52,6 @@
 <p>This page documents the internal data structures and storage
 mechanisms of <code class="docutils literal"><span class="pre">Borg</span></code>. It is partly based on <a class="reference external" href="http://librelist.com/browser/attic/2014/5/6/questions-and-suggestions-about-inner-working-of-attic&gt;">mailing list
 discussion about internals</a> and also on static code analysis.</p>
-<p>It may not be exactly up to date with the current source code.</p>
 <div class="section" id="repository-and-archives">
 <h2>Repository and Archives<a class="headerlink" href="#repository-and-archives" title="Permalink to this headline">¶</a></h2>
 <p><code class="docutils literal"><span class="pre">Borg</span></code> stores its data in a <cite>Repository</cite>. Each repository can
@@ -75,6 +75,25 @@ algorithm.</p>
 <dt>lock.roster and lock.exclusive/*</dt>
 <dd>used by the locking system to manage shared and exclusive locks</dd>
 </dl>
+</div>
+<div class="section" id="lock-files">
+<h2>Lock files<a class="headerlink" href="#lock-files" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal"><span class="pre">Borg</span></code> uses locks to get (exclusive or shared) access to the cache and
+the repository.</p>
+<p>The locking system is based on creating a directory <cite>lock.exclusive</cite> (for
+exclusive locks). Inside the lock directory, there is a file indication
+hostname, process id and thread id of the lock holder.</p>
+<p>There is also a json file <cite>lock.roster</cite> that keeps a directory of all shared
+and exclusive lockers.</p>
+<p>If the process can create the <cite>lock.exclusive</cite> directory for a resource, it has
+the lock for it. If creation fails (because the directory has already been
+created by some other process), lock acquisition fails.</p>
+<p>The cache lock is usually in <cite>~/.cache/borg/REPOID/lock.*</cite>.
+The repository lock is in <cite>repository/lock.*</cite>.</p>
+<p>In case you run into troubles with the locks, you can just delete the <cite>lock.*</cite>
+directory and file IF you first make sure that no <code class="docutils literal"><span class="pre">Borg</span></code> process is
+running on any machine that accesses this resource. Be very careful, the cache
+or repository might get damaged if multiple processes use it at the same time.</p>
 </div>
 <div class="section" id="config-file">
 <h2>Config file<a class="headerlink" href="#config-file" title="Permalink to this headline">¶</a></h2>
@@ -149,6 +168,9 @@ It contains:</p>
 </ul>
 <p>It is the last object stored, in the last segment, and is replaced
 each time.</p>
+</div>
+<div class="section" id="the-archive">
+<h2>The Archive<a class="headerlink" href="#the-archive" title="Permalink to this headline">¶</a></h2>
 <p>The archive metadata does not contain the file items directly. Only
 references to other objects that contain that data. An archive is an
 object that contains:</p>
@@ -161,6 +183,9 @@ object that contains:</p>
 <li>username</li>
 <li>time</li>
 </ul>
+</div>
+<div class="section" id="the-item">
+<h2>The Item<a class="headerlink" href="#the-item" title="Permalink to this headline">¶</a></h2>
 <p>Each item represents a file, directory or other fs item and is stored as an
 <code class="docutils literal"><span class="pre">item</span></code> dictionary that contains:</p>
 <ul class="simple">
@@ -210,7 +235,7 @@ what files you have based on a specific set of chunk sizes).</p>
 </div>
 <div class="section" id="indexes-caches">
 <h2>Indexes / Caches<a class="headerlink" href="#indexes-caches" title="Permalink to this headline">¶</a></h2>
-<p>The files cache is stored in <code class="docutils literal"><span class="pre">cache/files</span></code> and is indexed on the
+<p>The <strong>files cache</strong> is stored in <code class="docutils literal"><span class="pre">cache/files</span></code> and is indexed on the
 <code class="docutils literal"><span class="pre">file</span> <span class="pre">path</span> <span class="pre">hash</span></code>. At backup time, it is used to quickly determine whether we
 need to chunk a given file (or whether it is unchanged and we already have all
 its pieces).
@@ -227,7 +252,7 @@ different files, as a single path may not be unique across different
 archives in different setups.</p>
 <p>The files cache is stored as a python associative array storing
 python objects, which generates a lot of overhead.</p>
-<p>The chunks cache is stored in <code class="docutils literal"><span class="pre">cache/chunks</span></code> and is indexed on the
+<p>The <strong>chunks cache</strong> is stored in <code class="docutils literal"><span class="pre">cache/chunks</span></code> and is indexed on the
 <code class="docutils literal"><span class="pre">chunk</span> <span class="pre">id_hash</span></code>. It is used to determine whether we already have a specific
 chunk, to count references to it and also for statistics.
 It contains:</p>
@@ -236,7 +261,7 @@ It contains:</p>
 <li>size</li>
 <li>encrypted/compressed size</li>
 </ul>
-<p>The repository index is stored in <code class="docutils literal"><span class="pre">repo/index.%d</span></code> and is indexed on the
+<p>The <strong>repository index</strong> is stored in <code class="docutils literal"><span class="pre">repo/index.%d</span></code> and is indexed on the
 <code class="docutils literal"><span class="pre">chunk</span> <span class="pre">id_hash</span></code>. It is used to determine a chunk&#8217;s location in the repository.
 It contains:</p>
 <ul class="simple">
@@ -366,11 +391,33 @@ representation of the repository id.</p>
 </div>
 <div class="section" id="compression">
 <h2>Compression<a class="headerlink" href="#compression" title="Permalink to this headline">¶</a></h2>
-<p><code class="docutils literal"><span class="pre">Borg</span></code> currently always pipes all data through a zlib compressor which
-supports compression levels 0 (no compression, fast) to 9 (high compression, slow).</p>
+<p><code class="docutils literal"><span class="pre">Borg</span></code> supports the following compression methods:</p>
+<ul class="simple">
+<li>none (no compression, pass through data 1:1)</li>
+<li>lz4 (low compression, but super fast)</li>
+<li>zlib (level 0-9, level 0 is no compression [but still adding zlib overhead],
+level 1 is low, level 9 is high compression)</li>
+<li>lzma (level 0-9, level 0 is low, level 9 is high compression).</li>
+</ul>
+<p>Speed:  none &gt; lz4 &gt; zlib &gt; lzma
+Compression: lzma &gt; zlib &gt; lz4 &gt; none</p>
+<p>Be careful, higher zlib and especially lzma compression levels might take a
+lot of resources (CPU and memory).</p>
+<p>The overall speed of course also depends on the speed of your target storage.
+If that is slow, using a higher compression level might yield better overall
+performance. You need to experiment a bit. Maybe just watch your CPU load, if
+that is relatively low, increase compression until 1 core is 70-100% loaded.</p>
+<p>Even if your target storage is rather fast, you might see interesting effects:
+while doing no compression at all (none) is a operation that takes no time, it
+likely will need to store more data to the storage compared to using lz4.
+The time needed to transfer and store the additional data might be much more
+than if you had used lz4 (which is super fast, but still might compress your
+data about 2:1). This is assuming your data is compressible (if you backup
+already compressed data, trying to compress them at backup time is usually
+pointless).</p>
+<p>Compression is applied after deduplication, thus using different compression
+methods in one repo does not influence deduplication.</p>
 <p>See <code class="docutils literal"><span class="pre">borg</span> <span class="pre">create</span> <span class="pre">--help</span></code> about how to specify the compression level and its default.</p>
-<p>Note: zlib level 0 creates a little bit more output data than it gets as input,
-due to zlib protocol overhead.</p>
 </div>
 </div>
 
@@ -407,10 +454,13 @@ due to zlib protocol overhead.</p>
   <ul>
 <li><a class="reference internal" href="#">Internals</a><ul>
 <li><a class="reference internal" href="#repository-and-archives">Repository and Archives</a></li>
+<li><a class="reference internal" href="#lock-files">Lock files</a></li>
 <li><a class="reference internal" href="#config-file">Config file</a></li>
 <li><a class="reference internal" href="#keys">Keys</a></li>
 <li><a class="reference internal" href="#segments-and-archives">Segments and archives</a></li>
 <li><a class="reference internal" href="#the-manifest">The manifest</a></li>
+<li><a class="reference internal" href="#the-archive">The Archive</a></li>
+<li><a class="reference internal" href="#the-item">The Item</a></li>
 <li><a class="reference internal" href="#chunks">Chunks</a></li>
 <li><a class="reference internal" href="#indexes-caches">Indexes / Caches</a></li>
 <li><a class="reference internal" href="#indexes-caches-memory-usage">Indexes / Caches memory usage</a></li>
@@ -453,7 +503,7 @@ due to zlib protocol overhead.</p>
         <li class="right" >
           <a href="changes.html" title="Borg Changelog"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.24.0+1.g8223790 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.25.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

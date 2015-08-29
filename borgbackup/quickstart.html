@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Quick Start &mdash; Borg - Deduplicating Archiver 0.24.0+1.g8223790 documentation</title>
+    <title>Quick Start &mdash; Borg - Deduplicating Archiver 0.25.0 documentation</title>
     
     <link rel="stylesheet" href="_static/local.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.24.0+1.g8223790',
+        VERSION:     '0.25.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,8 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="Borg - Deduplicating Archiver 0.24.0+1.g8223790 documentation" href="index.html" />
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+    <link rel="top" title="Borg - Deduplicating Archiver 0.25.0 documentation" href="index.html" />
     <link rel="next" title="Usage" href="usage.html" />
     <link rel="prev" title="Installation" href="installation.html" /> 
   </head>
@@ -37,7 +38,7 @@
         <li class="right" >
           <a href="installation.html" title="Installation"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.24.0+1.g8223790 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.25.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -141,10 +142,28 @@ borg prune -v <span class="nv">$REPOSITORY</span> --keep-daily<span class="o">=<
 </pre></div>
 </div>
 </div>
+<div class="section" id="backup-compression">
+<h2>Backup compression<a class="headerlink" href="#backup-compression" title="Permalink to this headline">¶</a></h2>
+<p>Default is no compression, but we support different methods with high speed
+or high compression:</p>
+<p>If you have a quick repo storage and you want a little compression:</p>
+<blockquote>
+<div>$ borg create &#8211;compression lz4 /mnt/backup::repo ~</div></blockquote>
+<p>If you have a medium fast repo storage and you want a bit more compression (N=0..9,
+0 means no compression, 9 means high compression):</p>
+<blockquote>
+<div>$ borg create &#8211;compression zlib,N /mnt/backup::repo ~</div></blockquote>
+<p>If you have a very slow repo storage and you want high compression (N=0..9, 0 means
+low compression, 9 means high compression):</p>
+<blockquote>
+<div>$ borg create &#8211;compression lzma,N /mnt/backup::repo ~</div></blockquote>
+<p>You&#8217;ll need to experiment a bit to find the best compression for your use case.
+Keep an eye on CPU load and throughput.</p>
+</div>
 <div class="section" id="repository-encryption">
 <span id="encrypted-repos"></span><h2>Repository encryption<a class="headerlink" href="#repository-encryption" title="Permalink to this headline">¶</a></h2>
 <p>Repository encryption is enabled at repository creation time:</p>
-<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>borg init --encryption<span class="o">=</span>passphrase<span class="p">|</span>keyfile PATH
+<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>borg init --encryption<span class="o">=</span>repokey<span class="p">|</span>keyfile PATH
 </pre></div>
 </div>
 <p>When repository encryption is enabled all data is encrypted using 256-bit <a class="reference external" href="https://en.wikipedia.org/wiki/Advanced_Encryption_Standard">AES</a>
@@ -152,30 +171,27 @@ encryption and the integrity and authenticity is verified using <a class="refere
 <p>All data is encrypted before being written to the repository. This means that
 an attacker who manages to compromise the host containing an encrypted
 archive will not be able to access any of the data.</p>
-<p><code class="docutils literal"><span class="pre">Borg</span></code> supports two different methods to derive the AES and HMAC keys.</p>
+<p><code class="docutils literal"><span class="pre">Borg</span></code> supports different methods to store the AES and HMAC keys.</p>
 <dl class="docutils">
-<dt>Passphrase based encryption</dt>
-<dd><p class="first">This method uses a user supplied passphrase to derive the keys using the
-<a class="reference external" href="https://en.wikipedia.org/wiki/PBKDF2">PBKDF2</a> key derivation function. This method is convenient to use since
-there is no key file to keep track of and secure as long as a <em>strong</em>
-passphrase is used.</p>
-<div class="last admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">For automated backups the passphrase can be specified using the
+<dt><code class="docutils literal"><span class="pre">repokey</span></code> mode</dt>
+<dd>The key is stored inside the repository (in its &#8220;config&#8221; file).
+Use this mode if you trust in your good passphrase giving you enough
+protection.</dd>
+<dt><code class="docutils literal"><span class="pre">keyfile</span></code> mode</dt>
+<dd>The key is stored on your local disk (in <code class="docutils literal"><span class="pre">~/.borg/keys/</span></code>).
+Use this mode if you want &#8220;passphrase and having-the-key&#8221; security.</dd>
+</dl>
+<p>In both modes, the key is stored in encrypted form and can be only decrypted
+by providing the correct passphrase.</p>
+<p>For automated backups the passphrase can be specified using the
 <cite>BORG_PASSPHRASE</cite> environment variable.</p>
-</div>
-</dd>
-<dt>Key file based encryption</dt>
-<dd><p class="first">This method generates random keys at repository initialization time that
-are stored in a password protected file in the <code class="docutils literal"><span class="pre">~/.borg/keys/</span></code> directory.
-The key file is a printable text file. This method is secure and suitable
-for automated backups.</p>
-<div class="last admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">The repository data is totally inaccessible without the key file
-so it must be kept <strong>safe</strong>.</p>
-</div>
-</dd>
+<dl class="docutils">
+<dt><strong>The repository data is totally inaccessible without the key:</strong></dt>
+<dd>Make a backup copy of the key file (<code class="docutils literal"><span class="pre">keyfile</span></code> mode) or repo config
+file (<code class="docutils literal"><span class="pre">repokey</span></code> mode) and keep it at a safe place, so you still have
+the key in case it gets corrupted or lost.
+The backup that is encrypted with that key won&#8217;t help you with that,
+of course.</dd>
 </dl>
 </div>
 <div class="section" id="remote-repositories">
@@ -243,6 +259,7 @@ mounting the remote filesystem, for example, using sshfs:</p>
 <li><a class="reference internal" href="#">Quick Start</a><ul>
 <li><a class="reference internal" href="#a-step-by-step-example">A step by step example</a></li>
 <li><a class="reference internal" href="#automating-backups">Automating backups</a></li>
+<li><a class="reference internal" href="#backup-compression">Backup compression</a></li>
 <li><a class="reference internal" href="#repository-encryption">Repository encryption</a></li>
 <li><a class="reference internal" href="#remote-repositories">Remote repositories</a></li>
 </ul>
@@ -281,7 +298,7 @@ mounting the remote filesystem, for example, using sshfs:</p>
         <li class="right" >
           <a href="installation.html" title="Installation"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.24.0+1.g8223790 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.25.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

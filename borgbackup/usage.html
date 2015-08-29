@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Usage &mdash; Borg - Deduplicating Archiver 0.24.0+1.g8223790 documentation</title>
+    <title>Usage &mdash; Borg - Deduplicating Archiver 0.25.0 documentation</title>
     
     <link rel="stylesheet" href="_static/local.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.24.0+1.g8223790',
+        VERSION:     '0.25.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,8 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="Borg - Deduplicating Archiver 0.24.0+1.g8223790 documentation" href="index.html" />
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+    <link rel="top" title="Borg - Deduplicating Archiver 0.25.0 documentation" href="index.html" />
     <link rel="next" title="Frequently asked questions" href="faq.html" />
     <link rel="prev" title="Quick Start" href="quickstart.html" /> 
   </head>
@@ -37,7 +38,7 @@
         <li class="right" >
           <a href="quickstart.html" title="Quick Start"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.24.0+1.g8223790 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.25.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -76,26 +77,45 @@ change).</p>
 <div class="section" id="environment-variables">
 <h2>Environment Variables<a class="headerlink" href="#environment-variables" title="Permalink to this headline">¶</a></h2>
 <p><code class="docutils literal"><span class="pre">Borg</span></code> uses some environment variables for automation:</p>
-<div class="highlight-bash"><div class="highlight"><pre>Specifying a passphrase:
-    BORG_PASSPHRASE : When <span class="nb">set</span>, use the value to answer the passphrase question <span class="k">for</span> encrypted repositories.
-
-Some <span class="s2">&quot;yes&quot;</span> sayers <span class="o">(</span><span class="k">if</span> <span class="nb">set</span>, they automatically confirm that you really want to <span class="k">do</span> X even <span class="k">if</span> there is that warning<span class="o">)</span>:
-    BORG_UNKNOWN_UNENCRYPTED_REPO_ACCESS_IS_OK : For <span class="s2">&quot;Warning: Attempting to access a previously unknown unencrypted repository&quot;</span>
-    BORG_RELOCATED_REPO_ACCESS_IS_OK : For <span class="s2">&quot;Warning: The repository at location ... was previously located at ...&quot;</span>
-    BORG_CHECK_I_KNOW_WHAT_I_AM_DOING : For <span class="s2">&quot;Warning: &#39;check --repair&#39; is an experimental feature that might result in data loss.&quot;</span>
-
-Directories:
-    BORG_KEYS_DIR : Default to <span class="s1">&#39;~/.borg/keys&#39;</span>. This directory contains keys <span class="k">for</span> encrypted repositories.
-    BORG_CACHE_DIR : Default to <span class="s1">&#39;~/.cache/borg&#39;</span>. This directory contains the <span class="nb">local </span>cache and might need a lot
-                     of space <span class="k">for</span> dealing with big repositories<span class="o">)</span>.
-
-Building:
-    BORG_OPENSSL_PREFIX : Adds given OpenSSL header file directory to the default locations <span class="o">(</span>setup.py<span class="o">)</span>.
-
-General:
-    TMPDIR : where temporary files are stored <span class="o">(</span>might need a lot of temporary space <span class="k">for</span> some operations<span class="o">)</span>
-</pre></div>
-</div>
+<dl class="docutils">
+<dt>Specifying a passphrase:</dt>
+<dd><dl class="first last docutils">
+<dt>BORG_PASSPHRASE</dt>
+<dd>When set, use the value to answer the passphrase question for encrypted repositories.</dd>
+</dl>
+</dd>
+<dt>Some &#8220;yes&#8221; sayers (if set, they automatically confirm that you really want to do X even if there is that warning):</dt>
+<dd><dl class="first last docutils">
+<dt>BORG_UNKNOWN_UNENCRYPTED_REPO_ACCESS_IS_OK</dt>
+<dd>For &#8220;Warning: Attempting to access a previously unknown unencrypted repository&#8221;</dd>
+<dt>BORG_RELOCATED_REPO_ACCESS_IS_OK</dt>
+<dd>For &#8220;Warning: The repository at location ... was previously located at ...&#8221;</dd>
+<dt>BORG_CHECK_I_KNOW_WHAT_I_AM_DOING</dt>
+<dd>For &#8220;Warning: &#8216;check &#8211;repair&#8217; is an experimental feature that might result in data loss.&#8221;</dd>
+</dl>
+</dd>
+<dt>Directories:</dt>
+<dd><dl class="first last docutils">
+<dt>BORG_KEYS_DIR</dt>
+<dd>Default to &#8216;~/.borg/keys&#8217;. This directory contains keys for encrypted repositories.</dd>
+<dt>BORG_CACHE_DIR</dt>
+<dd>Default to &#8216;~/.cache/borg&#8217;. This directory contains the local cache and might need a lot
+of space for dealing with big repositories).</dd>
+</dl>
+</dd>
+<dt>Building:</dt>
+<dd><dl class="first last docutils">
+<dt>BORG_OPENSSL_PREFIX</dt>
+<dd>Adds given OpenSSL header file directory to the default locations (setup.py).</dd>
+</dl>
+</dd>
+<dt>General:</dt>
+<dd><dl class="first last docutils">
+<dt>TMPDIR</dt>
+<dd>where temporary files are stored (might need a lot of temporary space for some operations)</dd>
+</dl>
+</dd>
+</dl>
 <p>Please note:</p>
 <ul class="simple">
 <li>be very careful when using the &#8220;yes&#8221; sayers, the warnings with prompt exist for your / your data&#8217;s security/safety</li>
@@ -106,23 +126,38 @@ General:
 <div class="section" id="resource-usage">
 <h2>Resource Usage<a class="headerlink" href="#resource-usage" title="Permalink to this headline">¶</a></h2>
 <p><code class="docutils literal"><span class="pre">Borg</span></code> might use a lot of resources depending on the size of the data set it is dealing with.</p>
-<p>CPU: it won&#8217;t go beyond 100% of 1 core as the code is currently single-threaded.</p>
-<p>Memory (RAM): the chunks index and the files index are read into memory for performance reasons.</p>
 <dl class="docutils">
-<dt>Temporary files: reading data and metadata from a FUSE mounted repository will consume about the same space as the</dt>
-<dd>deduplicated chunks used to represent them in the repository.</dd>
-</dl>
-<p>Cache files: chunks index and files index (plus a compressed collection of single-archive chunk indexes).</p>
-<dl class="docutils">
-<dt>Chunks index: proportional to the amount of data chunks in your repo. lots of small chunks in your repo implies a big</dt>
-<dd>chunks index. you may need to tweak the chunker params (see create options) if you have a lot of data and
-you want to keep the chunks index at some reasonable size.</dd>
-<dt>Files index: proportional to the amount of files in your last backup. can be switched off (see create options), but</dt>
-<dd>next backup will be much slower if you do.</dd>
-<dt>Network: if your repository is remote, all deduplicated (and optionally compressed/encrypted) data of course has to go</dt>
-<dd>over the connection (ssh: repo url). if you use a locally mounted network filesystem, additionally some copy
-operations used for transaction support also go over the connection. if you backup multiple sources to one
-target repository, additional traffic happens for cache resynchronization.</dd>
+<dt>CPU:</dt>
+<dd>It won&#8217;t go beyond 100% of 1 core as the code is currently single-threaded.
+Especially higher zlib and lzma compression levels use significant amounts
+of CPU cycles.</dd>
+<dt>Memory (RAM):</dt>
+<dd>The chunks index and the files index are read into memory for performance
+reasons.
+Compression, esp. lzma compression with high levels might need substantial
+amounts of memory.</dd>
+<dt>Temporary files:</dt>
+<dd>Reading data and metadata from a FUSE mounted repository will consume about
+the same space as the deduplicated chunks used to represent them in the
+repository.</dd>
+<dt>Cache files:</dt>
+<dd>Contains the chunks index and files index (plus a compressed collection of
+single-archive chunk indexes).</dd>
+<dt>Chunks index:</dt>
+<dd>Proportional to the amount of data chunks in your repo. Lots of small chunks
+in your repo imply a big chunks index. You may need to tweak the chunker
+params (see create options) if you have a lot of data and you want to keep
+the chunks index at some reasonable size.</dd>
+<dt>Files index:</dt>
+<dd>Proportional to the amount of files in your last backup. Can be switched
+off (see create options), but next backup will be much slower if you do.</dd>
+<dt>Network:</dt>
+<dd>If your repository is remote, all deduplicated (and optionally compressed/
+encrypted) data of course has to go over the connection (ssh: repo url).
+If you use a locally mounted network filesystem, additionally some copy
+operations used for transaction support also go over the connection. If
+you backup multiple sources to one target repository, additional traffic
+happens for cache resynchronization.</dd>
 </dl>
 <p>In case you are interested in more details, please read the internals documentation.</p>
 </div>
@@ -205,7 +240,7 @@ for existing repos.</p>
                    <span class="o">[</span>-c SECONDS<span class="o">]</span> <span class="o">[</span>--do-not-cross-mountpoints<span class="o">]</span> <span class="o">[</span>--numeric-owner<span class="o">]</span>
                    <span class="o">[</span>--timestamp yyyy-mm-ddThh:mm:ss<span class="o">]</span>
                    <span class="o">[</span>--chunker-params CHUNK_MIN_EXP,CHUNK_MAX_EXP,HASH_MASK_BITS,HASH_WINDOW_SIZE<span class="o">]</span>
-                   <span class="o">[</span>-C N<span class="o">]</span>
+                   <span class="o">[</span>-C COMPRESSION<span class="o">]</span>
                    ARCHIVE PATH <span class="o">[</span>PATH ...<span class="o">]</span>
 
 Create new archive
@@ -239,11 +274,12 @@ optional arguments:
                         alternatively, give a reference file/directory.
   --chunker-params CHUNK_MIN_EXP,CHUNK_MAX_EXP,HASH_MASK_BITS,HASH_WINDOW_SIZE
                         specify the chunker parameters. default: 10,23,16,4095
-  -C N, --compression N
-                        <span class="k">select</span> compression algorithm and level. 0..9 is
-                        supported and means zlib level <span class="m">0</span> <span class="o">(</span>no compression,
-                        fast, default<span class="o">)</span> .. zlib level <span class="m">9</span> <span class="o">(</span>high compression,
-                        slow<span class="o">)</span>.
+  -C COMPRESSION, --compression COMPRESSION
+                        <span class="k">select</span> compression algorithm <span class="o">(</span>and level<span class="o">)</span>: <span class="nv">none</span> <span class="o">==</span> no
+                        compression <span class="o">(</span>default<span class="o">)</span>, <span class="nv">lz4</span> <span class="o">==</span> lz4, <span class="nv">zlib</span> <span class="o">==</span> zlib
+                        <span class="o">(</span>default level 6<span class="o">)</span>, zlib,0 .. zlib,9 <span class="o">==</span> zlib <span class="o">(</span>with
+                        level 0..9<span class="o">)</span>, <span class="nv">lzma</span> <span class="o">==</span> lzma <span class="o">(</span>default level 6<span class="o">)</span>, lzma,0 ..
+                        lzma,9 <span class="o">==</span> lzma <span class="o">(</span>with level 0..9<span class="o">)</span>.
 </pre></div>
 </div>
 <div class="section" id="id3">
@@ -273,6 +309,18 @@ files or parts of files that have already been stored in other archives.</p>
 
 <span class="c"># Backup a raw device (must not be active/in use/mounted at that time)</span>
 <span class="nv">$ </span>dd <span class="k">if</span><span class="o">=</span>/dev/sda <span class="nv">bs</span><span class="o">=</span>10M <span class="p">|</span> borg create /mnt/backup::my-sda -
+
+<span class="c"># No compression (default)</span>
+<span class="nv">$ </span>borg create /mnt/backup::repo ~
+
+<span class="c"># Super fast, low compression</span>
+<span class="nv">$ </span>borg create --compression lz4 /mnt/backup::repo ~
+
+<span class="c"># Less fast, higher compression (N = 0..9)</span>
+<span class="nv">$ </span>borg create --compression zlib,N /mnt/backup::repo ~
+
+<span class="c"># Even slower, even higher compression (N = 0..9)</span>
+<span class="nv">$ </span>borg create --compression lzma,N /mnt/backup::repo ~
 </pre></div>
 </div>
 </div>
@@ -371,13 +419,12 @@ optional arguments:
 <div class="section" id="id9">
 <h3>Description<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h3>
 <p>The check command verifies the consistency of a repository and the corresponding archives.</p>
-<p>First, the underlying repository data files are checked:
-- For all segments the segment magic (header) is checked
-- For all objects stored in the segments, all metadata (e.g. crc and size) and</p>
-<blockquote>
-<div>all data is read. The read data is checked by size and CRC. Bit rot and other
-types of accidental damage can be detected this way.</div></blockquote>
+<p>First, the underlying repository data files are checked:</p>
 <ul class="simple">
+<li>For all segments the segment magic (header) is checked</li>
+<li>For all objects stored in the segments, all metadata (e.g. crc and size) and
+all data is read. The read data is checked by size and CRC. Bit rot and other
+types of accidental damage can be detected this way.</li>
 <li>If we are in repair mode and a integrity error is detected for a segment,
 we try to recover as many objects from the segment as possible.</li>
 <li>In repair mode, it makes sure that the index is consistent with the data
@@ -386,11 +433,10 @@ stored in the segments.</li>
 repo server without causing significant network traffic.</li>
 <li>The repository check can be skipped using the &#8211;archives-only option.</li>
 </ul>
-<p>Second, the consistency and correctness of the archive metadata is verified:
-- Is the repo manifest present? If not, it is rebuilt from archive metadata</p>
-<blockquote>
-<div>chunks (this requires reading and decrypting of all metadata and data).</div></blockquote>
+<p>Second, the consistency and correctness of the archive metadata is verified:</p>
 <ul class="simple">
+<li>Is the repo manifest present? If not, it is rebuilt from archive metadata
+chunks (this requires reading and decrypting of all metadata and data).</li>
 <li>Check if archive metadata chunk is present. if not, remove archive from
 manifest.</li>
 <li>For all files (items) in the archive, for all chunks referenced by these
@@ -439,6 +485,7 @@ local cache for it (if any) is also deleted.</p>
 <div class="section" id="borg-list">
 <span id="id12"></span><h2>borg list<a class="headerlink" href="#borg-list" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-bash"><div class="highlight"><pre>usage: borg list <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>-v<span class="o">]</span> <span class="o">[</span>--no-files-cache<span class="o">]</span> <span class="o">[</span>--umask M<span class="o">]</span> <span class="o">[</span>--remote-path PATH<span class="o">]</span>
+                 <span class="o">[</span>--short<span class="o">]</span>
                  REPOSITORY_OR_ARCHIVE
 
 List archive or repository contents
@@ -454,6 +501,7 @@ optional arguments:
                         detect unchanged files
   --umask M             <span class="nb">set umask </span>to M <span class="o">(</span><span class="nb">local </span>and remote, default: 0o077<span class="o">)</span>
   --remote-path PATH    <span class="nb">set </span>remote path to executable <span class="o">(</span>default: <span class="s2">&quot;borg&quot;</span><span class="o">)</span>
+  --short               only print file/directory names, nothing <span class="k">else</span>
 </pre></div>
 </div>
 <div class="section" id="id13">
@@ -843,7 +891,7 @@ optional arguments:
         <li class="right" >
           <a href="quickstart.html" title="Quick Start"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.24.0+1.g8223790 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.25.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

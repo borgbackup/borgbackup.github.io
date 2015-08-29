@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Installation &mdash; Borg - Deduplicating Archiver 0.24.0+1.g8223790 documentation</title>
+    <title>Installation &mdash; Borg - Deduplicating Archiver 0.25.0 documentation</title>
     
     <link rel="stylesheet" href="_static/local.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.24.0+1.g8223790',
+        VERSION:     '0.25.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,8 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="Borg - Deduplicating Archiver 0.24.0+1.g8223790 documentation" href="index.html" />
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+    <link rel="top" title="Borg - Deduplicating Archiver 0.25.0 documentation" href="index.html" />
     <link rel="next" title="Quick Start" href="quickstart.html" />
     <link rel="prev" title="Introduction" href="intro.html" /> 
   </head>
@@ -37,7 +38,7 @@
         <li class="right" >
           <a href="intro.html" title="Introduction"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.24.0+1.g8223790 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.25.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -53,22 +54,39 @@
 <li><a class="reference external" href="http://www.python.org/">Python</a> &gt;= 3.2</li>
 <li><a class="reference external" href="https://www.openssl.org/">OpenSSL</a> &gt;= 1.0.0</li>
 <li><a class="reference external" href="http://savannah.nongnu.org/projects/acl/">libacl</a></li>
+<li><a class="reference external" href="https://github.com/Cyan4973/lz4">liblz4</a></li>
 <li>some python dependencies, see install_requires in setup.py</li>
 </ul>
 <div class="section" id="general-notes">
 <h2>General notes<a class="headerlink" href="#general-notes" title="Permalink to this headline">¶</a></h2>
-<p>Even though Python 3 is not the default Python version on many systems, it is
-usually available as an optional install.</p>
+<p>You need to do some platform specific preparation steps (to install libraries
+and tools) followed by the generic installation of <code class="docutils literal"><span class="pre">Borg</span></code> itself:</p>
+<p>Below, we describe different ways to install <code class="docutils literal"><span class="pre">Borg</span></code>.</p>
+<ul class="simple">
+<li><strong>dist package</strong> - easy and fast, needs a distribution and platform specific
+binary package (for your Linux/<a href="#id2"><span class="problematic" id="id3">*</span></a>BSD/OS X/... distribution).</li>
+<li><strong>wheel</strong> - easy and fast, needs a platform specific borgbackup binary wheel,
+which matches your platform [OS and CPU]).</li>
+<li><strong>pypi</strong> - installing a source package from pypi needs more installation steps
+and will compile stuff - try this if there is no binary wheel that works for
+you.</li>
+<li><strong>git</strong> - for developers and power users who want to have the latest code or
+use revision control (each release is tagged).</li>
+</ul>
+<p><strong>Python 3</strong>: Even though this is not the default Python version on many systems,
+it is usually available as an optional install.</p>
 <p><a class="reference external" href="https://pypi.python.org/pypi/virtualenv/">Virtualenv</a> can be used to build and install <code class="docutils literal"><span class="pre">Borg</span></code> without affecting
 the system Python or requiring root access.</p>
 <p>Important:
-if you install into a virtual environment, you need to activate
+If you install into a virtual environment, you need to <strong>activate</strong>
 the virtual env first (<code class="docutils literal"><span class="pre">source</span> <span class="pre">borg-env/bin/activate</span></code>).
 Alternatively, directly run <code class="docutils literal"><span class="pre">borg-env/bin/borg</span></code> (or symlink that into some
-directory that is in your PATH so you can just run <code class="docutils literal"><span class="pre">borg</span></code>).</p>
+directory that is in your PATH so you can just run <code class="docutils literal"><span class="pre">borg</span></code>).
+Using a virtual environment is optional, but recommended except for the most
+simple use cases.</p>
 <p>The <a class="reference external" href="https://pypi.python.org/pypi/llfuse/">llfuse</a> python package is also required if you wish to mount an
 archive as a FUSE filesystem. Only FUSE &gt;= 2.8.0 can support llfuse.</p>
-<p>You only need Cython to compile the .pyx files to the respective .c files
+<p>You only need <strong>Cython</strong> to compile the .pyx files to the respective .c files
 when using <code class="docutils literal"><span class="pre">Borg</span></code> code from git. For <code class="docutils literal"><span class="pre">Borg</span></code> releases, the .c
 files will be bundled, so you won&#8217;t need Cython to install a release.</p>
 </div>
@@ -78,107 +96,103 @@ files will be bundled, so you won&#8217;t need Cython to install a release.</p>
 <p>Mac OS X: You may need to get a recent enough OpenSSL version from <a class="reference external" href="http://mxcl.github.io/homebrew/">homebrew</a>.</p>
 <p>Mac OS X: You need OS X FUSE &gt;= 3.0.</p>
 </div>
-<div class="section" id="debian-ubuntu-installation-from-git">
-<h2>Debian / Ubuntu installation (from git)<a class="headerlink" href="#debian-ubuntu-installation-from-git" title="Permalink to this headline">¶</a></h2>
-<p>Note: this uses latest, unreleased development code from git.
-While we try not to break master, there are no guarantees on anything.</p>
-<p>Some of the steps detailled below might be useful also for non-git installs.</p>
-<pre class="literal-block">
-# Python 3.x (&gt;= 3.2) + Headers, Py Package Installer
-apt-get install python3 python3-dev python3-pip
+<div class="section" id="installation-dist-package">
+<h2>Installation (dist package)<a class="headerlink" href="#installation-dist-package" title="Permalink to this headline">¶</a></h2>
+<p>Some Linux, BSD and OS X distributions might offer a ready-to-use
+<cite>borgbackup</cite> package (which can be easily installed in the usual way).</p>
+<p>As <code class="docutils literal"><span class="pre">Borg</span></code> is still relatively new, such a package might be not
+available for your system yet. Please ask package maintainers to build a
+package or, if you can package / submit it yourself, please help us with
+that!</p>
+<p>If a package is available, it might be interesting for you to check its version
+and compare that to our latest release and review the change log (see links on
+our web site).</p>
+</div>
+<div class="section" id="debian-jessie-ubuntu-14-04-preparations-wheel">
+<h2>Debian Jessie / Ubuntu 14.04 preparations (wheel)<a class="headerlink" href="#debian-jessie-ubuntu-14-04-preparations-wheel" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-bash"><div class="highlight"><pre><span class="c"># Python stuff we need</span>
+apt-get install python3 python3-pip
 
-# we need OpenSSL + Headers for Crypto
+<span class="c"># Libraries we need (fuse is optional)</span>
+apt-get install openssl libacl1 liblz4-1 fuse
+</pre></div>
+</div>
+</div>
+<div class="section" id="installation-wheel">
+<h2>Installation (wheel)<a class="headerlink" href="#installation-wheel" title="Permalink to this headline">¶</a></h2>
+<p>This uses the latest binary wheel release.</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="c"># Check https://github.com/borgbackup/borg/issues/147 for the correct</span>
+<span class="c"># platform-specific binary wheel, download and install it:</span>
+
+<span class="c"># system-wide installation, needs sudo/root permissions:</span>
+sudo pip install borgbackup.whl
+
+<span class="c"># home directory installation, no sudo/root needed:</span>
+pip install --user borgbackup.whl
+</pre></div>
+</div>
+</div>
+<div class="section" id="debian-jessie-ubuntu-14-04-preparations-git-pypi">
+<h2>Debian Jessie / Ubuntu 14.04 preparations (git/pypi)<a class="headerlink" href="#debian-jessie-ubuntu-14-04-preparations-git-pypi" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-bash"><div class="highlight"><pre><span class="c"># Python 3.x (&gt;= 3.2) + Headers, Py Package Installer, VirtualEnv</span>
+apt-get install python3 python3-dev python3-pip python-virtualenv
+
+<span class="c"># we need OpenSSL + Headers for Crypto</span>
 apt-get install libssl-dev openssl
 
-# ACL support Headers + Library
+<span class="c"># ACL support Headers + Library</span>
 apt-get install libacl1-dev libacl1
 
-# if you do not have gcc / make / etc. yet
+<span class="c"># lz4 super fast compression support Headers + Library</span>
+apt-get install liblz4-dev liblz4-1
+
+<span class="c"># if you do not have gcc / make / etc. yet</span>
 apt-get install build-essential
 
-# optional: lowlevel FUSE py binding - to mount backup archives
-# in case you get complaints about permission denied on /etc/fuse.conf:
-# on ubuntu this means your user is not in the &quot;fuse&quot; group. just add
-# yourself there, log out and log in again.
-# if it complains about not being able to find llfuse: make a symlink
-# borg-env/lib/python3.4/site-packages/llfuse -&gt; /usr/lib/python3/dist-packages/llfuse
-apt-get install python3-llfuse fuse
+<span class="c"># optional: FUSE support - to mount backup archives</span>
+<span class="c"># in case you get complaints about permission denied on /etc/fuse.conf:</span>
+<span class="c"># on ubuntu this means your user is not in the &quot;fuse&quot; group. just add</span>
+<span class="c"># yourself there, log out and log in again.</span>
+apt-get install libfuse-dev fuse
 
-# optional: for unit testing
+<span class="c"># optional: for unit testing</span>
 apt-get install fakeroot
-
-# get <code class="docutils literal"><span class="pre">Borg</span></code> from github, install it
-git clone <a class="reference external" href="https://github.com/borgbackup/borg.git">https://github.com/borgbackup/borg.git</a>
-
-apt-get install python-virtualenv
-virtualenv --python=python3 borg-env
-source borg-env/bin/activate   # always before using!
-
-# install borg + dependencies into virtualenv
-pip install cython  # compile .pyx -&gt; .c
-pip install tox pytest  # optional, for running unit tests
-pip install sphinx  # optional, to build the docs
-cd borg
-pip install -e .  # in-place editable mode
-
-# optional: run all the tests, on all supported Python versions
-fakeroot -u tox
-</pre>
+</pre></div>
 </div>
-<div class="section" id="korora-fedora-21-installation-from-git">
-<h2>Korora / Fedora 21 installation (from git)<a class="headerlink" href="#korora-fedora-21-installation-from-git" title="Permalink to this headline">¶</a></h2>
-<p>Note: this uses latest, unreleased development code from git.
-While we try not to break master, there are no guarantees on anything.</p>
-<p>Some of the steps detailled below might be useful also for non-git installs.</p>
-<pre class="literal-block">
-# Python 3.x (&gt;= 3.2) + Headers, Py Package Installer
-sudo dnf install python3 python3-devel python3-pip
+</div>
+<div class="section" id="korora-fedora-21-preparations-git-pypi">
+<h2>Korora / Fedora 21 preparations (git/pypi)<a class="headerlink" href="#korora-fedora-21-preparations-git-pypi" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-bash"><div class="highlight"><pre><span class="c"># Python 3.x (&gt;= 3.2) + Headers, Py Package Installer, VirtualEnv</span>
+sudo dnf install python3 python3-devel python3-pip python3-virtualenv
 
-# we need OpenSSL + Headers for Crypto
+<span class="c"># we need OpenSSL + Headers for Crypto</span>
 sudo dnf install openssl-devel openssl
 
-# ACL support Headers + Library
+<span class="c"># ACL support Headers + Library</span>
 sudo dnf install libacl-devel libacl
 
-# optional: lowlevel FUSE py binding - to mount backup archives
-sudo dnf install python3-llfuse fuse
+<span class="c"># lz4 super fast compression support Headers + Library</span>
+sudo dnf install lz4-devel
 
-# optional: for unit testing
+<span class="c"># optional: FUSE support - to mount backup archives</span>
+sudo dnf install fuse-devel fuse
+
+<span class="c"># optional: for unit testing</span>
 sudo dnf install fakeroot
-
-# get <code class="docutils literal"><span class="pre">Borg</span></code> from github, install it
-git clone <a class="reference external" href="https://github.com/borgbackup/borg.git">https://github.com/borgbackup/borg.git</a>
-
-dnf install python3-virtualenv
-virtualenv --python=python3 borg-env
-source borg-env/bin/activate   # always before using!
-
-# install borg + dependencies into virtualenv
-pip install cython  # compile .pyx -&gt; .c
-pip install tox pytest  # optional, for running unit tests
-pip install sphinx  # optional, to build the docs
-cd borg
-pip install -e .  # in-place editable mode
-
-# optional: run all the tests, on all supported Python versions
-fakeroot -u tox
-</pre>
+</pre></div>
 </div>
-<div class="section" id="cygwin-from-git">
-<h2>Cygwin (from git)<a class="headerlink" href="#cygwin-from-git" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="cygwin-preparations-git-pypi">
+<h2>Cygwin preparations (git/pypi)<a class="headerlink" href="#cygwin-preparations-git-pypi" title="Permalink to this headline">¶</a></h2>
 <p>Please note that running under cygwin is rather experimental, stuff has been
 tested with CygWin (x86-64) v2.1.0.</p>
 <p>You&#8217;ll need at least (use the cygwin installer to fetch/install these):</p>
-<div class="highlight-bash"><div class="highlight"><pre>python3
-python3-setuptools
-python3-cython
-binutils
-gcc-core
-git
-libopenssl
-make
-openssh
-openssl-devel
+<div class="highlight-bash"><div class="highlight"><pre>python3 python3-setuptools
+python3-cython  <span class="c"># not needed for releases</span>
+binutils gcc-core
+libopenssl openssl-devel
+liblz4_1 liblz4-devel  <span class="c"># from cygwinports.org</span>
+git make openssh
 </pre></div>
 </div>
 <p>You can then install <code class="docutils literal"><span class="pre">pip</span></code> and <code class="docutils literal"><span class="pre">virtualenv</span></code>:</p>
@@ -186,11 +200,47 @@ openssl-devel
 pip install virtualenv
 </pre></div>
 </div>
-<p>And now continue as for Linux (see above).</p>
+<p>And now continue with the generic installation (see below).</p>
 <p>In case that creation of the virtual env fails, try deleting this file:</p>
 <div class="highlight-bash"><div class="highlight"><pre>/usr/lib/python3.4/__pycache__/platform.cpython-34.pyc
 </pre></div>
 </div>
+</div>
+<div class="section" id="installation-pypi">
+<h2>Installation (pypi)<a class="headerlink" href="#installation-pypi" title="Permalink to this headline">¶</a></h2>
+<p>This uses the latest (source package) release from PyPi.</p>
+<div class="highlight-bash"><div class="highlight"><pre>virtualenv --python<span class="o">=</span>python3 borg-env
+<span class="nb">source </span>borg-env/bin/activate   <span class="c"># always before using!</span>
+
+<span class="c"># install borg + dependencies into virtualenv</span>
+pip install llfuse  <span class="c"># optional, for FUSE support</span>
+pip install borgbackup
+</pre></div>
+</div>
+<p>Note: we install into a virtual environment here, but this is not a requirement.</p>
+</div>
+<div class="section" id="installation-git">
+<h2>Installation (git)<a class="headerlink" href="#installation-git" title="Permalink to this headline">¶</a></h2>
+<p>This uses latest, unreleased development code from git.
+While we try not to break master, there are no guarantees on anything.</p>
+<pre class="literal-block">
+# get <code class="docutils literal"><span class="pre">Borg</span></code> from github, install it
+git clone <a class="reference external" href="https://github.com/borgbackup/borg.git">https://github.com/borgbackup/borg.git</a>
+
+virtualenv --python=python3 borg-env
+source borg-env/bin/activate   # always before using!
+
+# install borg + dependencies into virtualenv
+pip install sphinx  # optional, to build the docs
+pip install llfuse  # optional, for FUSE support
+cd borg
+pip install -r requirements.d/development.txt
+pip install -e .  # in-place editable mode
+
+# optional: run all the tests, on all supported Python versions
+fakeroot -u tox
+</pre>
+<p>Note: as a developer or power user, you always want to use a virtual environment.</p>
 </div>
 </div>
 
@@ -228,9 +278,14 @@ pip install virtualenv
 <li><a class="reference internal" href="#">Installation</a><ul>
 <li><a class="reference internal" href="#general-notes">General notes</a></li>
 <li><a class="reference internal" href="#platform-notes">Platform notes</a></li>
-<li><a class="reference internal" href="#debian-ubuntu-installation-from-git">Debian / Ubuntu installation (from git)</a></li>
-<li><a class="reference internal" href="#korora-fedora-21-installation-from-git">Korora / Fedora 21 installation (from git)</a></li>
-<li><a class="reference internal" href="#cygwin-from-git">Cygwin (from git)</a></li>
+<li><a class="reference internal" href="#installation-dist-package">Installation (dist package)</a></li>
+<li><a class="reference internal" href="#debian-jessie-ubuntu-14-04-preparations-wheel">Debian Jessie / Ubuntu 14.04 preparations (wheel)</a></li>
+<li><a class="reference internal" href="#installation-wheel">Installation (wheel)</a></li>
+<li><a class="reference internal" href="#debian-jessie-ubuntu-14-04-preparations-git-pypi">Debian Jessie / Ubuntu 14.04 preparations (git/pypi)</a></li>
+<li><a class="reference internal" href="#korora-fedora-21-preparations-git-pypi">Korora / Fedora 21 preparations (git/pypi)</a></li>
+<li><a class="reference internal" href="#cygwin-preparations-git-pypi">Cygwin preparations (git/pypi)</a></li>
+<li><a class="reference internal" href="#installation-pypi">Installation (pypi)</a></li>
+<li><a class="reference internal" href="#installation-git">Installation (git)</a></li>
 </ul>
 </li>
 </ul>
@@ -267,7 +322,7 @@ pip install virtualenv
         <li class="right" >
           <a href="intro.html" title="Introduction"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.24.0+1.g8223790 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.25.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

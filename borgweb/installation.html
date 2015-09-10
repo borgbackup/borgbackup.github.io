@@ -56,6 +56,29 @@
 <p>Currently, only installation from git repo checkout is supported.</p>
 <p>Use pip install -e . from the top-level <code class="docutils literal"><span class="pre">BorgWeb</span></code> directory to install
 it into same virtualenv as you use for <code class="docutils literal"><span class="pre">BorgBackup</span></code>.</p>
+<p>To install the complete environment for development you can do the following:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="c"># Install Python code and dependencies:</span>
+virtualenv --python<span class="o">=</span>python3 borg-env
+<span class="nb">source </span>borg-env/bin/activate
+pip install tox pytest
+git clone https://github.com/borgbackup/borgweb.git
+<span class="nb">cd </span>borgweb
+pip install -e .
+
+<span class="c"># Install JS code and dependencies:</span>
+<span class="nb">cd </span>js
+npm install
+
+<span class="c"># Start the local Flask webserver:</span>
+<span class="nb">cd</span> ../../
+mkdir logs
+./borg-env/bin/borgweb
+
+<span class="c"># Start the watch process and Browsersync</span>
+<span class="c"># In another shell navigate to `borgweb/js` and enter:</span>
+gulp watch
+</pre></div>
+</div>
 </div>
 <div class="section" id="configuration">
 <h1>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h1>

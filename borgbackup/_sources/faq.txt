@@ -6,6 +6,7 @@ Frequently asked questions
 
 Which platforms are supported?
     Currently Linux, FreeBSD and MacOS X are supported.
+    OpenBSD and NetBSD work also, except for xattrs and ACLs.
 
     You can try your luck on other POSIX-like systems, like Cygwin,
     other BSDs, etc. but they are not officially supported.
@@ -41,7 +42,7 @@ Which file types, attributes, etc. are preserved?
     * User ID of owner
     * Group ID of owner
     * Unix Mode/Permissions (u/g/o permissions, suid, sgid, sticky)
-    * Extended Attributes (xattrs)
+    * Extended Attributes (xattrs) on Linux, OS X and FreeBSD
     * Access Control Lists (ACL_) on Linux, OS X and FreeBSD
     * BSD flags on OS X and FreeBSD
 

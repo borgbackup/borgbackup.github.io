@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Borg Changelog &mdash; Borg - Deduplicating Archiver 0.25.0 documentation</title>
+    <title>Borg Changelog &mdash; Borg - Deduplicating Archiver 0.26.1.dev0+ngd4de0fd.d20150919 documentation</title>
     
     <link rel="stylesheet" href="_static/local.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.25.0',
+        VERSION:     '0.26.1.dev0+ngd4de0fd.d20150919',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="shortcut icon" href="_static/favicon.ico"/>
-    <link rel="top" title="Borg - Deduplicating Archiver 0.25.0 documentation" href="index.html" />
+    <link rel="top" title="Borg - Deduplicating Archiver 0.26.1.dev0+ngd4de0fd.d20150919 documentation" href="index.html" />
     <link rel="next" title="Internals" href="internals.html" />
     <link rel="prev" title="Support" href="support.html" /> 
   </head>
@@ -38,7 +38,7 @@
         <li class="right" >
           <a href="support.html" title="Support"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.25.0 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.26.1.dev0+ngd4de0fd.d20150919 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -49,6 +49,69 @@
             
   <div class="section" id="borg-changelog">
 <span id="changelog"></span><h1>Borg Changelog<a class="headerlink" href="#borg-changelog" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="version-0-26-0">
+<h2>Version 0.26.0<a class="headerlink" href="#version-0-26-0" title="Permalink to this headline">¶</a></h2>
+<p>New features:</p>
+<ul class="simple">
+<li>Faster cache sync (do all in one pass, remove tar/compression stuff), #163</li>
+<li>BORG_REPO env var to specify the default repo, #168</li>
+<li>read special files as if they were regular files, #79</li>
+<li>implement borg create &#8211;dry-run, attic issue #267</li>
+<li>Normalize paths before pattern matching on OS X, #143</li>
+<li>support OpenBSD and NetBSD (except xattrs/ACLs)</li>
+<li>support / run tests on Python 3.5</li>
+</ul>
+<p>Bug fixes:</p>
+<ul class="simple">
+<li>borg mount repo: use absolute path, attic #200, attic #137</li>
+<li>chunker: use off_t to get 64bit on 32bit platform, #178</li>
+<li>initialize chunker fd to -1, so it&#8217;s not equal to STDIN_FILENO (0)</li>
+<li>fix reaction to &#8220;no&#8221; answer at delete repo prompt, #182</li>
+<li>setup.py: detect lz4.h header file location</li>
+<li>to support python &lt; 3.2.4, add less buggy argparse lib from 3.2.6 (#194)</li>
+<li>fix for obtaining &#8216;char <a href="#id1"><span class="problematic" id="id2">*</span></a>&#8216; from temporary Python value (old code causes
+a compile error on Mint 17.2)</li>
+<li>llfuse 0.41 install troubles on some platforms, require &lt; 0.41
+(UnicodeDecodeError exception due to non-ascii llfuse setup.py)</li>
+<li>cython code: add some int types to get rid of unspecific python add /
+subtract operations (avoid undefined symbol <a href="#id3"><span class="problematic" id="id4">FPE_</span></a>... error on some platforms)</li>
+<li>fix verbose mode display of stdin backup</li>
+<li>extract: warn if a include pattern never matched, fixes #209,
+implement counters for Include/ExcludePatterns</li>
+<li>archive names with slashes are invalid, attic issue #180</li>
+<li>chunker: add a check whether the POSIX_FADV_DONTNEED constant is defined -
+fixes building on OpenBSD.</li>
+</ul>
+<p>Other changes:</p>
+<ul class="simple">
+<li>detect inconsistency / corruption / hash collision, #170</li>
+<li>replace versioneer with setuptools_scm, #106</li>
+<li>docs:<ul>
+<li>pkg-config is needed for llfuse installation</li>
+<li>be more clear about pruning, attic issue #132</li>
+</ul>
+</li>
+<li>unit tests:<ul>
+<li>xattr: ignore security.selinux attribute showing up</li>
+<li>ext3 seems to need a bit more space for a sparse file</li>
+<li>do not test lzma level 9 compression (avoid MemoryError)</li>
+<li>work around strange mtime granularity issue on netbsd, fixes #204</li>
+<li>ignore st_rdev if file is not a block/char device, fixes #203</li>
+<li>stay away from the setgid and sticky mode bits</li>
+</ul>
+</li>
+<li>use Vagrant to do easy cross-platform testing (#196), currently:<ul>
+<li>Debian 7 &#8220;wheezy&#8221; 32bit, Debian 8 &#8220;jessie&#8221; 64bit</li>
+<li>Ubuntu 12.04 32bit, Ubuntu 14.04 64bit</li>
+<li>Centos 7 64bit</li>
+<li>FreeBSD 10.2 64bit</li>
+<li>OpenBSD 5.7 64bit</li>
+<li>NetBSD 6.1.5 64bit</li>
+<li>Darwin (OS X Yosemite)</li>
+</ul>
+</li>
+</ul>
+</div>
 <div class="section" id="version-0-25-0">
 <h2>Version 0.25.0<a class="headerlink" href="#version-0-25-0" title="Permalink to this headline">¶</a></h2>
 <p>Compatibility notes:</p>
@@ -481,6 +544,7 @@ not just the file name part (#5).</li>
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Borg Changelog</a><ul>
+<li><a class="reference internal" href="#version-0-26-0">Version 0.26.0</a></li>
 <li><a class="reference internal" href="#version-0-25-0">Version 0.25.0</a></li>
 <li><a class="reference internal" href="#version-0-24-0">Version 0.24.0</a></li>
 <li><a class="reference internal" href="#version-0-23-0">Version 0.23.0</a></li>
@@ -537,7 +601,7 @@ not just the file name part (#5).</li>
         <li class="right" >
           <a href="support.html" title="Support"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.25.0 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.26.1.dev0+ngd4de0fd.d20150919 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

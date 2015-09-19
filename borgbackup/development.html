@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Development &mdash; Borg - Deduplicating Archiver 0.25.0 documentation</title>
+    <title>Development &mdash; Borg - Deduplicating Archiver 0.26.1.dev0+ngd4de0fd.d20150919 documentation</title>
     
     <link rel="stylesheet" href="_static/local.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.25.0',
+        VERSION:     '0.26.1.dev0+ngd4de0fd.d20150919',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="shortcut icon" href="_static/favicon.ico"/>
-    <link rel="top" title="Borg - Deduplicating Archiver 0.25.0 documentation" href="index.html" />
+    <link rel="top" title="Borg - Deduplicating Archiver 0.26.1.dev0+ngd4de0fd.d20150919 documentation" href="index.html" />
     <link rel="prev" title="Internals" href="internals.html" /> 
   </head>
   <body role="document">
@@ -34,7 +34,7 @@
         <li class="right" style="margin-right: 10px">
           <a href="internals.html" title="Internals"
              accesskey="P">previous</a></li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.25.0 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.26.1.dev0+ngd4de0fd.d20150919 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -99,6 +99,39 @@ make html
 </div>
 <p>Then point a web browser at docs/_build/html/index.html.</p>
 </div>
+<div class="section" id="creating-a-new-release">
+<h2>Creating a new release<a class="headerlink" href="#creating-a-new-release" title="Permalink to this headline">¶</a></h2>
+<p>Checklist:</p>
+<div class="highlight-bash"><div class="highlight"><pre>- all issues <span class="k">for</span> this milestone closed?
+- any low hanging fruit left on the issue tracker?
+- run tox on all supported platforms via vagrant, check <span class="k">for</span> <span class="nb">test </span>fails.
+- is Travis CI happy also?
+- update CHANGES.rst <span class="o">(</span>compare to git log<span class="o">)</span>. check version number of upcoming release.
+- check MANIFEST.in and setup.py - are they <span class="nb">complete</span>?
+- tag the release::
+</pre></div>
+</div>
+<blockquote>
+<div>git tag -s -m &#8220;tagged release&#8221; 0.26.0</div></blockquote>
+<ul>
+<li><p class="first">create a release on PyPi:</p>
+<div class="highlight-bash"><div class="highlight"><pre>python setup.py register sdist upload --identity<span class="o">=</span><span class="s2">&quot;Thomas Waldmann&quot;</span> --sign
+</pre></div>
+</div>
+</li>
+<li><p class="first">close release milestone.</p>
+</li>
+<li><p class="first">announce on:</p>
+<div class="highlight-bash"><div class="highlight"><pre>- mailing list
+- Twitter
+- IRC channel <span class="o">(</span>topic<span class="o">)</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">create binary wheels and link them from issue tracker: <a class="reference external" href="https://github.com/borgbackup/borg/issues/147">https://github.com/borgbackup/borg/issues/147</a></p>
+</li>
+</ul>
+</div>
 </div>
 
 
@@ -133,6 +166,7 @@ make html
 <li><a class="reference internal" href="#building-a-development-environment">Building a development environment</a></li>
 <li><a class="reference internal" href="#running-the-tests">Running the tests</a></li>
 <li><a class="reference internal" href="#building-the-docs-with-sphinx">Building the docs with Sphinx</a></li>
+<li><a class="reference internal" href="#creating-a-new-release">Creating a new release</a></li>
 </ul>
 </li>
 </ul>
@@ -166,7 +200,7 @@ make html
         <li class="right" style="margin-right: 10px">
           <a href="internals.html" title="Internals"
              >previous</a></li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.25.0 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.26.1.dev0+ngd4de0fd.d20150919 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

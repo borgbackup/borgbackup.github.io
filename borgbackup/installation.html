@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Installation &mdash; Borg - Deduplicating Archiver 0.25.0 documentation</title>
+    <title>Installation &mdash; Borg - Deduplicating Archiver 0.26.1.dev0+ngd4de0fd.d20150919 documentation</title>
     
     <link rel="stylesheet" href="_static/local.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.25.0',
+        VERSION:     '0.26.1.dev0+ngd4de0fd.d20150919',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="shortcut icon" href="_static/favicon.ico"/>
-    <link rel="top" title="Borg - Deduplicating Archiver 0.25.0 documentation" href="index.html" />
+    <link rel="top" title="Borg - Deduplicating Archiver 0.26.1.dev0+ngd4de0fd.d20150919 documentation" href="index.html" />
     <link rel="next" title="Quick Start" href="quickstart.html" />
     <link rel="prev" title="Introduction" href="intro.html" /> 
   </head>
@@ -38,7 +38,7 @@
         <li class="right" >
           <a href="intro.html" title="Introduction"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.25.0 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.26.1.dev0+ngd4de0fd.d20150919 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -53,7 +53,7 @@
 <ul class="simple">
 <li><a class="reference external" href="http://www.python.org/">Python</a> &gt;= 3.2</li>
 <li><a class="reference external" href="https://www.openssl.org/">OpenSSL</a> &gt;= 1.0.0</li>
-<li><a class="reference external" href="http://savannah.nongnu.org/projects/acl/">libacl</a></li>
+<li><a class="reference external" href="http://savannah.nongnu.org/projects/acl/">libacl</a> (that pulls in <a class="reference external" href="http://savannah.nongnu.org/projects/attr/">libattr</a> also)</li>
 <li><a class="reference external" href="https://github.com/Cyan4973/lz4">liblz4</a></li>
 <li>some python dependencies, see install_requires in setup.py</li>
 </ul>
@@ -153,7 +153,7 @@ apt-get install build-essential
 <span class="c"># in case you get complaints about permission denied on /etc/fuse.conf:</span>
 <span class="c"># on ubuntu this means your user is not in the &quot;fuse&quot; group. just add</span>
 <span class="c"># yourself there, log out and log in again.</span>
-apt-get install libfuse-dev fuse
+apt-get install libfuse-dev fuse pkg-config
 
 <span class="c"># optional: for unit testing</span>
 apt-get install fakeroot
@@ -175,7 +175,7 @@ sudo dnf install libacl-devel libacl
 sudo dnf install lz4-devel
 
 <span class="c"># optional: FUSE support - to mount backup archives</span>
-sudo dnf install fuse-devel fuse
+sudo dnf install fuse-devel fuse pkgconfig
 
 <span class="c"># optional: for unit testing</span>
 sudo dnf install fakeroot
@@ -213,7 +213,8 @@ pip install virtualenv
 <span class="nb">source </span>borg-env/bin/activate   <span class="c"># always before using!</span>
 
 <span class="c"># install borg + dependencies into virtualenv</span>
-pip install llfuse  <span class="c"># optional, for FUSE support</span>
+pip install <span class="s1">&#39;llfuse&lt;0.41&#39;</span>  <span class="c"># optional, for FUSE support</span>
+                           <span class="c"># 0.41 and 0.41.1 have unicode issues at install time</span>
 pip install borgbackup
 </pre></div>
 </div>
@@ -232,7 +233,8 @@ source borg-env/bin/activate   # always before using!
 
 # install borg + dependencies into virtualenv
 pip install sphinx  # optional, to build the docs
-pip install llfuse  # optional, for FUSE support
+pip install 'llfuse&lt;0.41'  # optional, for FUSE support
+                           # 0.41 and 0.41.1 have unicode issues at install time
 cd borg
 pip install -r requirements.d/development.txt
 pip install -e .  # in-place editable mode
@@ -322,7 +324,7 @@ fakeroot -u tox
         <li class="right" >
           <a href="intro.html" title="Introduction"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.25.0 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.26.1.dev0+ngd4de0fd.d20150919 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

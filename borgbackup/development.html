@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Development &mdash; Borg - Deduplicating Archiver 0.26.0 documentation</title>
+    <title>Development &mdash; Borg - Deduplicating Archiver 0.26.1 documentation</title>
     
     <link rel="stylesheet" href="_static/local.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.26.0',
+        VERSION:     '0.26.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="shortcut icon" href="_static/favicon.ico"/>
-    <link rel="top" title="Borg - Deduplicating Archiver 0.26.0 documentation" href="index.html" />
+    <link rel="top" title="Borg - Deduplicating Archiver 0.26.1 documentation" href="index.html" />
     <link rel="prev" title="Internals" href="internals.html" /> 
   </head>
   <body role="document">
@@ -34,7 +34,7 @@
         <li class="right" style="margin-right: 10px">
           <a href="internals.html" title="Internals"
              accesskey="P">previous</a></li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.26.0 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.26.1 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -108,13 +108,16 @@ make html
 - is Travis CI happy also?
 - update CHANGES.rst <span class="o">(</span>compare to git log<span class="o">)</span>. check version number of upcoming release.
 - check MANIFEST.in and setup.py - are they <span class="nb">complete</span>?
-- <span class="nb">cd </span>docs <span class="p">;</span> make html  <span class="c"># to update the usage include files</span>
 - tag the release::
 </pre></div>
 </div>
 <blockquote>
 <div>git tag -s -m &#8220;tagged release&#8221; 0.26.0</div></blockquote>
 <ul>
+<li><p class="first">cd docs ; make html  # to update the usage include files</p>
+</li>
+<li><p class="first">update website with the html</p>
+</li>
 <li><p class="first">create a release on PyPi:</p>
 <div class="highlight-bash"><div class="highlight"><pre>python setup.py register sdist upload --identity<span class="o">=</span><span class="s2">&quot;Thomas Waldmann&quot;</span> --sign
 </pre></div>
@@ -131,7 +134,39 @@ make html
 </li>
 <li><p class="first">create binary wheels and link them from issue tracker: <a class="reference external" href="https://github.com/borgbackup/borg/issues/147">https://github.com/borgbackup/borg/issues/147</a></p>
 </li>
+<li><p class="first">create standalone binaries and link them from issue tracker: <a class="reference external" href="https://github.com/borgbackup/borg/issues/214">https://github.com/borgbackup/borg/issues/214</a></p>
+</li>
 </ul>
+</div>
+<div class="section" id="creating-binary-wheels">
+<h2>Creating binary wheels<a class="headerlink" href="#creating-binary-wheels" title="Permalink to this headline">¶</a></h2>
+<p>With virtual env activated:</p>
+<div class="highlight-bash"><div class="highlight"><pre>pip install wheel
+python setup.py bdist_wheel
+ls -l dist/*.whl
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Note: Binary wheels are rather specific for the platform they get built on.</dt>
+<dd>E.g. a wheel built for Ubuntu 14.04 64bit likely will not work on Centos7 64bit.</dd>
+</dl>
+</div>
+<div class="section" id="creating-standalone-binaries">
+<h2>Creating standalone binaries<a class="headerlink" href="#creating-standalone-binaries" title="Permalink to this headline">¶</a></h2>
+<p>With virtual env activated:</p>
+<div class="highlight-bash"><div class="highlight"><pre>pip install <span class="nv">pyinstaller</span><span class="o">==</span>3.0.dev2  <span class="c"># or a later 3.x release</span>
+pyinstaller -F -n borg-PLATFORM borg/__main__.py
+ls -l dist/*
+</pre></div>
+</div>
+<p>On less good supported platforms than Linux, there might be issues with pyinstaller
+not finding the dynamic python library (libpython*) or with pyinstaller not having
+a pre-compiled &#8220;bootloader&#8221; for the platform or with not supporting the platform at
+all.</p>
+<dl class="docutils">
+<dt>Note: Standalone binaries built with pyinstaller are supposed to work on same OS,</dt>
+<dd>same architecture (x86 32bit, amd64 64bit) without external dependencies.</dd>
+</dl>
 </div>
 </div>
 
@@ -168,6 +203,8 @@ make html
 <li><a class="reference internal" href="#running-the-tests">Running the tests</a></li>
 <li><a class="reference internal" href="#building-the-docs-with-sphinx">Building the docs with Sphinx</a></li>
 <li><a class="reference internal" href="#creating-a-new-release">Creating a new release</a></li>
+<li><a class="reference internal" href="#creating-binary-wheels">Creating binary wheels</a></li>
+<li><a class="reference internal" href="#creating-standalone-binaries">Creating standalone binaries</a></li>
 </ul>
 </li>
 </ul>
@@ -201,7 +238,7 @@ make html
         <li class="right" style="margin-right: 10px">
           <a href="internals.html" title="Internals"
              >previous</a></li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.26.0 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.26.1 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

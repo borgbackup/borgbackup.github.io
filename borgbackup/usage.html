@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Usage &mdash; Borg - Deduplicating Archiver 0.26.0 documentation</title>
+    <title>Usage &mdash; Borg - Deduplicating Archiver 0.26.1 documentation</title>
     
     <link rel="stylesheet" href="_static/local.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.26.0',
+        VERSION:     '0.26.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="shortcut icon" href="_static/favicon.ico"/>
-    <link rel="top" title="Borg - Deduplicating Archiver 0.26.0 documentation" href="index.html" />
+    <link rel="top" title="Borg - Deduplicating Archiver 0.26.1 documentation" href="index.html" />
     <link rel="next" title="Frequently asked questions" href="faq.html" />
     <link rel="prev" title="Quick Start" href="quickstart.html" /> 
   </head>
@@ -38,7 +38,7 @@
         <li class="right" >
           <a href="quickstart.html" title="Quick Start"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.26.0 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.26.1 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -327,12 +327,6 @@ files or parts of files that have already been stored in other archives.</p>
 
 <span class="c"># Even slower, even higher compression (N = 0..9)</span>
 <span class="nv">$ </span>borg create --compression lzma,N /mnt/backup::repo ~
-
-<span class="c"># Backup some LV snapshots (you have to create the snapshots before this</span>
-<span class="c"># and remove them afterwards). We also backup the output of lvdisplay so</span>
-<span class="c"># we can see the LV sizes at restore time. See also &quot;borg extract&quot; examples.</span>
-<span class="nv">$ </span>lvdisplay &gt; lvdisplay.txt
-<span class="nv">$ </span>borg create --read-special /mnt/backup::repo lvdisplay.txt /dev/vg0/*-snapshot
 </pre></div>
 </div>
 </div>
@@ -394,11 +388,6 @@ be restricted by using the <code class="docutils literal"><span class="pre">--ex
 
 <span class="c"># Extract the &quot;src&quot; directory but exclude object files</span>
 <span class="nv">$ </span>borg extract /mnt/backup::my-files home/USERNAME/src --exclude <span class="s1">&#39;*.o&#39;</span>
-
-<span class="c"># Restore LV snapshots (the target LVs /dev/vg0/* of correct size have</span>
-<span class="c"># to be already available and will be overwritten by this command!)</span>
-<span class="nv">$ </span>borg extract --stdout /mnt/backup::repo dev/vg0/root-snapshot &gt; /dev/vg0/root
-<span class="nv">$ </span>borg extract --stdout /mnt/backup::repo dev/vg0/home-snapshot &gt; /dev/vg0/home
 </pre></div>
 </div>
 <dl class="docutils">
@@ -783,6 +772,60 @@ optional arguments:
 </div>
 </div>
 </div>
+<div class="section" id="additional-notes">
+<h1>Additional Notes<a class="headerlink" href="#additional-notes" title="Permalink to this headline">¶</a></h1>
+<p>Here are misc. notes about topics that are maybe not covered in enough detail in the usage section.</p>
+<div class="section" id="read-special">
+<h2>&#8211;read-special<a class="headerlink" href="#read-special" title="Permalink to this headline">¶</a></h2>
+<p>The option &#8211;read-special is not intended for normal, filesystem-level (full or
+partly-recursive) backups. You only give this option if you want to do something
+rather ... special - and if you have hand-picked some files that you want to treat
+that way.</p>
+<p><cite>borg create &#8211;read-special</cite> will open all files without doing any special treatment
+according to the file type (the only exception here are directories: they will be
+recursed into). Just imagine what happens if you do <cite>cat filename</cite> - the content
+you will see there is what borg will backup for that filename.</p>
+<p>So, for example, symlinks will be followed, block device content will be read,
+named pipes / UNIX domain sockets will be read.</p>
+<p>You need to be careful with what you give as filename when using &#8211;read-special,
+e.g. if you give /dev/zero, your backup will never terminate.</p>
+<p>The given files&#8217; metadata is saved as it would be saved without &#8211;read-special
+(e.g. its name, its size [might be 0], its mode, etc.) - but additionally, also
+the content read from it will be saved for it.</p>
+<p>Restoring such files&#8217; content is currently only supported one at a time via &#8211;stdout
+option (and you have to redirect stdout to where ever it shall go, maybe directly
+into an existing device file of your choice or indirectly via dd).</p>
+<div class="section" id="example">
+<h3>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h3>
+<p>Imagine you have made some snapshots of logical volumes (LVs) you want to backup.</p>
+<p>Note: For some scenarios, this is a good method to get &#8220;crash-like&#8221; consistency
+(I call it crash-like because it is the same as you would get if you just hit the
+reset button or your machine would abrubtly and completely crash).
+This is better than no consistency at all and a good method for some use cases,
+but likely not good enough if you have databases running.</p>
+<p>Then you create a backup archive of all these snapshots. The backup process will
+see a &#8220;frozen&#8221; state of the logical volumes, while the processes working in the
+original volumes continue changing the data stored there.</p>
+<p>You also add the output of <cite>lvdisplay</cite> to your backup, so you can see the LV sizes
+in case you ever need to recreate and restore them.</p>
+<p>After the backup has completed, you remove the snapshots again.</p>
+<dl class="docutils">
+<dt>::</dt>
+<dd>$ # create snapshots here
+$ lvdisplay &gt; lvdisplay.txt
+$ borg create &#8211;read-special /mnt/backup::repo lvdisplay.txt /dev/vg0/<a href="#id30"><span class="problematic" id="id31">*</span></a>-snapshot
+$ # remove snapshots here</dd>
+</dl>
+<p>Now, let&#8217;s see how to restore some LVs from such a backup.</p>
+<blockquote>
+<div>$ borg extract /mnt/backup::repo lvdisplay.txt
+$ # create empty LVs with correct sizes here (look into lvdisplay.txt).
+$ # we assume that you created an empty root and home LV and overwrite it now:
+$ borg extract &#8211;stdout /mnt/backup::repo dev/vg0/root-snapshot &gt; /dev/vg0/root
+$ borg extract &#8211;stdout /mnt/backup::repo dev/vg0/home-snapshot &gt; /dev/vg0/home</div></blockquote>
+</div>
+</div>
+</div>
 
 
           </div>
@@ -875,6 +918,13 @@ optional arguments:
 </li>
 </ul>
 </li>
+<li><a class="reference internal" href="#additional-notes">Additional Notes</a><ul>
+<li><a class="reference internal" href="#read-special">&#8211;read-special</a><ul>
+<li><a class="reference internal" href="#example">Example</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 <a href="https://github.com/borgbackup/borg"><img style="position: fixed; top: 0; right: 0; border: 0;"
   src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub"></a>
@@ -909,7 +959,7 @@ optional arguments:
         <li class="right" >
           <a href="quickstart.html" title="Quick Start"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.26.0 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.26.1 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

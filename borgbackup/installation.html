@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Installation &mdash; Borg - Deduplicating Archiver 0.26.0 documentation</title>
+    <title>Installation &mdash; Borg - Deduplicating Archiver 0.26.1 documentation</title>
     
     <link rel="stylesheet" href="_static/local.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.26.0',
+        VERSION:     '0.26.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="shortcut icon" href="_static/favicon.ico"/>
-    <link rel="top" title="Borg - Deduplicating Archiver 0.26.0 documentation" href="index.html" />
+    <link rel="top" title="Borg - Deduplicating Archiver 0.26.1 documentation" href="index.html" />
     <link rel="next" title="Quick Start" href="quickstart.html" />
     <link rel="prev" title="Introduction" href="intro.html" /> 
   </head>
@@ -38,7 +38,7 @@
         <li class="right" >
           <a href="intro.html" title="Introduction"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.26.0 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.26.1 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -49,9 +49,15 @@
             
   <div class="section" id="installation">
 <span id="id1"></span><h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
-<p><code class="docutils literal"><span class="pre">Borg</span></code> requires:</p>
+<p><code class="docutils literal"><span class="pre">Borg</span></code> pyinstaller binary installation requires:</p>
 <ul class="simple">
-<li><a class="reference external" href="http://www.python.org/">Python</a> &gt;= 3.2</li>
+<li>Linux: glibc &gt;= 2.12 (ok for most supported Linux releases)</li>
+<li>MacOS X: 10.10 (unknown whether it works for older releases)</li>
+<li>FreeBSD: 10.2 (unknown whether it works for older releases)</li>
+</ul>
+<p><code class="docutils literal"><span class="pre">Borg</span></code> non-binary installation requires:</p>
+<ul class="simple">
+<li><a class="reference external" href="http://www.python.org/">Python</a> &gt;= 3.2.2</li>
 <li><a class="reference external" href="https://www.openssl.org/">OpenSSL</a> &gt;= 1.0.0</li>
 <li><a class="reference external" href="http://savannah.nongnu.org/projects/acl/">libacl</a> (that pulls in <a class="reference external" href="http://savannah.nongnu.org/projects/attr/">libattr</a> also)</li>
 <li><a class="reference external" href="https://github.com/Cyan4973/lz4">liblz4</a></li>
@@ -65,6 +71,8 @@ and tools) followed by the generic installation of <code class="docutils literal
 <ul class="simple">
 <li><strong>dist package</strong> - easy and fast, needs a distribution and platform specific
 binary package (for your Linux/<a href="#id2"><span class="problematic" id="id3">*</span></a>BSD/OS X/... distribution).</li>
+<li><strong>pyinstaller binary</strong> - easy and fast, we provide a ready-to-use binary file
+that just works on the supported platforms</li>
 <li><strong>wheel</strong> - easy and fast, needs a platform specific borgbackup binary wheel,
 which matches your platform [OS and CPU]).</li>
 <li><strong>pypi</strong> - installing a source package from pypi needs more installation steps
@@ -107,6 +115,12 @@ that!</p>
 <p>If a package is available, it might be interesting for you to check its version
 and compare that to our latest release and review the change log (see links on
 our web site).</p>
+</div>
+<div class="section" id="installation-pyinstaller-binary">
+<h2>Installation (pyinstaller binary)<a class="headerlink" href="#installation-pyinstaller-binary" title="Permalink to this headline">¶</a></h2>
+<p>For some platforms we offer a ready-to-use standalone borg binary.</p>
+<p>It is supposed to work without requiring installation or preparations.</p>
+<p>Check <a class="reference external" href="https://github.com/borgbackup/borg/issues/214">https://github.com/borgbackup/borg/issues/214</a> for available binaries.</p>
 </div>
 <div class="section" id="debian-jessie-ubuntu-14-04-preparations-wheel">
 <h2>Debian Jessie / Ubuntu 14.04 preparations (wheel)<a class="headerlink" href="#debian-jessie-ubuntu-14-04-preparations-wheel" title="Permalink to this headline">¶</a></h2>
@@ -281,6 +295,7 @@ fakeroot -u tox
 <li><a class="reference internal" href="#general-notes">General notes</a></li>
 <li><a class="reference internal" href="#platform-notes">Platform notes</a></li>
 <li><a class="reference internal" href="#installation-dist-package">Installation (dist package)</a></li>
+<li><a class="reference internal" href="#installation-pyinstaller-binary">Installation (pyinstaller binary)</a></li>
 <li><a class="reference internal" href="#debian-jessie-ubuntu-14-04-preparations-wheel">Debian Jessie / Ubuntu 14.04 preparations (wheel)</a></li>
 <li><a class="reference internal" href="#installation-wheel">Installation (wheel)</a></li>
 <li><a class="reference internal" href="#debian-jessie-ubuntu-14-04-preparations-git-pypi">Debian Jessie / Ubuntu 14.04 preparations (git/pypi)</a></li>
@@ -324,7 +339,7 @@ fakeroot -u tox
         <li class="right" >
           <a href="intro.html" title="Introduction"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.26.0 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.26.1 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

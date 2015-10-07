@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Borg Documentation &mdash; Borg - Deduplicating Archiver 0.26.1 documentation</title>
+    <title>Borg Documentation &mdash; Borg - Deduplicating Archiver 0.27.0 documentation</title>
     
     <link rel="stylesheet" href="_static/local.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.26.1',
+        VERSION:     '0.27.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="shortcut icon" href="_static/favicon.ico"/>
-    <link rel="top" title="Borg - Deduplicating Archiver 0.26.1 documentation" href="#" />
+    <link rel="top" title="Borg - Deduplicating Archiver 0.27.0 documentation" href="#" />
     <link rel="next" title="Introduction" href="intro.html" /> 
   </head>
   <body role="document">
@@ -32,9 +32,12 @@
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a></li>
+        <li class="right" >
           <a href="intro.html" title="Introduction"
-             accesskey="N">next</a></li>
-        <li class="nav-item nav-item-0"><a href="#">Borg - Deduplicating Archiver 0.26.1 documentation</a> &raquo;</li> 
+             accesskey="N">next</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">Borg - Deduplicating Archiver 0.27.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -57,8 +60,6 @@
 <li class="toctree-l2"><a class="reference internal" href="installation.html#platform-notes">Platform notes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#installation-dist-package">Installation (dist package)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#installation-pyinstaller-binary">Installation (pyinstaller binary)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#debian-jessie-ubuntu-14-04-preparations-wheel">Debian Jessie / Ubuntu 14.04 preparations (wheel)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#installation-wheel">Installation (wheel)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#debian-jessie-ubuntu-14-04-preparations-git-pypi">Debian Jessie / Ubuntu 14.04 preparations (git/pypi)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#korora-fedora-21-preparations-git-pypi">Korora / Fedora 21 preparations (git/pypi)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#cygwin-preparations-git-pypi">Cygwin preparations (git/pypi)</a></li>
@@ -105,6 +106,7 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="changes.html">Borg Changelog</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="changes.html#version-0-27-0">Version 0.27.0</a></li>
 <li class="toctree-l2"><a class="reference internal" href="changes.html#version-0-26-1">Version 0.26.1</a></li>
 <li class="toctree-l2"><a class="reference internal" href="changes.html#version-0-26-0">Version 0.26.0</a></li>
 <li class="toctree-l2"><a class="reference internal" href="changes.html#version-0-25-0">Version 0.25.0</a></li>
@@ -150,11 +152,12 @@
 <li class="toctree-l2"><a class="reference internal" href="development.html#building-a-development-environment">Building a development environment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="development.html#running-the-tests">Running the tests</a></li>
 <li class="toctree-l2"><a class="reference internal" href="development.html#building-the-docs-with-sphinx">Building the docs with Sphinx</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development.html#using-vagrant">Using Vagrant</a></li>
 <li class="toctree-l2"><a class="reference internal" href="development.html#creating-a-new-release">Creating a new release</a></li>
-<li class="toctree-l2"><a class="reference internal" href="development.html#creating-binary-wheels">Creating binary wheels</a></li>
 <li class="toctree-l2"><a class="reference internal" href="development.html#creating-standalone-binaries">Creating standalone binaries</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">Borg Backup API documentation</a></li>
 </ul>
 </div>
 </div>
@@ -175,7 +178,7 @@
 <ul>
   <li><a href="https://borgbackup.github.io/borgbackup/">Main Web Site</a></li>
   <li><a href="https://pypi.python.org/pypi/borgbackup">PyPI packages</a></li>
-  <li><a href="https://github.com/borgbackup/borg/issues/147">Binary Packages</a></li>
+  <li><a href="https://github.com/borgbackup/borg/issues/214">Binaries</a></li>
   <li><a href="https://github.com/borgbackup/borg/blob/master/CHANGES.rst">Current ChangeLog</a></li>
   <li><a href="https://github.com/borgbackup/borg">GitHub</a></li>
   <li><a href="https://github.com/borgbackup/borg/issues">Issue Tracker</a></li>
@@ -209,9 +212,12 @@
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a></li>
+        <li class="right" >
           <a href="intro.html" title="Introduction"
-             >next</a></li>
-        <li class="nav-item nav-item-0"><a href="#">Borg - Deduplicating Archiver 0.26.1 documentation</a> &raquo;</li> 
+             >next</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">Borg - Deduplicating Archiver 0.27.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

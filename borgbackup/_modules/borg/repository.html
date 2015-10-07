@@ -1,0 +1,755 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>borg.repository &mdash; Borg - Deduplicating Archiver 0.27.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/local.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.27.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+    <link rel="top" title="Borg - Deduplicating Archiver 0.27.0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a></li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Borg - Deduplicating Archiver 0.27.0 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for borg.repository</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">configparser</span> <span class="kn">import</span> <span class="n">RawConfigParser</span>
+<span class="kn">from</span> <span class="nn">binascii</span> <span class="kn">import</span> <span class="n">hexlify</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">islice</span>
+<span class="kn">import</span> <span class="nn">errno</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">struct</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">zlib</span> <span class="kn">import</span> <span class="n">crc32</span>
+
+<span class="kn">from</span> <span class="nn">.hashindex</span> <span class="kn">import</span> <span class="n">NSIndex</span>
+<span class="kn">from</span> <span class="nn">.helpers</span> <span class="kn">import</span> <span class="n">Error</span><span class="p">,</span> <span class="n">IntegrityError</span><span class="p">,</span> <span class="n">read_msgpack</span><span class="p">,</span> <span class="n">write_msgpack</span><span class="p">,</span> <span class="n">unhexlify</span>
+<span class="kn">from</span> <span class="nn">.locking</span> <span class="kn">import</span> <span class="n">UpgradableLock</span>
+<span class="kn">from</span> <span class="nn">.lrucache</span> <span class="kn">import</span> <span class="n">LRUCache</span>
+
+<span class="n">MAX_OBJECT_SIZE</span> <span class="o">=</span> <span class="mi">20</span> <span class="o">*</span> <span class="mi">1024</span> <span class="o">*</span> <span class="mi">1024</span>
+<span class="n">MAGIC</span> <span class="o">=</span> <span class="n">b</span><span class="s">&#39;BORG_SEG&#39;</span>
+<span class="n">MAGIC_LEN</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">MAGIC</span><span class="p">)</span>
+<span class="n">TAG_PUT</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">TAG_DELETE</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">TAG_COMMIT</span> <span class="o">=</span> <span class="mi">2</span>
+
+
+<div class="viewcode-block" id="Repository"><a class="viewcode-back" href="../../api.html#borg.repository.Repository">[docs]</a><span class="k">class</span> <span class="nc">Repository</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Filesystem based transactional key value store</span>
+
+<span class="sd">    On disk layout:</span>
+<span class="sd">    dir/README</span>
+<span class="sd">    dir/config</span>
+<span class="sd">    dir/data/&lt;X / SEGMENTS_PER_DIR&gt;/&lt;X&gt;</span>
+<span class="sd">    dir/index.X</span>
+<span class="sd">    dir/hints.X</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">DEFAULT_MAX_SEGMENT_SIZE</span> <span class="o">=</span> <span class="mi">5</span> <span class="o">*</span> <span class="mi">1024</span> <span class="o">*</span> <span class="mi">1024</span>
+    <span class="n">DEFAULT_SEGMENTS_PER_DIR</span> <span class="o">=</span> <span class="mi">10000</span>
+
+<div class="viewcode-block" id="Repository.DoesNotExist"><a class="viewcode-back" href="../../api.html#borg.repository.Repository.DoesNotExist">[docs]</a>    <span class="k">class</span> <span class="nc">DoesNotExist</span><span class="p">(</span><span class="n">Error</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Repository {} does not exist.&quot;&quot;&quot;</span>
+</div>
+<div class="viewcode-block" id="Repository.AlreadyExists"><a class="viewcode-back" href="../../api.html#borg.repository.Repository.AlreadyExists">[docs]</a>    <span class="k">class</span> <span class="nc">AlreadyExists</span><span class="p">(</span><span class="n">Error</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Repository {} already exists.&quot;&quot;&quot;</span>
+</div>
+<div class="viewcode-block" id="Repository.InvalidRepository"><a class="viewcode-back" href="../../api.html#borg.repository.Repository.InvalidRepository">[docs]</a>    <span class="k">class</span> <span class="nc">InvalidRepository</span><span class="p">(</span><span class="n">Error</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;{} is not a valid repository.&quot;&quot;&quot;</span>
+</div>
+<div class="viewcode-block" id="Repository.CheckNeeded"><a class="viewcode-back" href="../../api.html#borg.repository.Repository.CheckNeeded">[docs]</a>    <span class="k">class</span> <span class="nc">CheckNeeded</span><span class="p">(</span><span class="n">Error</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Inconsistency detected. Please run &quot;borg check {}&quot;.&quot;&quot;&quot;</span>
+</div>
+<div class="viewcode-block" id="Repository.ObjectNotFound"><a class="viewcode-back" href="../../api.html#borg.repository.Repository.ObjectNotFound">[docs]</a>    <span class="k">class</span> <span class="nc">ObjectNotFound</span><span class="p">(</span><span class="n">Error</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Object with key {} not found in repository {}.&quot;&quot;&quot;</span>
+</div>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">create</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">exclusive</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">io</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lock</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_active_txn</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">if</span> <span class="n">create</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">exclusive</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;&lt;</span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s">&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Repository.create"><a class="viewcode-back" href="../../api.html#borg.repository.Repository.create">[docs]</a>    <span class="k">def</span> <span class="nf">create</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create a new empty repository at `path`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">path</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="bp">self</span><span class="o">.</span><span class="n">AlreadyExists</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s">&#39;README&#39;</span><span class="p">),</span> <span class="s">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fd</span><span class="p">:</span>
+            <span class="n">fd</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;This is a Borg repository</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s">&#39;data&#39;</span><span class="p">))</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">RawConfigParser</span><span class="p">()</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">add_section</span><span class="p">(</span><span class="s">&#39;repository&#39;</span><span class="p">)</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s">&#39;repository&#39;</span><span class="p">,</span> <span class="s">&#39;version&#39;</span><span class="p">,</span> <span class="s">&#39;1&#39;</span><span class="p">)</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s">&#39;repository&#39;</span><span class="p">,</span> <span class="s">&#39;segments_per_dir&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">DEFAULT_SEGMENTS_PER_DIR</span><span class="p">)</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s">&#39;repository&#39;</span><span class="p">,</span> <span class="s">&#39;max_segment_size&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">DEFAULT_MAX_SEGMENT_SIZE</span><span class="p">)</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s">&#39;repository&#39;</span><span class="p">,</span> <span class="s">&#39;id&#39;</span><span class="p">,</span> <span class="n">hexlify</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">urandom</span><span class="p">(</span><span class="mi">32</span><span class="p">))</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s">&#39;ascii&#39;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">save_config</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Repository.save_config"><a class="viewcode-back" href="../../api.html#borg.repository.Repository.save_config">[docs]</a>    <span class="k">def</span> <span class="nf">save_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+        <span class="n">config_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s">&#39;config&#39;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">config_path</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fd</span><span class="p">:</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Repository.save_key"><a class="viewcode-back" href="../../api.html#borg.repository.Repository.save_key">[docs]</a>    <span class="k">def</span> <span class="nf">save_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">keydata</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span>
+        <span class="n">keydata</span> <span class="o">=</span> <span class="n">keydata</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">)</span>  <span class="c"># remote repo: msgpack issue #99, getting bytes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s">&#39;repository&#39;</span><span class="p">,</span> <span class="s">&#39;key&#39;</span><span class="p">,</span> <span class="n">keydata</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">save_config</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Repository.load_key"><a class="viewcode-back" href="../../api.html#borg.repository.Repository.load_key">[docs]</a>    <span class="k">def</span> <span class="nf">load_key</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">keydata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;repository&#39;</span><span class="p">,</span> <span class="s">&#39;key&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">keydata</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">)</span>  <span class="c"># remote repo: msgpack issue #99, returning bytes</span>
+</div>
+<div class="viewcode-block" id="Repository.destroy"><a class="viewcode-back" href="../../api.html#borg.repository.Repository.destroy">[docs]</a>    <span class="k">def</span> <span class="nf">destroy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Destroy the repository at `self.path`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="s">&#39;config&#39;</span><span class="p">))</span>  <span class="c"># kill config first</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Repository.get_index_transaction_id"><a class="viewcode-back" href="../../api.html#borg.repository.Repository.get_index_transaction_id">[docs]</a>    <span class="k">def</span> <span class="nf">get_index_transaction_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="n">name</span><span class="p">[</span><span class="mi">6</span><span class="p">:])</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span> <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;index.&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">name</span><span class="p">[</span><span class="mi">6</span><span class="p">:]</span><span class="o">.</span><span class="n">isdigit</span><span class="p">()))</span>
+        <span class="k">if</span> <span class="n">indices</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">indices</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+</div>
+<div class="viewcode-block" id="Repository.get_transaction_id"><a class="viewcode-back" href="../../api.html#borg.repository.Repository.get_transaction_id">[docs]</a>    <span class="k">def</span> <span class="nf">get_transaction_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">index_transaction_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_index_transaction_id</span><span class="p">()</span>
+        <span class="n">segments_transaction_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">get_segments_transaction_id</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">index_transaction_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">segments_transaction_id</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="bp">self</span><span class="o">.</span><span class="n">CheckNeeded</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+        <span class="c"># Attempt to automatically rebuild index if we crashed between commit</span>
+        <span class="c"># tag write and index save</span>
+        <span class="k">if</span> <span class="n">index_transaction_id</span> <span class="o">!=</span> <span class="n">segments_transaction_id</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">index_transaction_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">index_transaction_id</span> <span class="o">&gt;</span> <span class="n">segments_transaction_id</span><span class="p">:</span>
+                <span class="n">replay_from</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">replay_from</span> <span class="o">=</span> <span class="n">index_transaction_id</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">replay_segments</span><span class="p">(</span><span class="n">replay_from</span><span class="p">,</span> <span class="n">segments_transaction_id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_index_transaction_id</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Repository.open"><a class="viewcode-back" href="../../api.html#borg.repository.Repository.open">[docs]</a>    <span class="k">def</span> <span class="nf">open</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">exclusive</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="bp">self</span><span class="o">.</span><span class="n">DoesNotExist</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lock</span> <span class="o">=</span> <span class="n">UpgradableLock</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s">&#39;lock&#39;</span><span class="p">),</span> <span class="n">exclusive</span><span class="p">)</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">RawConfigParser</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="s">&#39;config&#39;</span><span class="p">))</span>
+        <span class="k">if</span> <span class="s">&#39;repository&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">sections</span><span class="p">()</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">getint</span><span class="p">(</span><span class="s">&#39;repository&#39;</span><span class="p">,</span> <span class="s">&#39;version&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="bp">self</span><span class="o">.</span><span class="n">InvalidRepository</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_segment_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">getint</span><span class="p">(</span><span class="s">&#39;repository&#39;</span><span class="p">,</span> <span class="s">&#39;max_segment_size&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">segments_per_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">getint</span><span class="p">(</span><span class="s">&#39;repository&#39;</span><span class="p">,</span> <span class="s">&#39;segments_per_dir&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">unhexlify</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;repository&#39;</span><span class="p">,</span> <span class="s">&#39;id&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">io</span> <span class="o">=</span> <span class="n">LoggedIO</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_segment_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">segments_per_dir</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Repository.close"><a class="viewcode-back" href="../../api.html#borg.repository.Repository.close">[docs]</a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lock</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">io</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lock</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lock</span> <span class="o">=</span> <span class="bp">None</span>
+</div>
+<div class="viewcode-block" id="Repository.commit"><a class="viewcode-back" href="../../api.html#borg.repository.Repository.commit">[docs]</a>    <span class="k">def</span> <span class="nf">commit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Commit transaction</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">write_commit</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">compact_segments</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write_index</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Repository.open_index"><a class="viewcode-back" href="../../api.html#borg.repository.Repository.open_index">[docs]</a>    <span class="k">def</span> <span class="nf">open_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">transaction_id</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">transaction_id</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">NSIndex</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">NSIndex</span><span class="o">.</span><span class="n">read</span><span class="p">((</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="s">&#39;index.</span><span class="si">%d</span><span class="s">&#39;</span><span class="p">)</span> <span class="o">%</span> <span class="n">transaction_id</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="Repository.prepare_txn"><a class="viewcode-back" href="../../api.html#borg.repository.Repository.prepare_txn">[docs]</a>    <span class="k">def</span> <span class="nf">prepare_txn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">transaction_id</span><span class="p">,</span> <span class="n">do_cleanup</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_active_txn</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lock</span><span class="o">.</span><span class="n">upgrade</span><span class="p">()</span>
+        <span class="k">except</span> <span class="n">UpgradableLock</span><span class="o">.</span><span class="n">ExclusiveLockFailed</span><span class="p">:</span>
+            <span class="c"># if upgrading the lock to exclusive fails, we do not have an</span>
+            <span class="c"># active transaction. this is important for &quot;serve&quot; mode, where</span>
+            <span class="c"># the repository instance lives on - even if exceptions happened.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_active_txn</span> <span class="o">=</span> <span class="bp">False</span>
+            <span class="k">raise</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">open_index</span><span class="p">(</span><span class="n">transaction_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">transaction_id</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">segments</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">compact</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">do_cleanup</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">cleanup</span><span class="p">(</span><span class="n">transaction_id</span><span class="p">)</span>
+            <span class="n">hints</span> <span class="o">=</span> <span class="n">read_msgpack</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="s">&#39;hints.</span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">transaction_id</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">hints</span><span class="p">[</span><span class="n">b</span><span class="s">&#39;version&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Unknown hints file version: </span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">hints</span><span class="p">[</span><span class="s">&#39;version&#39;</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">segments</span> <span class="o">=</span> <span class="n">hints</span><span class="p">[</span><span class="n">b</span><span class="s">&#39;segments&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">compact</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">hints</span><span class="p">[</span><span class="n">b</span><span class="s">&#39;compact&#39;</span><span class="p">])</span>
+</div>
+<div class="viewcode-block" id="Repository.write_index"><a class="viewcode-back" href="../../api.html#borg.repository.Repository.write_index">[docs]</a>    <span class="k">def</span> <span class="nf">write_index</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">hints</span> <span class="o">=</span> <span class="p">{</span><span class="n">b</span><span class="s">&#39;version&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                 <span class="n">b</span><span class="s">&#39;segments&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">segments</span><span class="p">,</span>
+                 <span class="n">b</span><span class="s">&#39;compact&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">compact</span><span class="p">)}</span>
+        <span class="n">transaction_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">get_segments_transaction_id</span><span class="p">()</span>
+        <span class="n">write_msgpack</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="s">&#39;hints.</span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">transaction_id</span><span class="p">),</span> <span class="n">hints</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="s">&#39;index.tmp&#39;</span><span class="p">))</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="s">&#39;index.tmp&#39;</span><span class="p">),</span>
+                  <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="s">&#39;index.</span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">transaction_id</span><span class="p">))</span>
+        <span class="c"># Remove old indices</span>
+        <span class="n">current</span> <span class="o">=</span> <span class="s">&#39;.</span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">transaction_id</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;index.&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;hints.&#39;</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">current</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">name</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="bp">None</span>
+</div>
+<div class="viewcode-block" id="Repository.compact_segments"><a class="viewcode-back" href="../../api.html#borg.repository.Repository.compact_segments">[docs]</a>    <span class="k">def</span> <span class="nf">compact_segments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Compact sparse segments by copying data into new segments</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">compact</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="n">index_transaction_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_index_transaction_id</span><span class="p">()</span>
+        <span class="n">segments</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">segments</span>
+        <span class="k">for</span> <span class="n">segment</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">compact</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">segment_exists</span><span class="p">(</span><span class="n">segment</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">tag</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">iter_objects</span><span class="p">(</span><span class="n">segment</span><span class="p">,</span> <span class="n">include_data</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">tag</span> <span class="o">==</span> <span class="n">TAG_PUT</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span> <span class="o">==</span> <span class="p">(</span><span class="n">segment</span><span class="p">,</span> <span class="n">offset</span><span class="p">):</span>
+                        <span class="n">new_segment</span><span class="p">,</span> <span class="n">offset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">write_put</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_segment</span><span class="p">,</span> <span class="n">offset</span>
+                        <span class="n">segments</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">new_segment</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+                        <span class="n">segments</span><span class="p">[</span><span class="n">new_segment</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+                        <span class="n">segments</span><span class="p">[</span><span class="n">segment</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span>
+                    <span class="k">elif</span> <span class="n">tag</span> <span class="o">==</span> <span class="n">TAG_DELETE</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">index_transaction_id</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="n">segment</span> <span class="o">&gt;</span> <span class="n">index_transaction_id</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">write_delete</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+                <span class="k">assert</span> <span class="n">segments</span><span class="p">[</span><span class="n">segment</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">write_commit</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">segment</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">compact</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">segments</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">segment</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">delete_segment</span><span class="p">(</span><span class="n">segment</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">compact</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Repository.replay_segments"><a class="viewcode-back" href="../../api.html#borg.repository.Repository.replay_segments">[docs]</a>    <span class="k">def</span> <span class="nf">replay_segments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index_transaction_id</span><span class="p">,</span> <span class="n">segments_transaction_id</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prepare_txn</span><span class="p">(</span><span class="n">index_transaction_id</span><span class="p">,</span> <span class="n">do_cleanup</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">segment</span><span class="p">,</span> <span class="n">filename</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">segment_iterator</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">index_transaction_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">segment</span> <span class="o">&lt;=</span> <span class="n">index_transaction_id</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="n">segment</span> <span class="o">&gt;</span> <span class="n">segments_transaction_id</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">segments</span><span class="p">[</span><span class="n">segment</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">tag</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">offset</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">iter_objects</span><span class="p">(</span><span class="n">segment</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">tag</span> <span class="o">==</span> <span class="n">TAG_PUT</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">s</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">compact</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">segments</span><span class="p">[</span><span class="n">s</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span>
+                    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                        <span class="k">pass</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">segment</span><span class="p">,</span> <span class="n">offset</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">segments</span><span class="p">[</span><span class="n">segment</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">elif</span> <span class="n">tag</span> <span class="o">==</span> <span class="n">TAG_DELETE</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">s</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">segments</span><span class="p">[</span><span class="n">s</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">compact</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                        <span class="k">pass</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">compact</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">segment</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">tag</span> <span class="o">==</span> <span class="n">TAG_COMMIT</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="bp">self</span><span class="o">.</span><span class="n">CheckNeeded</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">segments</span><span class="p">[</span><span class="n">segment</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">compact</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">segment</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write_index</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Repository.check"><a class="viewcode-back" href="../../api.html#borg.repository.Repository.check">[docs]</a>    <span class="k">def</span> <span class="nf">check</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repair</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check repository consistency</span>
+
+<span class="sd">        This method verifies all segment checksums and makes sure</span>
+<span class="sd">        the index is consistent with the data stored in the segments.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">error_found</span> <span class="o">=</span> <span class="bp">False</span>
+
+        <span class="k">def</span> <span class="nf">report_error</span><span class="p">(</span><span class="n">msg</span><span class="p">):</span>
+            <span class="n">nonlocal</span> <span class="n">error_found</span>
+            <span class="n">error_found</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="k">print</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="nb">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+
+        <span class="k">assert</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_active_txn</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">transaction_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_transaction_id</span><span class="p">()</span>
+            <span class="n">current_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">open_index</span><span class="p">(</span><span class="n">transaction_id</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="n">transaction_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">get_segments_transaction_id</span><span class="p">()</span>
+            <span class="n">current_index</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">if</span> <span class="n">transaction_id</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">transaction_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_index_transaction_id</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">transaction_id</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">transaction_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">get_latest_segment</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">repair</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">cleanup</span><span class="p">(</span><span class="n">transaction_id</span><span class="p">)</span>
+        <span class="n">segments_transaction_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">get_segments_transaction_id</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prepare_txn</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">segment</span><span class="p">,</span> <span class="n">filename</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">segment_iterator</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">segment</span> <span class="o">&gt;</span> <span class="n">transaction_id</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">objects</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">iter_objects</span><span class="p">(</span><span class="n">segment</span><span class="p">))</span>
+            <span class="k">except</span> <span class="n">IntegrityError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+                <span class="n">report_error</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">err</span><span class="p">))</span>
+                <span class="n">objects</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">if</span> <span class="n">repair</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">recover_segment</span><span class="p">(</span><span class="n">segment</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+                    <span class="n">objects</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">iter_objects</span><span class="p">(</span><span class="n">segment</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">segments</span><span class="p">[</span><span class="n">segment</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">tag</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">offset</span> <span class="ow">in</span> <span class="n">objects</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">tag</span> <span class="o">==</span> <span class="n">TAG_PUT</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">s</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">compact</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">segments</span><span class="p">[</span><span class="n">s</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span>
+                    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                        <span class="k">pass</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">segment</span><span class="p">,</span> <span class="n">offset</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">segments</span><span class="p">[</span><span class="n">segment</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">elif</span> <span class="n">tag</span> <span class="o">==</span> <span class="n">TAG_DELETE</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">s</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">segments</span><span class="p">[</span><span class="n">s</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">compact</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                        <span class="k">pass</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">compact</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">segment</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">tag</span> <span class="o">==</span> <span class="n">TAG_COMMIT</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">report_error</span><span class="p">(</span><span class="s">&#39;Unexpected tag {} in segment {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tag</span><span class="p">,</span> <span class="n">segment</span><span class="p">))</span>
+        <span class="c"># We might need to add a commit tag if no committed segment is found</span>
+        <span class="k">if</span> <span class="n">repair</span> <span class="ow">and</span> <span class="n">segments_transaction_id</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">report_error</span><span class="p">(</span><span class="s">&#39;Adding commit tag to segment {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">transaction_id</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">segment</span> <span class="o">=</span> <span class="n">transaction_id</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">write_commit</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">current_index</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">repair</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">current_index</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">):</span>
+                <span class="n">report_error</span><span class="p">(</span><span class="s">&#39;Index object count mismatch. {} != {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">current_index</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">)))</span>
+            <span class="k">elif</span> <span class="n">current_index</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="n">current_index</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span> <span class="o">!=</span> <span class="n">value</span><span class="p">:</span>
+                        <span class="n">report_error</span><span class="p">(</span><span class="s">&#39;Index mismatch for key {}. {} != {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">current_index</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))))</span>
+        <span class="k">if</span> <span class="n">repair</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">compact_segments</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write_index</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="n">error_found</span> <span class="ow">or</span> <span class="n">repair</span>
+</div>
+<div class="viewcode-block" id="Repository.rollback"><a class="viewcode-back" href="../../api.html#borg.repository.Repository.rollback">[docs]</a>    <span class="k">def</span> <span class="nf">rollback</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_active_txn</span> <span class="o">=</span> <span class="bp">False</span>
+</div>
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">open_index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_transaction_id</span><span class="p">())</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">open_index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_transaction_id</span><span class="p">())</span>
+        <span class="k">return</span> <span class="nb">id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span>
+
+<div class="viewcode-block" id="Repository.list"><a class="viewcode-back" href="../../api.html#borg.repository.Repository.list">[docs]</a>    <span class="k">def</span> <span class="nf">list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">open_index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_transaction_id</span><span class="p">())</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">id_</span> <span class="k">for</span> <span class="n">id_</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">islice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">iteritems</span><span class="p">(</span><span class="n">marker</span><span class="o">=</span><span class="n">marker</span><span class="p">),</span> <span class="n">limit</span><span class="p">)]</span>
+</div>
+<div class="viewcode-block" id="Repository.get"><a class="viewcode-back" href="../../api.html#borg.repository.Repository.get">[docs]</a>    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id_</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">open_index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_transaction_id</span><span class="p">())</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">segment</span><span class="p">,</span> <span class="n">offset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">id_</span><span class="p">]</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">segment</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">id_</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="bp">self</span><span class="o">.</span><span class="n">ObjectNotFound</span><span class="p">(</span><span class="n">id_</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Repository.get_many"><a class="viewcode-back" href="../../api.html#borg.repository.Repository.get_many">[docs]</a>    <span class="k">def</span> <span class="nf">get_many</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ids</span><span class="p">,</span> <span class="n">is_preloaded</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">id_</span> <span class="ow">in</span> <span class="n">ids</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">id_</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Repository.put"><a class="viewcode-back" href="../../api.html#borg.repository.Repository.put">[docs]</a>    <span class="k">def</span> <span class="nf">put</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_active_txn</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">prepare_txn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_transaction_id</span><span class="p">())</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">segment</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="nb">id</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">segments</span><span class="p">[</span><span class="n">segment</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">compact</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">segment</span><span class="p">)</span>
+            <span class="n">segment</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">write_delete</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">segments</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">segment</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">compact</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">segment</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="n">segment</span><span class="p">,</span> <span class="n">offset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">write_put</span><span class="p">(</span><span class="nb">id</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">segments</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">segment</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">segments</span><span class="p">[</span><span class="n">segment</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="nb">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">segment</span><span class="p">,</span> <span class="n">offset</span>
+</div>
+<div class="viewcode-block" id="Repository.delete"><a class="viewcode-back" href="../../api.html#borg.repository.Repository.delete">[docs]</a>    <span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_active_txn</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">prepare_txn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_transaction_id</span><span class="p">())</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">segment</span><span class="p">,</span> <span class="n">offset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="bp">self</span><span class="o">.</span><span class="n">ObjectNotFound</span><span class="p">(</span><span class="nb">id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">segments</span><span class="p">[</span><span class="n">segment</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">compact</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">segment</span><span class="p">)</span>
+        <span class="n">segment</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">write_delete</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">compact</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">segment</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">segments</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">segment</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Repository.preload"><a class="viewcode-back" href="../../api.html#borg.repository.Repository.preload">[docs]</a>    <span class="k">def</span> <span class="nf">preload</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ids</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Preload objects (only applies to remote repositories)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+</div></div>
+<div class="viewcode-block" id="LoggedIO"><a class="viewcode-back" href="../../api.html#borg.repository.LoggedIO">[docs]</a><span class="k">class</span> <span class="nc">LoggedIO</span><span class="p">:</span>
+
+    <span class="n">header_fmt</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span><span class="s">&#39;&lt;IIB&#39;</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">header_fmt</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">9</span>
+    <span class="n">put_header_fmt</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span><span class="s">&#39;&lt;IIB32s&#39;</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">put_header_fmt</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">41</span>
+    <span class="n">header_no_crc_fmt</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span><span class="s">&#39;&lt;IB&#39;</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">header_no_crc_fmt</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">5</span>
+    <span class="n">crc_fmt</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span><span class="s">&#39;&lt;I&#39;</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">crc_fmt</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">4</span>
+
+    <span class="n">_commit</span> <span class="o">=</span> <span class="n">header_no_crc_fmt</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="n">TAG_COMMIT</span><span class="p">)</span>
+    <span class="n">COMMIT</span> <span class="o">=</span> <span class="n">crc_fmt</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">crc32</span><span class="p">(</span><span class="n">_commit</span><span class="p">))</span> <span class="o">+</span> <span class="n">_commit</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">limit</span><span class="p">,</span> <span class="n">segments_per_dir</span><span class="p">,</span> <span class="n">capacity</span><span class="o">=</span><span class="mi">90</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fds</span> <span class="o">=</span> <span class="n">LRUCache</span><span class="p">(</span><span class="n">capacity</span><span class="p">,</span>
+                            <span class="n">dispose</span><span class="o">=</span><span class="k">lambda</span> <span class="n">fd</span><span class="p">:</span> <span class="n">fd</span><span class="o">.</span><span class="n">close</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">segment</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">limit</span> <span class="o">=</span> <span class="n">limit</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">segments_per_dir</span> <span class="o">=</span> <span class="n">segments_per_dir</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">offset</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_write_fd</span> <span class="o">=</span> <span class="bp">None</span>
+
+<div class="viewcode-block" id="LoggedIO.close"><a class="viewcode-back" href="../../api.html#borg.repository.LoggedIO.close">[docs]</a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">close_segment</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fds</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fds</span> <span class="o">=</span> <span class="bp">None</span>  <span class="c"># Just to make sure we&#39;re disabled</span>
+</div>
+<div class="viewcode-block" id="LoggedIO.segment_iterator"><a class="viewcode-back" href="../../api.html#borg.repository.LoggedIO.segment_iterator">[docs]</a>    <span class="k">def</span> <span class="nf">segment_iterator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="n">data_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="s">&#39;data&#39;</span><span class="p">)</span>
+        <span class="n">dirs</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">((</span><span class="nb">dir</span> <span class="k">for</span> <span class="nb">dir</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">data_path</span><span class="p">)</span> <span class="k">if</span> <span class="nb">dir</span><span class="o">.</span><span class="n">isdigit</span><span class="p">()),</span> <span class="n">key</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="n">reverse</span><span class="p">)</span>
+        <span class="k">for</span> <span class="nb">dir</span> <span class="ow">in</span> <span class="n">dirs</span><span class="p">:</span>
+            <span class="n">filenames</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="nb">dir</span><span class="p">))</span>
+            <span class="n">sorted_filenames</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">((</span><span class="n">filename</span> <span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">filenames</span>
+                                       <span class="k">if</span> <span class="n">filename</span><span class="o">.</span><span class="n">isdigit</span><span class="p">()),</span> <span class="n">key</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="n">reverse</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">sorted_filenames</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="nb">int</span><span class="p">(</span><span class="n">filename</span><span class="p">),</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="nb">dir</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="LoggedIO.get_latest_segment"><a class="viewcode-back" href="../../api.html#borg.repository.LoggedIO.get_latest_segment">[docs]</a>    <span class="k">def</span> <span class="nf">get_latest_segment</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">segment</span><span class="p">,</span> <span class="n">filename</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">segment_iterator</span><span class="p">(</span><span class="n">reverse</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">segment</span>
+        <span class="k">return</span> <span class="bp">None</span>
+</div>
+<div class="viewcode-block" id="LoggedIO.get_segments_transaction_id"><a class="viewcode-back" href="../../api.html#borg.repository.LoggedIO.get_segments_transaction_id">[docs]</a>    <span class="k">def</span> <span class="nf">get_segments_transaction_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Verify that the transaction id is consistent with the index transaction id</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">segment</span><span class="p">,</span> <span class="n">filename</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">segment_iterator</span><span class="p">(</span><span class="n">reverse</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_committed_segment</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">segment</span>
+        <span class="k">return</span> <span class="bp">None</span>
+</div>
+<div class="viewcode-block" id="LoggedIO.cleanup"><a class="viewcode-back" href="../../api.html#borg.repository.LoggedIO.cleanup">[docs]</a>    <span class="k">def</span> <span class="nf">cleanup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">transaction_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Delete segment files left by aborted transactions</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">segment</span> <span class="o">=</span> <span class="n">transaction_id</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="n">segment</span><span class="p">,</span> <span class="n">filename</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">segment_iterator</span><span class="p">(</span><span class="n">reverse</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">segment</span> <span class="o">&gt;</span> <span class="n">transaction_id</span><span class="p">:</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">break</span>
+</div>
+<div class="viewcode-block" id="LoggedIO.is_committed_segment"><a class="viewcode-back" href="../../api.html#borg.repository.LoggedIO.is_committed_segment">[docs]</a>    <span class="k">def</span> <span class="nf">is_committed_segment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check if segment ends with a COMMIT_TAG tag</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fd</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">fd</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">header_fmt</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">SEEK_END</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="c"># return False if segment file is empty or too small</span>
+                <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">errno</span> <span class="o">==</span> <span class="n">errno</span><span class="o">.</span><span class="n">EINVAL</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">False</span>
+                <span class="k">raise</span> <span class="n">e</span>
+            <span class="k">return</span> <span class="n">fd</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">header_fmt</span><span class="o">.</span><span class="n">size</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">COMMIT</span>
+</div>
+<div class="viewcode-block" id="LoggedIO.segment_filename"><a class="viewcode-back" href="../../api.html#borg.repository.LoggedIO.segment_filename">[docs]</a>    <span class="k">def</span> <span class="nf">segment_filename</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">segment</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="s">&#39;data&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">segment</span> <span class="o">//</span> <span class="bp">self</span><span class="o">.</span><span class="n">segments_per_dir</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">segment</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="LoggedIO.get_write_fd"><a class="viewcode-back" href="../../api.html#borg.repository.LoggedIO.get_write_fd">[docs]</a>    <span class="k">def</span> <span class="nf">get_write_fd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">no_new</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">no_new</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">offset</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">offset</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">limit</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">close_segment</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_write_fd</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">segment</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">segments_per_dir</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">dirname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="s">&#39;data&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">segment</span> <span class="o">//</span> <span class="bp">self</span><span class="o">.</span><span class="n">segments_per_dir</span><span class="p">))</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">dirname</span><span class="p">):</span>
+                    <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">dirname</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_write_fd</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">segment_filename</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">segment</span><span class="p">),</span> <span class="s">&#39;ab&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_write_fd</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">MAGIC</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">offset</span> <span class="o">=</span> <span class="n">MAGIC_LEN</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_write_fd</span>
+</div>
+<div class="viewcode-block" id="LoggedIO.get_fd"><a class="viewcode-back" href="../../api.html#borg.repository.LoggedIO.get_fd">[docs]</a>    <span class="k">def</span> <span class="nf">get_fd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">segment</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fds</span><span class="p">[</span><span class="n">segment</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="n">fd</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">segment_filename</span><span class="p">(</span><span class="n">segment</span><span class="p">),</span> <span class="s">&#39;rb&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fds</span><span class="p">[</span><span class="n">segment</span><span class="p">]</span> <span class="o">=</span> <span class="n">fd</span>
+            <span class="k">return</span> <span class="n">fd</span>
+</div>
+<div class="viewcode-block" id="LoggedIO.delete_segment"><a class="viewcode-back" href="../../api.html#borg.repository.LoggedIO.delete_segment">[docs]</a>    <span class="k">def</span> <span class="nf">delete_segment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">segment</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">segment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fds</span><span class="p">:</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">fds</span><span class="p">[</span><span class="n">segment</span><span class="p">]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">segment_filename</span><span class="p">(</span><span class="n">segment</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+            <span class="k">pass</span>
+</div>
+<div class="viewcode-block" id="LoggedIO.segment_exists"><a class="viewcode-back" href="../../api.html#borg.repository.LoggedIO.segment_exists">[docs]</a>    <span class="k">def</span> <span class="nf">segment_exists</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">segment</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">segment_filename</span><span class="p">(</span><span class="n">segment</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="LoggedIO.iter_objects"><a class="viewcode-back" href="../../api.html#borg.repository.LoggedIO.iter_objects">[docs]</a>    <span class="k">def</span> <span class="nf">iter_objects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">segment</span><span class="p">,</span> <span class="n">include_data</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="n">fd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_fd</span><span class="p">(</span><span class="n">segment</span><span class="p">)</span>
+        <span class="n">fd</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">fd</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">MAGIC_LEN</span><span class="p">)</span> <span class="o">!=</span> <span class="n">MAGIC</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">IntegrityError</span><span class="p">(</span><span class="s">&#39;Invalid segment magic [segment {}, offset {}]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">segment</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="n">MAGIC_LEN</span>
+        <span class="n">header</span> <span class="o">=</span> <span class="n">fd</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">header_fmt</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+        <span class="k">while</span> <span class="n">header</span><span class="p">:</span>
+            <span class="n">size</span><span class="p">,</span> <span class="n">tag</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">header_fmt</span><span class="p">,</span> <span class="n">header</span><span class="p">,</span> <span class="n">segment</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span>
+                                              <span class="p">(</span><span class="n">TAG_PUT</span><span class="p">,</span> <span class="n">TAG_DELETE</span><span class="p">,</span> <span class="n">TAG_COMMIT</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">include_data</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="n">tag</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">data</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="n">tag</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">offset</span>
+            <span class="n">offset</span> <span class="o">+=</span> <span class="n">size</span>
+            <span class="n">header</span> <span class="o">=</span> <span class="n">fd</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">header_fmt</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="LoggedIO.recover_segment"><a class="viewcode-back" href="../../api.html#borg.repository.LoggedIO.recover_segment">[docs]</a>    <span class="k">def</span> <span class="nf">recover_segment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">segment</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">segment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fds</span><span class="p">:</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">fds</span><span class="p">[</span><span class="n">segment</span><span class="p">]</span>
+        <span class="c"># FIXME: save a copy of the original file</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fd</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">memoryview</span><span class="p">(</span><span class="n">fd</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">filename</span> <span class="o">+</span> <span class="s">&#39;.beforerecover&#39;</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;attempting to recover &#39;</span> <span class="o">+</span> <span class="n">filename</span><span class="p">,</span> <span class="nb">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fd</span><span class="p">:</span>
+            <span class="n">fd</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">MAGIC</span><span class="p">)</span>
+            <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">header_fmt</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+                <span class="n">crc</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">tag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">header_fmt</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="n">data</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">header_fmt</span><span class="o">.</span><span class="n">size</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">size</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">header_fmt</span><span class="o">.</span><span class="n">size</span> <span class="ow">or</span> <span class="n">size</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+                    <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+                    <span class="k">continue</span>
+                <span class="k">if</span> <span class="n">crc32</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">4</span><span class="p">:</span><span class="n">size</span><span class="p">])</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span> <span class="o">!=</span> <span class="n">crc</span><span class="p">:</span>
+                    <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+                    <span class="k">continue</span>
+                <span class="n">fd</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">data</span><span class="p">[:</span><span class="n">size</span><span class="p">])</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">size</span><span class="p">:]</span>
+</div>
+<div class="viewcode-block" id="LoggedIO.read"><a class="viewcode-back" href="../../api.html#borg.repository.LoggedIO.read">[docs]</a>    <span class="k">def</span> <span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">segment</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="nb">id</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">segment</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">segment</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_write_fd</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_write_fd</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+        <span class="n">fd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_fd</span><span class="p">(</span><span class="n">segment</span><span class="p">)</span>
+        <span class="n">fd</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="n">offset</span><span class="p">)</span>
+        <span class="n">header</span> <span class="o">=</span> <span class="n">fd</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">put_header_fmt</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+        <span class="n">size</span><span class="p">,</span> <span class="n">tag</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">put_header_fmt</span><span class="p">,</span> <span class="n">header</span><span class="p">,</span> <span class="n">segment</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="p">(</span><span class="n">TAG_PUT</span><span class="p">,</span> <span class="p">))</span>
+        <span class="k">if</span> <span class="nb">id</span> <span class="o">!=</span> <span class="n">key</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">IntegrityError</span><span class="p">(</span><span class="s">&#39;Invalid segment entry header, is not for wanted id [segment {}, offset {}]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">segment</span><span class="p">,</span> <span class="n">offset</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">data</span>
+</div>
+    <span class="k">def</span> <span class="nf">_read</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fd</span><span class="p">,</span> <span class="n">fmt</span><span class="p">,</span> <span class="n">header</span><span class="p">,</span> <span class="n">segment</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">acceptable_tags</span><span class="p">):</span>
+        <span class="c"># some code shared by read() and iter_objects()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">hdr_tuple</span> <span class="o">=</span> <span class="n">fmt</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">struct</span><span class="o">.</span><span class="n">error</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">IntegrityError</span><span class="p">(</span><span class="s">&#39;Invalid segment entry header [segment {}, offset {}]: {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">segment</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">err</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">fmt</span> <span class="ow">is</span> <span class="bp">self</span><span class="o">.</span><span class="n">put_header_fmt</span><span class="p">:</span>
+            <span class="n">crc</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">tag</span><span class="p">,</span> <span class="n">key</span> <span class="o">=</span> <span class="n">hdr_tuple</span>
+        <span class="k">elif</span> <span class="n">fmt</span> <span class="ow">is</span> <span class="bp">self</span><span class="o">.</span><span class="n">header_fmt</span><span class="p">:</span>
+            <span class="n">crc</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">tag</span> <span class="o">=</span> <span class="n">hdr_tuple</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&quot;_read called with unsupported format&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">size</span> <span class="o">&gt;</span> <span class="n">MAX_OBJECT_SIZE</span> <span class="ow">or</span> <span class="n">size</span> <span class="o">&lt;</span> <span class="n">fmt</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">IntegrityError</span><span class="p">(</span><span class="s">&#39;Invalid segment entry size [segment {}, offset {}]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">segment</span><span class="p">,</span> <span class="n">offset</span><span class="p">))</span>
+        <span class="n">length</span> <span class="o">=</span> <span class="n">size</span> <span class="o">-</span> <span class="n">fmt</span><span class="o">.</span><span class="n">size</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">fd</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">length</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">!=</span> <span class="n">length</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">IntegrityError</span><span class="p">(</span><span class="s">&#39;Segment entry data short read [segment {}, offset {}]: expected {}, got {} bytes&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">segment</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">length</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)))</span>
+        <span class="k">if</span> <span class="n">crc32</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">crc32</span><span class="p">(</span><span class="n">memoryview</span><span class="p">(</span><span class="n">header</span><span class="p">)[</span><span class="mi">4</span><span class="p">:]))</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span> <span class="o">!=</span> <span class="n">crc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">IntegrityError</span><span class="p">(</span><span class="s">&#39;Segment entry checksum mismatch [segment {}, offset {}]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">segment</span><span class="p">,</span> <span class="n">offset</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">tag</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">acceptable_tags</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">IntegrityError</span><span class="p">(</span><span class="s">&#39;Invalid segment entry header, did not get acceptable tag [segment {}, offset {}]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">segment</span><span class="p">,</span> <span class="n">offset</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">tag</span> <span class="ow">in</span> <span class="p">(</span><span class="n">TAG_PUT</span><span class="p">,</span> <span class="n">TAG_DELETE</span><span class="p">):</span>
+            <span class="n">key</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[:</span><span class="mi">32</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="mi">32</span><span class="p">:]</span>
+        <span class="k">return</span> <span class="n">size</span><span class="p">,</span> <span class="n">tag</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">data</span>
+
+<div class="viewcode-block" id="LoggedIO.write_put"><a class="viewcode-back" href="../../api.html#borg.repository.LoggedIO.write_put">[docs]</a>    <span class="k">def</span> <span class="nf">write_put</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">put_header_fmt</span><span class="o">.</span><span class="n">size</span>
+        <span class="n">fd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_write_fd</span><span class="p">()</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">offset</span>
+        <span class="n">header</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">header_no_crc_fmt</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">TAG_PUT</span><span class="p">)</span>
+        <span class="n">crc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">crc_fmt</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">crc32</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">crc32</span><span class="p">(</span><span class="nb">id</span><span class="p">,</span> <span class="n">crc32</span><span class="p">(</span><span class="n">header</span><span class="p">)))</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span><span class="p">)</span>
+        <span class="n">fd</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">b</span><span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">crc</span><span class="p">,</span> <span class="n">header</span><span class="p">,</span> <span class="nb">id</span><span class="p">,</span> <span class="n">data</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">offset</span> <span class="o">+=</span> <span class="n">size</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">segment</span><span class="p">,</span> <span class="n">offset</span>
+</div>
+<div class="viewcode-block" id="LoggedIO.write_delete"><a class="viewcode-back" href="../../api.html#borg.repository.LoggedIO.write_delete">[docs]</a>    <span class="k">def</span> <span class="nf">write_delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">):</span>
+        <span class="n">fd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_write_fd</span><span class="p">()</span>
+        <span class="n">header</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">header_no_crc_fmt</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">put_header_fmt</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">TAG_DELETE</span><span class="p">)</span>
+        <span class="n">crc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">crc_fmt</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">crc32</span><span class="p">(</span><span class="nb">id</span><span class="p">,</span> <span class="n">crc32</span><span class="p">(</span><span class="n">header</span><span class="p">))</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span><span class="p">)</span>
+        <span class="n">fd</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">b</span><span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">crc</span><span class="p">,</span> <span class="n">header</span><span class="p">,</span> <span class="nb">id</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">offset</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">put_header_fmt</span><span class="o">.</span><span class="n">size</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">segment</span>
+</div>
+<div class="viewcode-block" id="LoggedIO.write_commit"><a class="viewcode-back" href="../../api.html#borg.repository.LoggedIO.write_commit">[docs]</a>    <span class="k">def</span> <span class="nf">write_commit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">fd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_write_fd</span><span class="p">(</span><span class="n">no_new</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">header</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">header_no_crc_fmt</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">header_fmt</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">TAG_COMMIT</span><span class="p">)</span>
+        <span class="n">crc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">crc_fmt</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">crc32</span><span class="p">(</span><span class="n">header</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span><span class="p">)</span>
+        <span class="n">fd</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">b</span><span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">crc</span><span class="p">,</span> <span class="n">header</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">close_segment</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="LoggedIO.close_segment"><a class="viewcode-back" href="../../api.html#borg.repository.LoggedIO.close_segment">[docs]</a>    <span class="k">def</span> <span class="nf">close_segment</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_write_fd</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">segment</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">offset</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_write_fd</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">fsync</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_write_fd</span><span class="o">.</span><span class="n">fileno</span><span class="p">())</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">os</span><span class="p">,</span> <span class="s">&#39;posix_fadvise&#39;</span><span class="p">):</span>  <span class="c"># python &gt;= 3.3, only on UNIX</span>
+                <span class="c"># tell the OS that it does not need to cache what we just wrote,</span>
+                <span class="c"># avoids spoiling the cache for the OS and other processes.</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">posix_fadvise</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_write_fd</span><span class="o">.</span><span class="n">fileno</span><span class="p">(),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">POSIX_FADV_DONTNEED</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_write_fd</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_write_fd</span> <span class="o">=</span> <span class="bp">None</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="sidebarlogo">
+  <a href="../../index.html">
+  <div class="title">Borg</div>
+</a>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><a href="https://github.com/borgbackup/borg"><img style="position: fixed; top: 0; right: 0; border: 0;"
+  src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub"></a>
+
+<h3>Useful Links</h3>
+<ul>
+  <li><a href="https://borgbackup.github.io/borgbackup/">Main Web Site</a></li>
+  <li><a href="https://pypi.python.org/pypi/borgbackup">PyPI packages</a></li>
+  <li><a href="https://github.com/borgbackup/borg/issues/214">Binaries</a></li>
+  <li><a href="https://github.com/borgbackup/borg/blob/master/CHANGES.rst">Current ChangeLog</a></li>
+  <li><a href="https://github.com/borgbackup/borg">GitHub</a></li>
+  <li><a href="https://github.com/borgbackup/borg/issues">Issue Tracker</a></li>
+  <li><a href="https://www.bountysource.com/teams/borgbackup">Bounties &amp; Fundraisers</a></li>
+  <li><a href="http://librelist.com/browser/borgbackup/">Mailing List</a></li>
+</ul>
+
+<h3>Related Projects</h3>
+<ul>
+  <li><a href="https://borgbackup.github.io/borgweb/">BorgWeb</a></li>
+</ul>
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a></li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Borg - Deduplicating Archiver 0.27.0 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    </div>
+  </body>
+</html>

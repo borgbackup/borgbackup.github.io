@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Borg Changelog &mdash; Borg - Deduplicating Archiver 0.26.1 documentation</title>
+    <title>Borg Changelog &mdash; Borg - Deduplicating Archiver 0.27.0 documentation</title>
     
     <link rel="stylesheet" href="_static/local.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.26.1',
+        VERSION:     '0.27.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="shortcut icon" href="_static/favicon.ico"/>
-    <link rel="top" title="Borg - Deduplicating Archiver 0.26.1 documentation" href="index.html" />
+    <link rel="top" title="Borg - Deduplicating Archiver 0.27.0 documentation" href="index.html" />
     <link rel="next" title="Internals" href="internals.html" />
     <link rel="prev" title="Support" href="support.html" /> 
   </head>
@@ -33,12 +33,15 @@
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a></li>
+        <li class="right" >
           <a href="internals.html" title="Internals"
-             accesskey="N">next</a></li>
+             accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="support.html" title="Support"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.26.1 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.27.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -49,6 +52,38 @@
             
   <div class="section" id="borg-changelog">
 <span id="changelog"></span><h1>Borg Changelog<a class="headerlink" href="#borg-changelog" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="version-0-27-0">
+<h2>Version 0.27.0<a class="headerlink" href="#version-0-27-0" title="Permalink to this headline">¶</a></h2>
+<p>New features:</p>
+<ul class="simple">
+<li>&#8220;borg upgrade&#8221; command - attic -&gt; borg one time converter / migration, #21</li>
+<li>temporary hack to avoid using lots of disk space for chunks.archive.d, #235:
+To use it: rm -rf chunks.archive.d ; touch chunks.archive.d</li>
+<li>respect XDG_CACHE_HOME, attic #181</li>
+<li>add support for arbitrary SSH commands, attic #99</li>
+<li>borg delete &#8211;cache-only REPO (only delete cache, not REPO), attic #123</li>
+</ul>
+<p>Bug fixes:</p>
+<ul class="simple">
+<li>use Debian 7 (wheezy) to build pyinstaller borgbackup binaries, fixes slow
+down observed when running the Centos6-built binary on Ubuntu, #222</li>
+<li>do not crash on empty lock.roster, fixes #232</li>
+<li>fix multiple issues with the cache config version check, #234</li>
+<li>fix segment entry header size check, attic #352
+plus other error handling improvements / code deduplication there.</li>
+<li>always give segment and offset in repo IntegrityErrors</li>
+</ul>
+<p>Other changes:</p>
+<ul class="simple">
+<li>stop producing binary wheels, remove docs about it, #147</li>
+<li>docs:
+- add warning about prune
+- generate usage include files only as needed
+- development docs: add Vagrant section
+- update / improve / reformat FAQ
+- hint to single-file pyinstaller binaries from README</li>
+</ul>
+</div>
 <div class="section" id="version-0-26-1">
 <h2>Version 0.26.1<a class="headerlink" href="#version-0-26-1" title="Permalink to this headline">¶</a></h2>
 <p>This is a minor update, just docs and new pyinstaller binaries.</p>
@@ -555,6 +590,7 @@ not just the file name part (#5).</li>
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Borg Changelog</a><ul>
+<li><a class="reference internal" href="#version-0-27-0">Version 0.27.0</a></li>
 <li><a class="reference internal" href="#version-0-26-1">Version 0.26.1</a></li>
 <li><a class="reference internal" href="#version-0-26-0">Version 0.26.0</a></li>
 <li><a class="reference internal" href="#version-0-25-0">Version 0.25.0</a></li>
@@ -587,7 +623,7 @@ not just the file name part (#5).</li>
 <ul>
   <li><a href="https://borgbackup.github.io/borgbackup/">Main Web Site</a></li>
   <li><a href="https://pypi.python.org/pypi/borgbackup">PyPI packages</a></li>
-  <li><a href="https://github.com/borgbackup/borg/issues/147">Binary Packages</a></li>
+  <li><a href="https://github.com/borgbackup/borg/issues/214">Binaries</a></li>
   <li><a href="https://github.com/borgbackup/borg/blob/master/CHANGES.rst">Current ChangeLog</a></li>
   <li><a href="https://github.com/borgbackup/borg">GitHub</a></li>
   <li><a href="https://github.com/borgbackup/borg/issues">Issue Tracker</a></li>
@@ -608,12 +644,15 @@ not just the file name part (#5).</li>
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a></li>
+        <li class="right" >
           <a href="internals.html" title="Internals"
-             >next</a></li>
+             >next</a> |</li>
         <li class="right" >
           <a href="support.html" title="Support"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.26.1 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.27.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

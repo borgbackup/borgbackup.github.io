@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Installation &mdash; Borg - Deduplicating Archiver 0.26.1 documentation</title>
+    <title>Installation &mdash; Borg - Deduplicating Archiver 0.27.0 documentation</title>
     
     <link rel="stylesheet" href="_static/local.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.26.1',
+        VERSION:     '0.27.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="shortcut icon" href="_static/favicon.ico"/>
-    <link rel="top" title="Borg - Deduplicating Archiver 0.26.1 documentation" href="index.html" />
+    <link rel="top" title="Borg - Deduplicating Archiver 0.27.0 documentation" href="index.html" />
     <link rel="next" title="Quick Start" href="quickstart.html" />
     <link rel="prev" title="Introduction" href="intro.html" /> 
   </head>
@@ -33,12 +33,15 @@
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a></li>
+        <li class="right" >
           <a href="quickstart.html" title="Quick Start"
-             accesskey="N">next</a></li>
+             accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="intro.html" title="Introduction"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.26.1 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.27.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -73,11 +76,8 @@ and tools) followed by the generic installation of <code class="docutils literal
 binary package (for your Linux/<a href="#id2"><span class="problematic" id="id3">*</span></a>BSD/OS X/... distribution).</li>
 <li><strong>pyinstaller binary</strong> - easy and fast, we provide a ready-to-use binary file
 that just works on the supported platforms</li>
-<li><strong>wheel</strong> - easy and fast, needs a platform specific borgbackup binary wheel,
-which matches your platform [OS and CPU]).</li>
 <li><strong>pypi</strong> - installing a source package from pypi needs more installation steps
-and will compile stuff - try this if there is no binary wheel that works for
-you.</li>
+and will need a compiler, development headers, etc..</li>
 <li><strong>git</strong> - for developers and power users who want to have the latest code or
 use revision control (each release is tagged).</li>
 </ul>
@@ -121,30 +121,6 @@ our web site).</p>
 <p>For some platforms we offer a ready-to-use standalone borg binary.</p>
 <p>It is supposed to work without requiring installation or preparations.</p>
 <p>Check <a class="reference external" href="https://github.com/borgbackup/borg/issues/214">https://github.com/borgbackup/borg/issues/214</a> for available binaries.</p>
-</div>
-<div class="section" id="debian-jessie-ubuntu-14-04-preparations-wheel">
-<h2>Debian Jessie / Ubuntu 14.04 preparations (wheel)<a class="headerlink" href="#debian-jessie-ubuntu-14-04-preparations-wheel" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-bash"><div class="highlight"><pre><span class="c"># Python stuff we need</span>
-apt-get install python3 python3-pip
-
-<span class="c"># Libraries we need (fuse is optional)</span>
-apt-get install openssl libacl1 liblz4-1 fuse
-</pre></div>
-</div>
-</div>
-<div class="section" id="installation-wheel">
-<h2>Installation (wheel)<a class="headerlink" href="#installation-wheel" title="Permalink to this headline">¶</a></h2>
-<p>This uses the latest binary wheel release.</p>
-<div class="highlight-bash"><div class="highlight"><pre><span class="c"># Check https://github.com/borgbackup/borg/issues/147 for the correct</span>
-<span class="c"># platform-specific binary wheel, download and install it:</span>
-
-<span class="c"># system-wide installation, needs sudo/root permissions:</span>
-sudo pip install borgbackup.whl
-
-<span class="c"># home directory installation, no sudo/root needed:</span>
-pip install --user borgbackup.whl
-</pre></div>
-</div>
 </div>
 <div class="section" id="debian-jessie-ubuntu-14-04-preparations-git-pypi">
 <h2>Debian Jessie / Ubuntu 14.04 preparations (git/pypi)<a class="headerlink" href="#debian-jessie-ubuntu-14-04-preparations-git-pypi" title="Permalink to this headline">¶</a></h2>
@@ -296,8 +272,6 @@ fakeroot -u tox
 <li><a class="reference internal" href="#platform-notes">Platform notes</a></li>
 <li><a class="reference internal" href="#installation-dist-package">Installation (dist package)</a></li>
 <li><a class="reference internal" href="#installation-pyinstaller-binary">Installation (pyinstaller binary)</a></li>
-<li><a class="reference internal" href="#debian-jessie-ubuntu-14-04-preparations-wheel">Debian Jessie / Ubuntu 14.04 preparations (wheel)</a></li>
-<li><a class="reference internal" href="#installation-wheel">Installation (wheel)</a></li>
 <li><a class="reference internal" href="#debian-jessie-ubuntu-14-04-preparations-git-pypi">Debian Jessie / Ubuntu 14.04 preparations (git/pypi)</a></li>
 <li><a class="reference internal" href="#korora-fedora-21-preparations-git-pypi">Korora / Fedora 21 preparations (git/pypi)</a></li>
 <li><a class="reference internal" href="#cygwin-preparations-git-pypi">Cygwin preparations (git/pypi)</a></li>
@@ -313,7 +287,7 @@ fakeroot -u tox
 <ul>
   <li><a href="https://borgbackup.github.io/borgbackup/">Main Web Site</a></li>
   <li><a href="https://pypi.python.org/pypi/borgbackup">PyPI packages</a></li>
-  <li><a href="https://github.com/borgbackup/borg/issues/147">Binary Packages</a></li>
+  <li><a href="https://github.com/borgbackup/borg/issues/214">Binaries</a></li>
   <li><a href="https://github.com/borgbackup/borg/blob/master/CHANGES.rst">Current ChangeLog</a></li>
   <li><a href="https://github.com/borgbackup/borg">GitHub</a></li>
   <li><a href="https://github.com/borgbackup/borg/issues">Issue Tracker</a></li>
@@ -334,12 +308,15 @@ fakeroot -u tox
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a></li>
+        <li class="right" >
           <a href="quickstart.html" title="Quick Start"
-             >next</a></li>
+             >next</a> |</li>
         <li class="right" >
           <a href="intro.html" title="Introduction"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.26.1 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.27.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Frequently asked questions &mdash; Borg - Deduplicating Archiver 0.26.1 documentation</title>
+    <title>Frequently asked questions &mdash; Borg - Deduplicating Archiver 0.27.0 documentation</title>
     
     <link rel="stylesheet" href="_static/local.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.26.1',
+        VERSION:     '0.27.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="shortcut icon" href="_static/favicon.ico"/>
-    <link rel="top" title="Borg - Deduplicating Archiver 0.26.1 documentation" href="index.html" />
+    <link rel="top" title="Borg - Deduplicating Archiver 0.27.0 documentation" href="index.html" />
     <link rel="next" title="Support" href="support.html" />
     <link rel="prev" title="Usage" href="usage.html" /> 
   </head>
@@ -33,12 +33,15 @@
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a></li>
+        <li class="right" >
           <a href="support.html" title="Support"
-             accesskey="N">next</a></li>
+             accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="usage.html" title="Usage"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.26.1 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.27.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -50,15 +53,9 @@
   <div class="section" id="frequently-asked-questions">
 <h1>Frequently asked questions<a class="headerlink" href="#frequently-asked-questions" title="Permalink to this headline">¶</a></h1>
 <dl class="docutils">
-<dt>Which platforms are supported?</dt>
-<dd><p class="first">Currently Linux, FreeBSD and MacOS X are supported.
-OpenBSD and NetBSD work also, except for xattrs and ACLs.</p>
-<p class="last">You can try your luck on other POSIX-like systems, like Cygwin,
-other BSDs, etc. but they are not officially supported.</p>
-</dd>
 <dt>Can I backup VM disk images?</dt>
-<dd>Yes, the <span class="xref std std-ref">deduplication</span> technique used by <code class="docutils literal"><span class="pre">Borg</span></code>
-makes sure only the modified parts of the file are stored.
+<dd>Yes, the <span class="xref std std-ref">deduplication</span> technique used by
+<code class="docutils literal"><span class="pre">Borg</span></code> makes sure only the modified parts of the file are stored.
 Also, we have optional simple sparse file support for extract.</dd>
 <dt>Can I backup from multiple servers into a single repository?</dt>
 <dd><p class="first">Yes, but in order for the deduplication used by <code class="docutils literal"><span class="pre">Borg</span></code> to work, it
@@ -93,9 +90,10 @@ or deleting archives, which may make <em>simultaneous</em> backups fail.</p>
 </dd>
 <dt>Which file types, attributes, etc. are <em>not</em> preserved?</dt>
 <dd><ul class="first last simple">
-<li>UNIX domain sockets (because it does not make sense - they are meaningless
-without the running process that created them and the process needs to
-recreate them in any case). So, don&#8217;t panic if your backup misses a UDS!</li>
+<li>UNIX domain sockets (because it does not make sense - they are
+meaningless without the running process that created them and the process
+needs to recreate them in any case). So, don&#8217;t panic if your backup
+misses a UDS!</li>
 <li>The precise on-disk representation of the holes in a sparse file.
 Archive creation has no special support for sparse files, holes are
 backed up as (deduplicated and compressed) runs of zero bytes.
@@ -121,51 +119,49 @@ all your files/dirs data and metadata are stored in their encrypted form
 into the repository.
 Yes, as an attacker with access to the remote server could delete (or
 otherwise make unavailable) all your backups.</dd>
-<dt>If a backup stops mid-way, does the already-backed-up data stay there? I.e. does <code class="docutils literal"><span class="pre">Borg</span></code> resume backups?</dt>
-<dd>Yes, during a backup a special checkpoint archive named <code class="docutils literal"><span class="pre">&lt;archive-name&gt;.checkpoint</span></code> is saved every 5 minutes
-containing all the data backed-up until that point. This means that at most 5 minutes worth of data needs to be
-retransmitted if a backup needs to be restarted.</dd>
+<dt>If a backup stops mid-way, does the already-backed-up data stay there?</dt>
+<dd>Yes, <code class="docutils literal"><span class="pre">Borg</span></code> supports resuming backups.
+During a backup a special checkpoint archive named <code class="docutils literal"><span class="pre">&lt;archive-name&gt;.checkpoint</span></code>
+is saved every checkpoint interval (the default value for this is 5
+minutes) containing all the data backed-up until that point. This means
+that at most &lt;checkpoint interval&gt; worth of data needs to be retransmitted
+if a backup needs to be restarted.
+Once your backup has finished successfully, you can delete all <code class="docutils literal"><span class="pre">*.checkpoint</span></code>
+archives.</dd>
 <dt>If it crashes with a UnicodeError, what can I do?</dt>
 <dd><p class="first">Check if your encoding is set correctly. For most POSIX-like systems, try:</p>
 <div class="last highlight-bash"><div class="highlight"><pre><span class="nb">export </span><span class="nv">LANG</span><span class="o">=</span>en_US.UTF-8  <span class="c"># or similar, important is correct charset</span>
 </pre></div>
 </div>
 </dd>
-<dt>I can&#8217;t extract non-ascii filenames by giving them on the commandline on OS X!?</dt>
-<dd><p class="first">This is due to different ways to represent some characters in unicode.
-HFS+ likes the decomposed form while the commandline seems to be the composed
-form usually. If you run into that, for now maybe just try:</p>
-<ul class="simple">
-<li>avoiding the non-ascii characters on the commandline by e.g. extracting
+<dt>I can&#8217;t extract non-ascii filenames by giving them on the commandline!?</dt>
+<dd><p class="first">This might be due to different ways to represent some characters in unicode
+or due to other non-ascii encoding issues.
+If you run into that, try this:</p>
+<ul class="last simple">
+<li>avoid the non-ascii characters on the commandline by e.g. extracting
 the parent directory (or even everything)</li>
-<li>try to enter the composed form on the commandline</li>
 <li>mount the repo using FUSE and use some file manager</li>
 </ul>
-<p class="last">See issue #143 on the issue tracker for more about this.</p>
-</dd>
-<dt>If I want to run <code class="docutils literal"><span class="pre">Borg</span></code> on a ARM CPU older than ARM v6?</dt>
-<dd><p class="first">You need to enable the alignment trap handler to fixup misaligned accesses:</p>
-<div class="last highlight-bash"><div class="highlight"><pre><span class="nb">echo</span> <span class="s2">&quot;2&quot;</span> &gt; /proc/cpu/alignment
-</pre></div>
-</div>
 </dd>
 <dt>Can <code class="docutils literal"><span class="pre">Borg</span></code> add redundancy to the backup data to deal with hardware malfunction?</dt>
-<dd><p class="first">No, it can&#8217;t. While that at first sounds like a good idea to defend against some
-defect HDD sectors or SSD flash blocks, dealing with this in a reliable way needs a lot
-of low-level storage layout information and control which we do not have (and also can&#8217;t
-get, even if we wanted).</p>
-<p class="last">So, if you need that, consider RAID1 or a filesystem that offers redundant storage
-or just make 2 backups to different locations / different hardware.</p>
+<dd><p class="first">No, it can&#8217;t. While that at first sounds like a good idea to defend against
+some defect HDD sectors or SSD flash blocks, dealing with this in a
+reliable way needs a lot of low-level storage layout information and
+control which we do not have (and also can&#8217;t get, even if we wanted).</p>
+<p>So, if you need that, consider RAID or a filesystem that offers redundant
+storage or just make backups to different locations / different hardware.</p>
+<p class="last">See also <a class="reference external" href="https://github.com/borgbackup/borg/issues/225">ticket 225</a>.</p>
 </dd>
 <dt>Can <code class="docutils literal"><span class="pre">Borg</span></code> verify data integrity of a backup archive?</dt>
-<dd>Yes, if you want to detect accidental data damage (like bit rot), use the <code class="docutils literal"><span class="pre">check</span></code>
-operation. It will notice corruption using CRCs and hashes.
-If you want to be able to detect malicious tampering also, use a encrypted repo.
-It will then be able to check using CRCs and HMACs.</dd>
+<dd>Yes, if you want to detect accidental data damage (like bit rot), use the
+<code class="docutils literal"><span class="pre">check</span></code> operation. It will notice corruption using CRCs and hashes.
+If you want to be able to detect malicious tampering also, use a encrypted
+repo. It will then be able to check using CRCs and HMACs.</dd>
 <dt>Why was Borg forked from Attic?</dt>
-<dd><p class="first">Borg was created in May 2015 in response to the difficulty of
-getting new code or larger changes incorporated into Attic and
-establishing a bigger developer community / more open development.</p>
+<dd><p class="first">Borg was created in May 2015 in response to the difficulty of getting new
+code or larger changes incorporated into Attic and establishing a bigger
+developer community / more open development.</p>
 <p>More details can be found in <a class="reference external" href="https://github.com/jborg/attic/issues/217">ticket 217</a> that led to the fork.</p>
 <p>Borg intends to be:</p>
 <ul class="last simple">
@@ -228,7 +224,7 @@ or without warning. allow compatibility breaking for other cases.</li>
 <ul>
   <li><a href="https://borgbackup.github.io/borgbackup/">Main Web Site</a></li>
   <li><a href="https://pypi.python.org/pypi/borgbackup">PyPI packages</a></li>
-  <li><a href="https://github.com/borgbackup/borg/issues/147">Binary Packages</a></li>
+  <li><a href="https://github.com/borgbackup/borg/issues/214">Binaries</a></li>
   <li><a href="https://github.com/borgbackup/borg/blob/master/CHANGES.rst">Current ChangeLog</a></li>
   <li><a href="https://github.com/borgbackup/borg">GitHub</a></li>
   <li><a href="https://github.com/borgbackup/borg/issues">Issue Tracker</a></li>
@@ -249,12 +245,15 @@ or without warning. allow compatibility breaking for other cases.</li>
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a></li>
+        <li class="right" >
           <a href="support.html" title="Support"
-             >next</a></li>
+             >next</a> |</li>
         <li class="right" >
           <a href="usage.html" title="Usage"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.26.1 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.27.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Quick Start &mdash; Borg - Deduplicating Archiver 0.26.1 documentation</title>
+    <title>Quick Start &mdash; Borg - Deduplicating Archiver 0.27.0 documentation</title>
     
     <link rel="stylesheet" href="_static/local.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.26.1',
+        VERSION:     '0.27.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="shortcut icon" href="_static/favicon.ico"/>
-    <link rel="top" title="Borg - Deduplicating Archiver 0.26.1 documentation" href="index.html" />
+    <link rel="top" title="Borg - Deduplicating Archiver 0.27.0 documentation" href="index.html" />
     <link rel="next" title="Usage" href="usage.html" />
     <link rel="prev" title="Installation" href="installation.html" /> 
   </head>
@@ -33,12 +33,15 @@
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a></li>
+        <li class="right" >
           <a href="usage.html" title="Usage"
-             accesskey="N">next</a></li>
+             accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="installation.html" title="Installation"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.26.1 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.27.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -136,9 +139,12 @@ borg create --stats                             <span class="se">\</span>
     --exclude /home/Ben/Music/Justin<span class="se">\ </span>Bieber    <span class="se">\</span>
     --exclude <span class="s1">&#39;*.pyc&#39;</span>
 
-<span class="c"># Use the `prune` subcommand to maintain 7 daily, 4 weekly</span>
-<span class="c"># and 6 monthly archives.</span>
-borg prune -v <span class="nv">$REPOSITORY</span> --keep-daily<span class="o">=</span><span class="m">7</span> --keep-weekly<span class="o">=</span><span class="m">4</span> --keep-monthly<span class="o">=</span>6
+<span class="c"># Use the `prune` subcommand to maintain 7 daily, 4 weekly and 6 monthly</span>
+<span class="c"># archives of THIS machine. --prefix `hostname`- is very important to</span>
+<span class="c"># limit prune&#39;s operation to this machine&#39;s archives and not apply to</span>
+<span class="c"># other machine&#39;s archives also.</span>
+borg prune -v <span class="nv">$REPOSITORY</span> --prefix <span class="sb">`</span>hostname<span class="sb">`</span>- <span class="se">\</span>
+    --keep-daily<span class="o">=</span><span class="m">7</span> --keep-weekly<span class="o">=</span><span class="m">4</span> --keep-monthly<span class="o">=</span>6
 </pre></div>
 </div>
 </div>
@@ -272,7 +278,7 @@ mounting the remote filesystem, for example, using sshfs:</p>
 <ul>
   <li><a href="https://borgbackup.github.io/borgbackup/">Main Web Site</a></li>
   <li><a href="https://pypi.python.org/pypi/borgbackup">PyPI packages</a></li>
-  <li><a href="https://github.com/borgbackup/borg/issues/147">Binary Packages</a></li>
+  <li><a href="https://github.com/borgbackup/borg/issues/214">Binaries</a></li>
   <li><a href="https://github.com/borgbackup/borg/blob/master/CHANGES.rst">Current ChangeLog</a></li>
   <li><a href="https://github.com/borgbackup/borg">GitHub</a></li>
   <li><a href="https://github.com/borgbackup/borg/issues">Issue Tracker</a></li>
@@ -293,12 +299,15 @@ mounting the remote filesystem, for example, using sshfs:</p>
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a></li>
+        <li class="right" >
           <a href="usage.html" title="Usage"
-             >next</a></li>
+             >next</a> |</li>
         <li class="right" >
           <a href="installation.html" title="Installation"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.26.1 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.27.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

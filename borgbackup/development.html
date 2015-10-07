@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Development &mdash; Borg - Deduplicating Archiver 0.26.1 documentation</title>
+    <title>Development &mdash; Borg - Deduplicating Archiver 0.27.0 documentation</title>
     
     <link rel="stylesheet" href="_static/local.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.26.1',
+        VERSION:     '0.27.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,8 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="shortcut icon" href="_static/favicon.ico"/>
-    <link rel="top" title="Borg - Deduplicating Archiver 0.26.1 documentation" href="index.html" />
+    <link rel="top" title="Borg - Deduplicating Archiver 0.27.0 documentation" href="index.html" />
+    <link rel="next" title="Borg Backup API documentation" href="api.html" />
     <link rel="prev" title="Internals" href="internals.html" /> 
   </head>
   <body role="document">
@@ -32,9 +33,15 @@
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a></li>
+        <li class="right" >
+          <a href="api.html" title="Borg Backup API documentation"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
           <a href="internals.html" title="Internals"
-             accesskey="P">previous</a></li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.26.1 documentation</a> &raquo;</li> 
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.27.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -89,7 +96,7 @@ fakeroot -u tox borg.testsuite -- -v  <span class="c"># verbose py.test</span>
 <h2>Building the docs with Sphinx<a class="headerlink" href="#building-the-docs-with-sphinx" title="Permalink to this headline">¶</a></h2>
 <p>The documentation (in reStructuredText format, .rst) is in docs/.</p>
 <p>To build the html version of it, you need to have sphinx installed:</p>
-<div class="highlight-bash"><div class="highlight"><pre>pip3 install sphinx
+<div class="highlight-bash"><div class="highlight"><pre>pip3 install sphinx  <span class="c"># important: this will install sphinx with Python 3</span>
 </pre></div>
 </div>
 <p>Now run:</p>
@@ -98,6 +105,26 @@ make html
 </pre></div>
 </div>
 <p>Then point a web browser at docs/_build/html/index.html.</p>
+</div>
+<div class="section" id="using-vagrant">
+<h2>Using Vagrant<a class="headerlink" href="#using-vagrant" title="Permalink to this headline">¶</a></h2>
+<p>We use Vagrant for the automated creation of testing environment and borgbackup
+standalone binaries for various platforms.</p>
+<p>For better security, there is no automatic sync in the VM to host direction.
+The plugin <cite>vagrant-scp</cite> is useful to copy stuff from the VMs to the host.</p>
+<p>Usage:</p>
+<div class="highlight-bash"><div class="highlight"><pre>To create and provision the VM:
+  vagrant up OS
+To create an ssh session to the VM:
+  vagrant ssh OS <span class="nb">command</span>
+To shut down the VM:
+  vagrant halt OS
+To shut down and destroy the VM:
+  vagrant destroy OS
+To copy files from the VM <span class="o">(</span>in this <span class="k">case</span>, the generated binary<span class="o">)</span>:
+  vagrant scp OS:/vagrant/borg/borg/dist/borg .
+</pre></div>
+</div>
 </div>
 <div class="section" id="creating-a-new-release">
 <h2>Creating a new release<a class="headerlink" href="#creating-a-new-release" title="Permalink to this headline">¶</a></h2>
@@ -132,37 +159,20 @@ make html
 </pre></div>
 </div>
 </li>
-<li><p class="first">create binary wheels and link them from issue tracker: <a class="reference external" href="https://github.com/borgbackup/borg/issues/147">https://github.com/borgbackup/borg/issues/147</a></p>
-</li>
 <li><p class="first">create standalone binaries and link them from issue tracker: <a class="reference external" href="https://github.com/borgbackup/borg/issues/214">https://github.com/borgbackup/borg/issues/214</a></p>
 </li>
 </ul>
 </div>
-<div class="section" id="creating-binary-wheels">
-<h2>Creating binary wheels<a class="headerlink" href="#creating-binary-wheels" title="Permalink to this headline">¶</a></h2>
-<p>With virtual env activated:</p>
-<div class="highlight-bash"><div class="highlight"><pre>pip install wheel
-python setup.py bdist_wheel
-ls -l dist/*.whl
-</pre></div>
-</div>
-<dl class="docutils">
-<dt>Note: Binary wheels are rather specific for the platform they get built on.</dt>
-<dd>E.g. a wheel built for Ubuntu 14.04 64bit likely will not work on Centos7 64bit.</dd>
-</dl>
-</div>
 <div class="section" id="creating-standalone-binaries">
 <h2>Creating standalone binaries<a class="headerlink" href="#creating-standalone-binaries" title="Permalink to this headline">¶</a></h2>
+<p>Make sure you have everything built and installed (including llfuse and fuse).</p>
 <p>With virtual env activated:</p>
-<div class="highlight-bash"><div class="highlight"><pre>pip install <span class="nv">pyinstaller</span><span class="o">==</span>3.0.dev2  <span class="c"># or a later 3.x release</span>
-pyinstaller -F -n borg-PLATFORM borg/__main__.py
+<div class="highlight-bash"><div class="highlight"><pre>pip install pyinstaller&gt;<span class="o">=</span>3.0  <span class="c"># or git checkout master</span>
+pyinstaller -F -n borg-PLATFORM --hidden-import<span class="o">=</span>logging.config borg/__main__.py
 ls -l dist/*
 </pre></div>
 </div>
-<p>On less good supported platforms than Linux, there might be issues with pyinstaller
-not finding the dynamic python library (libpython*) or with pyinstaller not having
-a pre-compiled &#8220;bootloader&#8221; for the platform or with not supporting the platform at
-all.</p>
+<p>If you encounter issues, see also our <cite>Vagrantfile</cite> for details.</p>
 <dl class="docutils">
 <dt>Note: Standalone binaries built with pyinstaller are supposed to work on same OS,</dt>
 <dd>same architecture (x86 32bit, amd64 64bit) without external dependencies.</dd>
@@ -183,6 +193,9 @@ all.</p>
   <h4>Previous topic</h4>
   <p class="topless"><a href="internals.html"
                         title="previous chapter">Internals</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="api.html"
+                        title="next chapter">Borg Backup API documentation</a></p>
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
@@ -202,8 +215,8 @@ all.</p>
 <li><a class="reference internal" href="#building-a-development-environment">Building a development environment</a></li>
 <li><a class="reference internal" href="#running-the-tests">Running the tests</a></li>
 <li><a class="reference internal" href="#building-the-docs-with-sphinx">Building the docs with Sphinx</a></li>
+<li><a class="reference internal" href="#using-vagrant">Using Vagrant</a></li>
 <li><a class="reference internal" href="#creating-a-new-release">Creating a new release</a></li>
-<li><a class="reference internal" href="#creating-binary-wheels">Creating binary wheels</a></li>
 <li><a class="reference internal" href="#creating-standalone-binaries">Creating standalone binaries</a></li>
 </ul>
 </li>
@@ -215,7 +228,7 @@ all.</p>
 <ul>
   <li><a href="https://borgbackup.github.io/borgbackup/">Main Web Site</a></li>
   <li><a href="https://pypi.python.org/pypi/borgbackup">PyPI packages</a></li>
-  <li><a href="https://github.com/borgbackup/borg/issues/147">Binary Packages</a></li>
+  <li><a href="https://github.com/borgbackup/borg/issues/214">Binaries</a></li>
   <li><a href="https://github.com/borgbackup/borg/blob/master/CHANGES.rst">Current ChangeLog</a></li>
   <li><a href="https://github.com/borgbackup/borg">GitHub</a></li>
   <li><a href="https://github.com/borgbackup/borg/issues">Issue Tracker</a></li>
@@ -236,9 +249,15 @@ all.</p>
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a></li>
+        <li class="right" >
+          <a href="api.html" title="Borg Backup API documentation"
+             >next</a> |</li>
+        <li class="right" >
           <a href="internals.html" title="Internals"
-             >previous</a></li>
-        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.26.1 documentation</a> &raquo;</li> 
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Borg - Deduplicating Archiver 0.27.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

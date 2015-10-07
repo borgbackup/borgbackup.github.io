@@ -1,0 +1,824 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>borg.helpers &mdash; Borg - Deduplicating Archiver 0.27.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/local.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.27.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+    <link rel="top" title="Borg - Deduplicating Archiver 0.27.0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a></li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Borg - Deduplicating Archiver 0.27.0 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for borg.helpers</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">.support</span> <span class="kn">import</span> <span class="n">argparse</span>  <span class="c"># see support/__init__.py docstring</span>
+                               <span class="c"># DEPRECATED - remove after requiring py 3.4</span>
+
+<span class="kn">import</span> <span class="nn">binascii</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">namedtuple</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">wraps</span>
+<span class="kn">import</span> <span class="nn">grp</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pwd</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">unicodedata</span>
+
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span><span class="p">,</span> <span class="n">timedelta</span>
+<span class="kn">from</span> <span class="nn">fnmatch</span> <span class="kn">import</span> <span class="n">translate</span>
+<span class="kn">from</span> <span class="nn">operator</span> <span class="kn">import</span> <span class="n">attrgetter</span>
+
+<span class="kn">import</span> <span class="nn">msgpack</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">hashindex</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">chunker</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">crypto</span>
+
+
+<div class="viewcode-block" id="Error"><a class="viewcode-back" href="../../api.html#borg.helpers.Error">[docs]</a><span class="k">class</span> <span class="nc">Error</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Error base class&quot;&quot;&quot;</span>
+
+    <span class="n">exit_code</span> <span class="o">=</span> <span class="mi">1</span>
+
+<div class="viewcode-block" id="Error.get_message"><a class="viewcode-back" href="../../api.html#borg.helpers.Error.get_message">[docs]</a>    <span class="k">def</span> <span class="nf">get_message</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;Error: &#39;</span> <span class="o">+</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__doc__</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="ExtensionModuleError"><a class="viewcode-back" href="../../api.html#borg.helpers.ExtensionModuleError">[docs]</a><span class="k">class</span> <span class="nc">ExtensionModuleError</span><span class="p">(</span><span class="n">Error</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The Borg binary extension modules do not seem to be properly installed&quot;&quot;&quot;</span>
+
+</div>
+<div class="viewcode-block" id="check_extension_modules"><a class="viewcode-back" href="../../api.html#borg.helpers.check_extension_modules">[docs]</a><span class="k">def</span> <span class="nf">check_extension_modules</span><span class="p">():</span>
+    <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">platform</span>
+    <span class="k">if</span> <span class="n">hashindex</span><span class="o">.</span><span class="n">API_VERSION</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ExtensionModuleError</span>
+    <span class="k">if</span> <span class="n">chunker</span><span class="o">.</span><span class="n">API_VERSION</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ExtensionModuleError</span>
+    <span class="k">if</span> <span class="n">crypto</span><span class="o">.</span><span class="n">API_VERSION</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ExtensionModuleError</span>
+    <span class="k">if</span> <span class="n">platform</span><span class="o">.</span><span class="n">API_VERSION</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ExtensionModuleError</span>
+
+</div>
+<div class="viewcode-block" id="Manifest"><a class="viewcode-back" href="../../api.html#borg.helpers.Manifest">[docs]</a><span class="k">class</span> <span class="nc">Manifest</span><span class="p">:</span>
+
+    <span class="n">MANIFEST_ID</span> <span class="o">=</span> <span class="n">b</span><span class="s">&#39;</span><span class="se">\0</span><span class="s">&#39;</span> <span class="o">*</span> <span class="mi">32</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">repository</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">archives</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">key</span> <span class="o">=</span> <span class="n">key</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">repository</span> <span class="o">=</span> <span class="n">repository</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Manifest.load"><a class="viewcode-back" href="../../api.html#borg.helpers.Manifest.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">repository</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">.key</span> <span class="kn">import</span> <span class="n">key_factory</span>
+        <span class="n">cdata</span> <span class="o">=</span> <span class="n">repository</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">MANIFEST_ID</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">key</span><span class="p">:</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">key_factory</span><span class="p">(</span><span class="n">repository</span><span class="p">,</span> <span class="n">cdata</span><span class="p">)</span>
+        <span class="n">manifest</span> <span class="o">=</span> <span class="n">cls</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">repository</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">decrypt</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="n">cdata</span><span class="p">)</span>
+        <span class="n">manifest</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">id_hash</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">msgpack</span><span class="o">.</span><span class="n">unpackb</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">m</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">b</span><span class="s">&#39;version&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Invalid manifest version&#39;</span><span class="p">)</span>
+        <span class="n">manifest</span><span class="o">.</span><span class="n">archives</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">k</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">),</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">m</span><span class="p">[</span><span class="n">b</span><span class="s">&#39;archives&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+        <span class="n">manifest</span><span class="o">.</span><span class="n">timestamp</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">b</span><span class="s">&#39;timestamp&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">manifest</span><span class="o">.</span><span class="n">timestamp</span><span class="p">:</span>
+            <span class="n">manifest</span><span class="o">.</span><span class="n">timestamp</span> <span class="o">=</span> <span class="n">manifest</span><span class="o">.</span><span class="n">timestamp</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s">&#39;ascii&#39;</span><span class="p">)</span>
+        <span class="n">manifest</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">m</span><span class="p">[</span><span class="n">b</span><span class="s">&#39;config&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">manifest</span><span class="p">,</span> <span class="n">key</span>
+</div>
+<div class="viewcode-block" id="Manifest.write"><a class="viewcode-back" href="../../api.html#borg.helpers.Manifest.write">[docs]</a>    <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timestamp</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">msgpack</span><span class="o">.</span><span class="n">packb</span><span class="p">(</span><span class="n">StableDict</span><span class="p">({</span>
+            <span class="s">&#39;version&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="s">&#39;archives&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">archives</span><span class="p">,</span>
+            <span class="s">&#39;timestamp&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">timestamp</span><span class="p">,</span>
+            <span class="s">&#39;config&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">,</span>
+        <span class="p">}))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="o">.</span><span class="n">id_hash</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">repository</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">MANIFEST_ID</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="o">.</span><span class="n">encrypt</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="Manifest.list_archive_infos"><a class="viewcode-back" href="../../api.html#borg.helpers.Manifest.list_archive_infos">[docs]</a>    <span class="k">def</span> <span class="nf">list_archive_infos</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sort_by</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="c"># inexpensive Archive.list_archives replacement if we just need .name, .id, .ts</span>
+        <span class="n">ArchiveInfo</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s">&#39;ArchiveInfo&#39;</span><span class="p">,</span> <span class="s">&#39;name id ts&#39;</span><span class="p">)</span>
+        <span class="n">archives</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">archives</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">ts</span> <span class="o">=</span> <span class="n">parse_timestamp</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="n">b</span><span class="s">&#39;time&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">))</span>
+            <span class="nb">id</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="n">b</span><span class="s">&#39;id&#39;</span><span class="p">]</span>
+            <span class="n">archives</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ArchiveInfo</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="nb">id</span><span class="p">,</span> <span class="n">ts</span><span class="o">=</span><span class="n">ts</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">sort_by</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">archives</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">archives</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">attrgetter</span><span class="p">(</span><span class="n">sort_by</span><span class="p">),</span> <span class="n">reverse</span><span class="o">=</span><span class="n">reverse</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">archives</span>
+
+</div></div>
+<div class="viewcode-block" id="prune_within"><a class="viewcode-back" href="../../api.html#borg.helpers.prune_within">[docs]</a><span class="k">def</span> <span class="nf">prune_within</span><span class="p">(</span><span class="n">archives</span><span class="p">,</span> <span class="n">within</span><span class="p">):</span>
+    <span class="n">multiplier</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;H&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s">&#39;d&#39;</span><span class="p">:</span> <span class="mi">24</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">:</span> <span class="mi">24</span><span class="o">*</span><span class="mi">7</span><span class="p">,</span> <span class="s">&#39;m&#39;</span><span class="p">:</span> <span class="mi">24</span><span class="o">*</span><span class="mi">31</span><span class="p">,</span> <span class="s">&#39;y&#39;</span><span class="p">:</span> <span class="mi">24</span><span class="o">*</span><span class="mi">365</span><span class="p">}</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">hours</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">within</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">*</span> <span class="n">multiplier</span><span class="p">[</span><span class="n">within</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+        <span class="c"># I don&#39;t like how this displays the original exception too:</span>
+        <span class="k">raise</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentTypeError</span><span class="p">(</span><span class="s">&#39;Unable to parse --within option: &quot;</span><span class="si">%s</span><span class="s">&quot;&#39;</span> <span class="o">%</span> <span class="n">within</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">hours</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentTypeError</span><span class="p">(</span><span class="s">&#39;Number specified using --within option must be positive&#39;</span><span class="p">)</span>
+    <span class="n">target</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span> <span class="o">-</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">seconds</span><span class="o">=</span><span class="n">hours</span><span class="o">*</span><span class="mi">60</span><span class="o">*</span><span class="mi">60</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">archives</span> <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">ts</span> <span class="o">&gt;</span> <span class="n">target</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="prune_split"><a class="viewcode-back" href="../../api.html#borg.helpers.prune_split">[docs]</a><span class="k">def</span> <span class="nf">prune_split</span><span class="p">(</span><span class="n">archives</span><span class="p">,</span> <span class="n">pattern</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">skip</span><span class="o">=</span><span class="p">[]):</span>
+    <span class="n">last</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">keep</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">keep</span>
+    <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">archives</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">attrgetter</span><span class="p">(</span><span class="s">&#39;ts&#39;</span><span class="p">),</span> <span class="n">reverse</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="n">period</span> <span class="o">=</span> <span class="n">to_localtime</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">ts</span><span class="p">)</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">period</span> <span class="o">!=</span> <span class="n">last</span><span class="p">:</span>
+            <span class="n">last</span> <span class="o">=</span> <span class="n">period</span>
+            <span class="k">if</span> <span class="n">a</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">skip</span><span class="p">:</span>
+                <span class="n">keep</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">keep</span><span class="p">)</span> <span class="o">==</span> <span class="n">n</span><span class="p">:</span>
+                    <span class="k">break</span>
+    <span class="k">return</span> <span class="n">keep</span>
+
+</div>
+<div class="viewcode-block" id="Statistics"><a class="viewcode-back" href="../../api.html#borg.helpers.Statistics">[docs]</a><span class="k">class</span> <span class="nc">Statistics</span><span class="p">:</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">osize</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">csize</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">usize</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nfiles</span> <span class="o">=</span> <span class="mi">0</span>
+
+<div class="viewcode-block" id="Statistics.update"><a class="viewcode-back" href="../../api.html#borg.helpers.Statistics.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">csize</span><span class="p">,</span> <span class="n">unique</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">osize</span> <span class="o">+=</span> <span class="n">size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">csize</span> <span class="o">+=</span> <span class="n">csize</span>
+        <span class="k">if</span> <span class="n">unique</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">usize</span> <span class="o">+=</span> <span class="n">csize</span>
+</div>
+<div class="viewcode-block" id="Statistics.print_"><a class="viewcode-back" href="../../api.html#borg.helpers.Statistics.print_">[docs]</a>    <span class="k">def</span> <span class="nf">print_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">cache</span><span class="p">):</span>
+        <span class="n">total_size</span><span class="p">,</span> <span class="n">total_csize</span><span class="p">,</span> <span class="n">unique_size</span><span class="p">,</span> <span class="n">unique_csize</span><span class="p">,</span> <span class="n">total_unique_chunks</span><span class="p">,</span> <span class="n">total_chunks</span> <span class="o">=</span> <span class="n">cache</span><span class="o">.</span><span class="n">chunks</span><span class="o">.</span><span class="n">summarize</span><span class="p">()</span>
+        <span class="k">print</span><span class="p">()</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;                       Original size      Compressed size    Deduplicated size&#39;</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%-15s</span><span class="s"> </span><span class="si">%20s</span><span class="s"> </span><span class="si">%20s</span><span class="s"> </span><span class="si">%20s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">format_file_size</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">osize</span><span class="p">),</span> <span class="n">format_file_size</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">csize</span><span class="p">),</span> <span class="n">format_file_size</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">usize</span><span class="p">)))</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;All archives:   </span><span class="si">%20s</span><span class="s"> </span><span class="si">%20s</span><span class="s"> </span><span class="si">%20s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">format_file_size</span><span class="p">(</span><span class="n">total_size</span><span class="p">),</span> <span class="n">format_file_size</span><span class="p">(</span><span class="n">total_csize</span><span class="p">),</span> <span class="n">format_file_size</span><span class="p">(</span><span class="n">unique_csize</span><span class="p">)))</span>
+        <span class="k">print</span><span class="p">()</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;                       Unique chunks         Total chunks&#39;</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;Chunk index:    </span><span class="si">%20d</span><span class="s"> </span><span class="si">%20d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">total_unique_chunks</span><span class="p">,</span> <span class="n">total_chunks</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="Statistics.show_progress"><a class="viewcode-back" href="../../api.html#borg.helpers.Statistics.show_progress">[docs]</a>    <span class="k">def</span> <span class="nf">show_progress</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">final</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">final</span><span class="p">:</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">remove_surrogates</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="n">b</span><span class="s">&#39;path&#39;</span><span class="p">])</span> <span class="k">if</span> <span class="n">item</span> <span class="k">else</span> <span class="s">&#39;&#39;</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">43</span><span class="p">:</span>
+                <span class="n">path</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">...</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">path</span><span class="p">[:</span><span class="mi">20</span><span class="p">],</span> <span class="n">path</span><span class="p">[</span><span class="o">-</span><span class="mi">20</span><span class="p">:])</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%9s</span><span class="s"> O </span><span class="si">%9s</span><span class="s"> C </span><span class="si">%9s</span><span class="s"> D </span><span class="si">%-43s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="n">format_file_size</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">osize</span><span class="p">),</span> <span class="n">format_file_size</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">csize</span><span class="p">),</span> <span class="n">format_file_size</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">usize</span><span class="p">),</span> <span class="n">path</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s">&#39; &#39;</span> <span class="o">*</span> <span class="mi">79</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s">&#39;</span><span class="se">\r</span><span class="s">&#39;</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+</div></div>
+<div class="viewcode-block" id="get_keys_dir"><a class="viewcode-back" href="../../api.html#borg.helpers.get_keys_dir">[docs]</a><span class="k">def</span> <span class="nf">get_keys_dir</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Determine where to repository keys and cache&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;BORG_KEYS_DIR&#39;</span><span class="p">,</span>
+                          <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&#39;~&#39;</span><span class="p">),</span> <span class="s">&#39;.borg&#39;</span><span class="p">,</span> <span class="s">&#39;keys&#39;</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="get_cache_dir"><a class="viewcode-back" href="../../api.html#borg.helpers.get_cache_dir">[docs]</a><span class="k">def</span> <span class="nf">get_cache_dir</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Determine where to repository keys and cache&quot;&quot;&quot;</span>
+    <span class="n">xdg_cache</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;XDG_CACHE_HOME&#39;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&#39;~&#39;</span><span class="p">),</span> <span class="s">&#39;.cache&#39;</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;BORG_CACHE_DIR&#39;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">xdg_cache</span><span class="p">,</span> <span class="s">&#39;borg&#39;</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="to_localtime"><a class="viewcode-back" href="../../api.html#borg.helpers.to_localtime">[docs]</a><span class="k">def</span> <span class="nf">to_localtime</span><span class="p">(</span><span class="n">ts</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert datetime object from UTC to local time zone&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">datetime</span><span class="p">(</span><span class="o">*</span><span class="n">time</span><span class="o">.</span><span class="n">localtime</span><span class="p">((</span><span class="n">ts</span> <span class="o">-</span> <span class="n">datetime</span><span class="p">(</span><span class="mi">1970</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">tzinfo</span><span class="o">=</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">))</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">())[:</span><span class="mi">6</span><span class="p">])</span>
+
+</div>
+<div class="viewcode-block" id="parse_timestamp"><a class="viewcode-back" href="../../api.html#borg.helpers.parse_timestamp">[docs]</a><span class="k">def</span> <span class="nf">parse_timestamp</span><span class="p">(</span><span class="n">timestamp</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parse a ISO 8601 timestamp string&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s">&#39;.&#39;</span> <span class="ow">in</span> <span class="n">timestamp</span><span class="p">:</span>  <span class="c"># microseconds might not be pressent</span>
+        <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">timestamp</span><span class="p">,</span> <span class="s">&#39;%Y-%m-</span><span class="si">%d</span><span class="s">T%H:%M:%S.</span><span class="si">%f</span><span class="s">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">tzinfo</span><span class="o">=</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">timestamp</span><span class="p">,</span> <span class="s">&#39;%Y-%m-</span><span class="si">%d</span><span class="s">T%H:%M:%S&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">tzinfo</span><span class="o">=</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="update_excludes"><a class="viewcode-back" href="../../api.html#borg.helpers.update_excludes">[docs]</a><span class="k">def</span> <span class="nf">update_excludes</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Merge exclude patterns from files with those on command line.</span>
+<span class="sd">    Empty lines and lines starting with &#39;#&#39; are ignored, but whitespace</span>
+<span class="sd">    is not stripped.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="s">&#39;exclude_files&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">args</span><span class="o">.</span><span class="n">exclude_files</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="s">&#39;excludes&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">args</span><span class="o">.</span><span class="n">excludes</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">excludes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="nb">file</span> <span class="ow">in</span> <span class="n">args</span><span class="o">.</span><span class="n">exclude_files</span><span class="p">:</span>
+            <span class="n">patterns</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\r\n</span><span class="s">&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">file</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;#&#39;</span><span class="p">)]</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">excludes</span> <span class="o">+=</span> <span class="p">[</span><span class="n">ExcludePattern</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span> <span class="k">for</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="n">patterns</span> <span class="k">if</span> <span class="n">pattern</span><span class="p">]</span>
+            <span class="nb">file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="adjust_patterns"><a class="viewcode-back" href="../../api.html#borg.helpers.adjust_patterns">[docs]</a><span class="k">def</span> <span class="nf">adjust_patterns</span><span class="p">(</span><span class="n">paths</span><span class="p">,</span> <span class="n">excludes</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">paths</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">excludes</span> <span class="ow">or</span> <span class="p">[])</span> <span class="o">+</span> <span class="p">[</span><span class="n">IncludePattern</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">ExcludePattern</span><span class="p">(</span><span class="s">&#39;*&#39;</span><span class="p">)]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">excludes</span>
+
+</div>
+<div class="viewcode-block" id="exclude_path"><a class="viewcode-back" href="../../api.html#borg.helpers.exclude_path">[docs]</a><span class="k">def</span> <span class="nf">exclude_path</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">patterns</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Used by create and extract sub-commands to determine</span>
+<span class="sd">    whether or not an item should be processed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="p">(</span><span class="n">patterns</span> <span class="ow">or</span> <span class="p">[]):</span>
+        <span class="k">if</span> <span class="n">pattern</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">ExcludePattern</span><span class="p">)</span>
+    <span class="k">return</span> <span class="bp">False</span>
+
+
+<span class="c"># For both IncludePattern and ExcludePattern, we require that</span>
+<span class="c"># the pattern either match the whole path or an initial segment</span>
+<span class="c"># of the path up to but not including a path separator.  To</span>
+<span class="c"># unify the two cases, we add a path separator to the end of</span>
+<span class="c"># the path before matching.</span>
+</div>
+<div class="viewcode-block" id="normalized"><a class="viewcode-back" href="../../api.html#borg.helpers.normalized">[docs]</a><span class="k">def</span> <span class="nf">normalized</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Decorator for the Pattern match methods, returning a wrapper that</span>
+<span class="sd">    normalizes OSX paths to match the normalized pattern on OSX, and </span>
+<span class="sd">    returning the original method on other platforms&quot;&quot;&quot;</span>
+    <span class="nd">@wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">normalize_wrapper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">unicodedata</span><span class="o">.</span><span class="n">normalize</span><span class="p">(</span><span class="s">&quot;NFD&quot;</span><span class="p">,</span> <span class="n">path</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;darwin&#39;</span><span class="p">,):</span>
+        <span class="c"># HFS+ converts paths to a canonical form, so users shouldn&#39;t be</span>
+        <span class="c"># required to enter an exact match</span>
+        <span class="k">return</span> <span class="n">normalize_wrapper</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c"># Windows and Unix filesystems allow different forms, so users</span>
+        <span class="c"># always have to enter an exact match</span>
+        <span class="k">return</span> <span class="n">func</span>
+
+</div>
+<div class="viewcode-block" id="IncludePattern"><a class="viewcode-back" href="../../api.html#borg.helpers.IncludePattern">[docs]</a><span class="k">class</span> <span class="nc">IncludePattern</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Literal files or directories listed on the command line</span>
+<span class="sd">    for some operations (e.g. extract, but not create).</span>
+<span class="sd">    If a directory is specified, all paths that start with that</span>
+<span class="sd">    path match as well.  A trailing slash makes no difference.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pattern</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pattern_orig</span> <span class="o">=</span> <span class="n">pattern</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">match_count</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;darwin&#39;</span><span class="p">,):</span>
+            <span class="n">pattern</span> <span class="o">=</span> <span class="n">unicodedata</span><span class="o">.</span><span class="n">normalize</span><span class="p">(</span><span class="s">&quot;NFD&quot;</span><span class="p">,</span> <span class="n">pattern</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">pattern</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">normpath</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">sep</span><span class="p">)</span><span class="o">+</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">sep</span>
+
+    <span class="nd">@normalized</span>
+<div class="viewcode-block" id="IncludePattern.match"><a class="viewcode-back" href="../../api.html#borg.helpers.IncludePattern.match">[docs]</a>    <span class="k">def</span> <span class="nf">match</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="n">matches</span> <span class="o">=</span> <span class="p">(</span><span class="n">path</span><span class="o">+</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">sep</span><span class="p">)</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pattern</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">matches</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">match_count</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">matches</span>
+</div>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">(</span><span class="si">%s</span><span class="s">)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">pattern</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pattern_orig</span>
+
+</div>
+<div class="viewcode-block" id="ExcludePattern"><a class="viewcode-back" href="../../api.html#borg.helpers.ExcludePattern">[docs]</a><span class="k">class</span> <span class="nc">ExcludePattern</span><span class="p">(</span><span class="n">IncludePattern</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Shell glob patterns to exclude.  A trailing slash means to</span>
+<span class="sd">    exclude the contents of a directory, but not the directory itself.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pattern</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pattern_orig</span> <span class="o">=</span> <span class="n">pattern</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">match_count</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">if</span> <span class="n">pattern</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">sep</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pattern</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">normpath</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">sep</span><span class="p">)</span><span class="o">+</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">sep</span><span class="o">+</span><span class="s">&#39;*&#39;</span><span class="o">+</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">sep</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pattern</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">normpath</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span><span class="o">+</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">sep</span><span class="o">+</span><span class="s">&#39;*&#39;</span>
+
+        <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;darwin&#39;</span><span class="p">,):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pattern</span> <span class="o">=</span> <span class="n">unicodedata</span><span class="o">.</span><span class="n">normalize</span><span class="p">(</span><span class="s">&quot;NFD&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pattern</span><span class="p">)</span>
+
+        <span class="c"># fnmatch and re.match both cache compiled regular expressions.</span>
+        <span class="c"># Nevertheless, this is about 10 times faster.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">regex</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">translate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pattern</span><span class="p">))</span>
+
+    <span class="nd">@normalized</span>
+<div class="viewcode-block" id="ExcludePattern.match"><a class="viewcode-back" href="../../api.html#borg.helpers.ExcludePattern.match">[docs]</a>    <span class="k">def</span> <span class="nf">match</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="n">matches</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">regex</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">path</span><span class="o">+</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">sep</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span>
+        <span class="k">if</span> <span class="n">matches</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">match_count</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">matches</span>
+</div>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">(</span><span class="si">%s</span><span class="s">)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">pattern</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pattern_orig</span>
+
+</div>
+<div class="viewcode-block" id="timestamp"><a class="viewcode-back" href="../../api.html#borg.helpers.timestamp">[docs]</a><span class="k">def</span> <span class="nf">timestamp</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert a --timestamp=s argument to a datetime object&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c"># is it pointing to a file / directory?</span>
+        <span class="n">ts</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">stat</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">.</span><span class="n">st_mtime</span>
+        <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">utcfromtimestamp</span><span class="p">(</span><span class="n">ts</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+        <span class="c"># didn&#39;t work, try parsing as timestamp. UTC, no TZ, no microsecs support.</span>
+        <span class="k">for</span> <span class="n">format</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;%Y-%m-</span><span class="si">%d</span><span class="s">T%H:%M:%SZ&#39;</span><span class="p">,</span> <span class="s">&#39;%Y-%m-</span><span class="si">%d</span><span class="s">T%H:%M:%S+00:00&#39;</span><span class="p">,</span>
+                       <span class="s">&#39;%Y-%m-</span><span class="si">%d</span><span class="s">T%H:%M:%S&#39;</span><span class="p">,</span> <span class="s">&#39;%Y-%m-</span><span class="si">%d</span><span class="s"> %H:%M:%S&#39;</span><span class="p">,</span>
+                       <span class="s">&#39;%Y-%m-</span><span class="si">%d</span><span class="s">T%H:%M&#39;</span><span class="p">,</span> <span class="s">&#39;%Y-%m-</span><span class="si">%d</span><span class="s"> %H:%M&#39;</span><span class="p">,</span>
+                       <span class="s">&#39;%Y-%m-</span><span class="si">%d</span><span class="s">&#39;</span><span class="p">,</span> <span class="s">&#39;%Y-%j&#39;</span><span class="p">,</span>
+                       <span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">format</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="k">continue</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span>
+
+</div>
+<div class="viewcode-block" id="ChunkerParams"><a class="viewcode-back" href="../../api.html#borg.helpers.ChunkerParams">[docs]</a><span class="k">def</span> <span class="nf">ChunkerParams</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="n">chunk_min</span><span class="p">,</span> <span class="n">chunk_max</span><span class="p">,</span> <span class="n">chunk_mask</span><span class="p">,</span> <span class="n">window_size</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">chunk_max</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">23</span><span class="p">:</span>
+        <span class="c"># do not go beyond 2**23 (8MB) chunk size now,</span>
+        <span class="c"># COMPR_BUFFER can only cope with up to this size</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;max. chunk size exponent must not be more than 23 (2^23 = 8MiB max. chunk size)&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">chunk_min</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">chunk_max</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">chunk_mask</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">window_size</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="CompressionSpec"><a class="viewcode-back" href="../../api.html#borg.helpers.CompressionSpec">[docs]</a><span class="k">def</span> <span class="nf">CompressionSpec</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">)</span>
+    <span class="n">count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">count</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span>
+    <span class="n">compression</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">compression</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">compression</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">count</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span>
+        <span class="c"># DEPRECATED: it is just --compression N</span>
+        <span class="k">if</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">compression</span> <span class="o">&lt;=</span> <span class="mi">9</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&#39;zlib&#39;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">compression</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="c"># --compression algo[,...]</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">compression</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;none&#39;</span><span class="p">,</span> <span class="s">&#39;lz4&#39;</span><span class="p">,</span> <span class="p">):</span>
+            <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;zlib&#39;</span><span class="p">,</span> <span class="s">&#39;lzma&#39;</span><span class="p">,</span> <span class="p">):</span>
+            <span class="k">if</span> <span class="n">count</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">level</span> <span class="o">=</span> <span class="mi">6</span>  <span class="c"># default compression level in py stdlib</span>
+            <span class="k">elif</span> <span class="n">count</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">level</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">level</span> <span class="o">&lt;=</span> <span class="mi">9</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span>
+            <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">level</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span>
+
+</div>
+<div class="viewcode-block" id="is_cachedir"><a class="viewcode-back" href="../../api.html#borg.helpers.is_cachedir">[docs]</a><span class="k">def</span> <span class="nf">is_cachedir</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Determines whether the specified path is a cache directory (and</span>
+<span class="sd">    therefore should potentially be excluded from the backup) according to</span>
+<span class="sd">    the CACHEDIR.TAG protocol</span>
+<span class="sd">    (http://www.brynosaurus.com/cachedir/spec.html).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">tag_contents</span> <span class="o">=</span> <span class="n">b</span><span class="s">&#39;Signature: 8a477f597d28d172789f06886806bc55&#39;</span>
+    <span class="n">tag_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s">&#39;CACHEDIR.TAG&#39;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">tag_path</span><span class="p">):</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">tag_path</span><span class="p">,</span> <span class="s">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">tag_file</span><span class="p">:</span>
+                <span class="n">tag_data</span> <span class="o">=</span> <span class="n">tag_file</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">tag_contents</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">tag_data</span> <span class="o">==</span> <span class="n">tag_contents</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+        <span class="k">pass</span>
+    <span class="k">return</span> <span class="bp">False</span>
+
+</div>
+<div class="viewcode-block" id="format_time"><a class="viewcode-back" href="../../api.html#borg.helpers.format_time">[docs]</a><span class="k">def</span> <span class="nf">format_time</span><span class="p">(</span><span class="n">t</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Format datetime suitable for fixed length list output</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">abs</span><span class="p">((</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="n">t</span><span class="p">)</span><span class="o">.</span><span class="n">days</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">365</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">t</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s">&#39;%b </span><span class="si">%d</span><span class="s"> %H:%M&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">t</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s">&#39;%b </span><span class="si">%d</span><span class="s">  %Y&#39;</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="format_timedelta"><a class="viewcode-back" href="../../api.html#borg.helpers.format_timedelta">[docs]</a><span class="k">def</span> <span class="nf">format_timedelta</span><span class="p">(</span><span class="n">td</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Format timedelta in a human friendly format</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># Since td.total_seconds() requires python 2.7</span>
+    <span class="n">ts</span> <span class="o">=</span> <span class="p">(</span><span class="n">td</span><span class="o">.</span><span class="n">microseconds</span> <span class="o">+</span> <span class="p">(</span><span class="n">td</span><span class="o">.</span><span class="n">seconds</span> <span class="o">+</span> <span class="n">td</span><span class="o">.</span><span class="n">days</span> <span class="o">*</span> <span class="mi">24</span> <span class="o">*</span> <span class="mi">3600</span><span class="p">)</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">**</span> <span class="mi">6</span><span class="p">)</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="mi">10</span> <span class="o">**</span> <span class="mi">6</span><span class="p">)</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">ts</span> <span class="o">%</span> <span class="mi">60</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ts</span> <span class="o">/</span> <span class="mi">60</span><span class="p">)</span> <span class="o">%</span> <span class="mi">60</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ts</span> <span class="o">/</span> <span class="mi">3600</span><span class="p">)</span> <span class="o">%</span> <span class="mi">24</span>
+    <span class="n">txt</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%.2f</span><span class="s"> seconds&#39;</span> <span class="o">%</span> <span class="n">s</span>
+    <span class="k">if</span> <span class="n">m</span><span class="p">:</span>
+        <span class="n">txt</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%d</span><span class="s"> minutes </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">txt</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">h</span><span class="p">:</span>
+        <span class="n">txt</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%d</span><span class="s"> hours </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">txt</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">td</span><span class="o">.</span><span class="n">days</span><span class="p">:</span>
+        <span class="n">txt</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%d</span><span class="s"> days </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">td</span><span class="o">.</span><span class="n">days</span><span class="p">,</span> <span class="n">txt</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">txt</span>
+
+</div>
+<div class="viewcode-block" id="format_file_mode"><a class="viewcode-back" href="../../api.html#borg.helpers.format_file_mode">[docs]</a><span class="k">def</span> <span class="nf">format_file_mode</span><span class="p">(</span><span class="n">mod</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Format file mode bits for list output</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">x</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">v</span> <span class="o">&amp;</span> <span class="n">m</span> <span class="ow">and</span> <span class="n">s</span> <span class="ow">or</span> <span class="s">&#39;-&#39;</span>
+                       <span class="k">for</span> <span class="n">m</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="p">((</span><span class="mi">4</span><span class="p">,</span> <span class="s">&#39;r&#39;</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s">&#39;x&#39;</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="s">&#39;</span><span class="si">%s%s%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">x</span><span class="p">(</span><span class="n">mod</span> <span class="o">//</span> <span class="mi">64</span><span class="p">),</span> <span class="n">x</span><span class="p">(</span><span class="n">mod</span> <span class="o">//</span> <span class="mi">8</span><span class="p">),</span> <span class="n">x</span><span class="p">(</span><span class="n">mod</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="format_file_size"><a class="viewcode-back" href="../../api.html#borg.helpers.format_file_size">[docs]</a><span class="k">def</span> <span class="nf">format_file_size</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Format file size into a human friendly format</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">10</span><span class="o">**</span><span class="mi">12</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s">&#39;</span><span class="si">%.2f</span><span class="s"> TB&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">v</span> <span class="o">/</span> <span class="mi">10</span><span class="o">**</span><span class="mi">12</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">abs</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">10</span><span class="o">**</span><span class="mi">9</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s">&#39;</span><span class="si">%.2f</span><span class="s"> GB&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">v</span> <span class="o">/</span> <span class="mi">10</span><span class="o">**</span><span class="mi">9</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">abs</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">10</span><span class="o">**</span><span class="mi">6</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s">&#39;</span><span class="si">%.2f</span><span class="s"> MB&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">v</span> <span class="o">/</span> <span class="mi">10</span><span class="o">**</span><span class="mi">6</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">abs</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">10</span><span class="o">**</span><span class="mi">3</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s">&#39;</span><span class="si">%.2f</span><span class="s"> kB&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">v</span> <span class="o">/</span> <span class="mi">10</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s">&#39;</span><span class="si">%d</span><span class="s"> B&#39;</span> <span class="o">%</span> <span class="n">v</span>
+
+</div>
+<div class="viewcode-block" id="format_archive"><a class="viewcode-back" href="../../api.html#borg.helpers.format_archive">[docs]</a><span class="k">def</span> <span class="nf">format_archive</span><span class="p">(</span><span class="n">archive</span><span class="p">):</span>
+    <span class="k">return</span> <span class="s">&#39;</span><span class="si">%-36s</span><span class="s"> </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">archive</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">to_localtime</span><span class="p">(</span><span class="n">archive</span><span class="o">.</span><span class="n">ts</span><span class="p">)</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%c</span><span class="s">&#39;</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="IntegrityError"><a class="viewcode-back" href="../../api.html#borg.helpers.IntegrityError">[docs]</a><span class="k">class</span> <span class="nc">IntegrityError</span><span class="p">(</span><span class="n">Error</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Data integrity error&quot;&quot;&quot;</span>
+
+</div>
+<div class="viewcode-block" id="memoize"><a class="viewcode-back" href="../../api.html#borg.helpers.memoize">[docs]</a><span class="k">def</span> <span class="nf">memoize</span><span class="p">(</span><span class="n">function</span><span class="p">):</span>
+    <span class="n">cache</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span> <span class="nf">decorated_function</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">cache</span><span class="p">[</span><span class="n">args</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="n">function</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+            <span class="n">cache</span><span class="p">[</span><span class="n">args</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+            <span class="k">return</span> <span class="n">val</span>
+    <span class="k">return</span> <span class="n">decorated_function</span>
+
+</div>
+<span class="nd">@memoize</span>
+<div class="viewcode-block" id="uid2user"><a class="viewcode-back" href="../../api.html#borg.helpers.uid2user">[docs]</a><span class="k">def</span> <span class="nf">uid2user</span><span class="p">(</span><span class="n">uid</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">pwd</span><span class="o">.</span><span class="n">getpwuid</span><span class="p">(</span><span class="n">uid</span><span class="p">)</span><span class="o">.</span><span class="n">pw_name</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">default</span>
+
+</div>
+<span class="nd">@memoize</span>
+<div class="viewcode-block" id="user2uid"><a class="viewcode-back" href="../../api.html#borg.helpers.user2uid">[docs]</a><span class="k">def</span> <span class="nf">user2uid</span><span class="p">(</span><span class="n">user</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">user</span> <span class="ow">and</span> <span class="n">pwd</span><span class="o">.</span><span class="n">getpwnam</span><span class="p">(</span><span class="n">user</span><span class="p">)</span><span class="o">.</span><span class="n">pw_uid</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">default</span>
+
+</div>
+<span class="nd">@memoize</span>
+<div class="viewcode-block" id="gid2group"><a class="viewcode-back" href="../../api.html#borg.helpers.gid2group">[docs]</a><span class="k">def</span> <span class="nf">gid2group</span><span class="p">(</span><span class="n">gid</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">grp</span><span class="o">.</span><span class="n">getgrgid</span><span class="p">(</span><span class="n">gid</span><span class="p">)</span><span class="o">.</span><span class="n">gr_name</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">default</span>
+
+</div>
+<span class="nd">@memoize</span>
+<div class="viewcode-block" id="group2gid"><a class="viewcode-back" href="../../api.html#borg.helpers.group2gid">[docs]</a><span class="k">def</span> <span class="nf">group2gid</span><span class="p">(</span><span class="n">group</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">group</span> <span class="ow">and</span> <span class="n">grp</span><span class="o">.</span><span class="n">getgrnam</span><span class="p">(</span><span class="n">group</span><span class="p">)</span><span class="o">.</span><span class="n">gr_gid</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">default</span>
+
+</div>
+<div class="viewcode-block" id="posix_acl_use_stored_uid_gid"><a class="viewcode-back" href="../../api.html#borg.helpers.posix_acl_use_stored_uid_gid">[docs]</a><span class="k">def</span> <span class="nf">posix_acl_use_stored_uid_gid</span><span class="p">(</span><span class="n">acl</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Replace the user/group field with the stored uid/gid</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">entries</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">acl</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s">&#39;ascii&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">entry</span><span class="p">:</span>
+            <span class="n">fields</span> <span class="o">=</span> <span class="n">entry</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;:&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">fields</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+                <span class="n">entries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;:&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">fields</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">fields</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">fields</span><span class="p">[</span><span class="mi">2</span><span class="p">]]))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">entries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">entry</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">entries</span><span class="p">))</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;ascii&#39;</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="Location"><a class="viewcode-back" href="../../api.html#borg.helpers.Location">[docs]</a><span class="k">class</span> <span class="nc">Location</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Object representing a repository / archive location</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">proto</span> <span class="o">=</span> <span class="n">user</span> <span class="o">=</span> <span class="n">host</span> <span class="o">=</span> <span class="n">port</span> <span class="o">=</span> <span class="n">path</span> <span class="o">=</span> <span class="n">archive</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="c"># borg mount&#39;s FUSE filesystem creates one level of directories from</span>
+    <span class="c"># the archive names. Thus, we must not accept &quot;/&quot; in archive names.</span>
+    <span class="n">ssh_re</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">r&#39;(?P&lt;proto&gt;ssh)://(?:(?P&lt;user&gt;[^@]+)@)?&#39;</span>
+                        <span class="s">r&#39;(?P&lt;host&gt;[^:/#]+)(?::(?P&lt;port&gt;\d+))?&#39;</span>
+                        <span class="s">r&#39;(?P&lt;path&gt;[^:]+)(?:::(?P&lt;archive&gt;[^/]+))?$&#39;</span><span class="p">)</span>
+    <span class="n">file_re</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">r&#39;(?P&lt;proto&gt;file)://&#39;</span>
+                         <span class="s">r&#39;(?P&lt;path&gt;[^:]+)(?:::(?P&lt;archive&gt;[^/]+))?$&#39;</span><span class="p">)</span>
+    <span class="n">scp_re</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">r&#39;((?:(?P&lt;user&gt;[^@]+)@)?(?P&lt;host&gt;[^:/]+):)?&#39;</span>
+                        <span class="s">r&#39;(?P&lt;path&gt;[^:]+)(?:::(?P&lt;archive&gt;[^/]+))?$&#39;</span><span class="p">)</span>
+    <span class="c"># get the repo from BORG_RE env and the optional archive from param.</span>
+    <span class="c"># if the syntax requires giving REPOSITORY (see &quot;borg mount&quot;),</span>
+    <span class="c"># use &quot;::&quot; to let it use the env var.</span>
+    <span class="c"># if REPOSITORY argument is optional, it&#39;ll automatically use the env.</span>
+    <span class="n">env_re</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">r&#39;(?:::(?P&lt;archive&gt;[^/]+)?)?$&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">orig</span> <span class="o">=</span> <span class="n">text</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">orig</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span>
+
+<div class="viewcode-block" id="Location.parse"><a class="viewcode-back" href="../../api.html#borg.helpers.Location.parse">[docs]</a>    <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+        <span class="n">valid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">valid</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">m</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="n">repo</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;BORG_REPO&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">repo</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="n">valid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse</span><span class="p">(</span><span class="n">repo</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">valid</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">archive</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s">&#39;archive&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">True</span>
+</div>
+    <span class="k">def</span> <span class="nf">_parse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ssh_re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">m</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">proto</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s">&#39;proto&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">user</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s">&#39;user&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">host</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s">&#39;host&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s">&#39;port&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">int</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s">&#39;port&#39;</span><span class="p">))</span> <span class="ow">or</span> <span class="bp">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s">&#39;path&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">archive</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s">&#39;archive&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">m</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">proto</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s">&#39;proto&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s">&#39;path&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">archive</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s">&#39;archive&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scp_re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">m</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">user</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s">&#39;user&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">host</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s">&#39;host&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s">&#39;path&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">archive</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s">&#39;archive&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">proto</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">host</span> <span class="ow">and</span> <span class="s">&#39;ssh&#39;</span> <span class="ow">or</span> <span class="s">&#39;file&#39;</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;proto=</span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">proto</span><span class="p">)</span>
+        <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;user=</span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">)</span>
+        <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;host=</span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">host</span><span class="p">)</span>
+        <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;port=</span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">)</span>
+        <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;path=</span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;archive=</span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">archive</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">items</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Location.to_key_filename"><a class="viewcode-back" href="../../api.html#borg.helpers.Location.to_key_filename">[docs]</a>    <span class="k">def</span> <span class="nf">to_key_filename</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;[^\w]&#39;</span><span class="p">,</span> <span class="s">&#39;_&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s">&#39;_&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">proto</span> <span class="o">!=</span> <span class="s">&#39;file&#39;</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">host</span> <span class="o">+</span> <span class="s">&#39;__&#39;</span> <span class="o">+</span> <span class="n">name</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">get_keys_dir</span><span class="p">(),</span> <span class="n">name</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;Location(</span><span class="si">%s</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="bp">self</span>
+
+<div class="viewcode-block" id="Location.canonical_path"><a class="viewcode-back" href="../../api.html#borg.helpers.Location.canonical_path">[docs]</a>    <span class="k">def</span> <span class="nf">canonical_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">proto</span> <span class="o">==</span> <span class="s">&#39;file&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;~&#39;</span><span class="p">):</span>
+                <span class="n">path</span> <span class="o">=</span> <span class="s">&#39;/&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">):</span>
+                <span class="n">path</span> <span class="o">=</span> <span class="s">&#39;/~/&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span>
+            <span class="k">return</span> <span class="s">&#39;ssh://{}{}{}{}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s">&#39;{}@&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span> <span class="k">else</span> <span class="s">&#39;&#39;</span><span class="p">,</span>
+                                           <span class="bp">self</span><span class="o">.</span><span class="n">host</span><span class="p">,</span>
+                                           <span class="s">&#39;:{}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="k">else</span> <span class="s">&#39;&#39;</span><span class="p">,</span>
+                                           <span class="n">path</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="location_validator"><a class="viewcode-back" href="../../api.html#borg.helpers.location_validator">[docs]</a><span class="k">def</span> <span class="nf">location_validator</span><span class="p">(</span><span class="n">archive</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">validator</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">loc</span> <span class="o">=</span> <span class="n">Location</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentTypeError</span><span class="p">(</span><span class="s">&#39;Invalid location format: &quot;</span><span class="si">%s</span><span class="s">&quot;&#39;</span> <span class="o">%</span> <span class="n">text</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">archive</span> <span class="ow">is</span> <span class="bp">True</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">loc</span><span class="o">.</span><span class="n">archive</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentTypeError</span><span class="p">(</span><span class="s">&#39;&quot;</span><span class="si">%s</span><span class="s">&quot;: No archive specified&#39;</span> <span class="o">%</span> <span class="n">text</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">archive</span> <span class="ow">is</span> <span class="bp">False</span> <span class="ow">and</span> <span class="n">loc</span><span class="o">.</span><span class="n">archive</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentTypeError</span><span class="p">(</span><span class="s">&#39;&quot;</span><span class="si">%s</span><span class="s">&quot; No archive can be specified&#39;</span> <span class="o">%</span> <span class="n">text</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">loc</span>
+    <span class="k">return</span> <span class="n">validator</span>
+
+</div>
+<div class="viewcode-block" id="read_msgpack"><a class="viewcode-back" href="../../api.html#borg.helpers.read_msgpack">[docs]</a><span class="k">def</span> <span class="nf">read_msgpack</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fd</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">msgpack</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="write_msgpack"><a class="viewcode-back" href="../../api.html#borg.helpers.write_msgpack">[docs]</a><span class="k">def</span> <span class="nf">write_msgpack</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span> <span class="o">+</span> <span class="s">&#39;.tmp&#39;</span><span class="p">,</span> <span class="s">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fd</span><span class="p">:</span>
+        <span class="n">msgpack</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">fd</span><span class="p">)</span>
+        <span class="n">fd</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">fsync</span><span class="p">(</span><span class="n">fd</span><span class="o">.</span><span class="n">fileno</span><span class="p">())</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">filename</span> <span class="o">+</span> <span class="s">&#39;.tmp&#39;</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="decode_dict"><a class="viewcode-back" href="../../api.html#borg.helpers.decode_dict">[docs]</a><span class="k">def</span> <span class="nf">decode_dict</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">keys</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s">&#39;utf-8&#39;</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s">&#39;surrogateescape&#39;</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">),</span> <span class="nb">bytes</span><span class="p">):</span>
+            <span class="n">d</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">encoding</span><span class="p">,</span> <span class="n">errors</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">d</span>
+
+</div>
+<div class="viewcode-block" id="remove_surrogates"><a class="viewcode-back" href="../../api.html#borg.helpers.remove_surrogates">[docs]</a><span class="k">def</span> <span class="nf">remove_surrogates</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s">&#39;replace&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Replace surrogates generated by fsdecode with &#39;?&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">,</span> <span class="n">errors</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">)</span>
+
+</div>
+<span class="n">_safe_re</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">r&#39;^((\.\.)?/+)+&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="make_path_safe"><a class="viewcode-back" href="../../api.html#borg.helpers.make_path_safe">[docs]</a><span class="k">def</span> <span class="nf">make_path_safe</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Make path safe by making it relative and local</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_safe_re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span> <span class="ow">or</span> <span class="s">&#39;.&#39;</span>
+
+</div>
+<div class="viewcode-block" id="daemonize"><a class="viewcode-back" href="../../api.html#borg.helpers.daemonize">[docs]</a><span class="k">def</span> <span class="nf">daemonize</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Detach process from controlling terminal and run in background</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">pid</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">fork</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">pid</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">_exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">setsid</span><span class="p">()</span>
+    <span class="n">pid</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">fork</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">pid</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">_exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">fd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&#39;/dev/null&#39;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">O_RDWR</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">dup2</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">dup2</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">dup2</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="StableDict"><a class="viewcode-back" href="../../api.html#borg.helpers.StableDict">[docs]</a><span class="k">class</span> <span class="nc">StableDict</span><span class="p">(</span><span class="nb">dict</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A dict subclass with stable items() ordering&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="StableDict.items"><a class="viewcode-back" href="../../api.html#borg.helpers.StableDict.items">[docs]</a>    <span class="k">def</span> <span class="nf">items</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+
+</div></div>
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version</span> <span class="o">&lt;</span> <span class="s">&#39;3.3&#39;</span><span class="p">:</span>
+    <span class="c"># st_mtime_ns attribute only available in 3.3+</span>
+    <span class="k">def</span> <span class="nf">st_mtime_ns</span><span class="p">(</span><span class="n">st</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">st_mtime</span> <span class="o">*</span> <span class="mf">1e9</span><span class="p">)</span>
+
+    <span class="c"># unhexlify in &lt; 3.3 incorrectly only accepts bytes input</span>
+    <span class="k">def</span> <span class="nf">unhexlify</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;ascii&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">binascii</span><span class="o">.</span><span class="n">unhexlify</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+<div class="viewcode-block" id="st_mtime_ns"><a class="viewcode-back" href="../../api.html#borg.helpers.st_mtime_ns">[docs]</a>    <span class="k">def</span> <span class="nf">st_mtime_ns</span><span class="p">(</span><span class="n">st</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">st</span><span class="o">.</span><span class="n">st_mtime_ns</span>
+</div>
+    <span class="n">unhexlify</span> <span class="o">=</span> <span class="n">binascii</span><span class="o">.</span><span class="n">unhexlify</span>
+
+
+<div class="viewcode-block" id="bigint_to_int"><a class="viewcode-back" href="../../api.html#borg.helpers.bigint_to_int">[docs]</a><span class="k">def</span> <span class="nf">bigint_to_int</span><span class="p">(</span><span class="n">mtime</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert bytearray to int</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mtime</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span><span class="n">mtime</span><span class="p">,</span> <span class="s">&#39;little&#39;</span><span class="p">,</span> <span class="n">signed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">mtime</span>
+
+</div>
+<div class="viewcode-block" id="int_to_bigint"><a class="viewcode-back" href="../../api.html#borg.helpers.int_to_bigint">[docs]</a><span class="k">def</span> <span class="nf">int_to_bigint</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert integers larger than 64 bits to bytearray</span>
+
+<span class="sd">    Smaller integers are left alone</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">bit_length</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">63</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">to_bytes</span><span class="p">((</span><span class="n">value</span><span class="o">.</span><span class="n">bit_length</span><span class="p">()</span> <span class="o">+</span> <span class="mi">9</span><span class="p">)</span> <span class="o">//</span> <span class="mi">8</span><span class="p">,</span> <span class="s">&#39;little&#39;</span><span class="p">,</span> <span class="n">signed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">value</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="sidebarlogo">
+  <a href="../../index.html">
+  <div class="title">Borg</div>
+</a>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><a href="https://github.com/borgbackup/borg"><img style="position: fixed; top: 0; right: 0; border: 0;"
+  src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub"></a>
+
+<h3>Useful Links</h3>
+<ul>
+  <li><a href="https://borgbackup.github.io/borgbackup/">Main Web Site</a></li>
+  <li><a href="https://pypi.python.org/pypi/borgbackup">PyPI packages</a></li>
+  <li><a href="https://github.com/borgbackup/borg/issues/214">Binaries</a></li>
+  <li><a href="https://github.com/borgbackup/borg/blob/master/CHANGES.rst">Current ChangeLog</a></li>
+  <li><a href="https://github.com/borgbackup/borg">GitHub</a></li>
+  <li><a href="https://github.com/borgbackup/borg/issues">Issue Tracker</a></li>
+  <li><a href="https://www.bountysource.com/teams/borgbackup">Bounties &amp; Fundraisers</a></li>
+  <li><a href="http://librelist.com/browser/borgbackup/">Mailing List</a></li>
+</ul>
+
+<h3>Related Projects</h3>
+<ul>
+  <li><a href="https://borgbackup.github.io/borgweb/">BorgWeb</a></li>
+</ul>
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a></li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Borg - Deduplicating Archiver 0.27.0 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    </div>
+  </body>
+</html>

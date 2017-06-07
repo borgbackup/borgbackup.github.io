@@ -38,36 +38,14 @@
 			border-bottom: 1px solid #666;
 		}
 
-		main ul {
-			line-height: 1.5em;
-		}
-
-		#links {
-			margin-top: 2em;
-		}
-
-		#links a {
-			text-decoration: none; color: #00dd00;
-		}
-
-		#links a:hover .action {
-			text-decoration: none;
-			font-weight: bold;
-			color: #00ff00;
-			background: white;
-		}
-
-		#links .link {
-			float: left;
-			width: 199px;
-			height: 120px;
-			text-align: center;
-		}
-
-		#links .action {
-			font-size: 400%;
+		#demo {
+			margin: 2em 0;
+			position: absolute;
+			left: 0;
+			right: 0;
 		}
 	</style>
+	<link rel="stylesheet" type="text/css" href="/asciinema/player.css" />
 	<link rel="shortcut icon" href="favicon.ico"/>
 	<link rel="icon" type="image/ico" href="favicon.ico"/>
 </head>
@@ -90,9 +68,12 @@
 
 		<a href="/">« back</a>
 
-		<script type="text/javascript" src="https://asciinema.org/a/28691.js" id="asciicast-28691" async></script>
+		<div id="demo">
+			<asciinema-player src="/asciinema/asciicast-28691.json" cols="80" rows="24" autoplay="1" speed="1.5"></asciinema-player>
+			<noscript><p><strong>JavaScript is needed to view the demo.</strong></p></noscript>
+		</div>
 
-		<em>... and always check your backups!</em>
+		<script src="/asciinema/player.js"></script>
 	</main>
 </body>
 </html>

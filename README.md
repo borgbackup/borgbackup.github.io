@@ -1,7 +1,10 @@
-# borgbackup.github.io
+# www.borgbackup.org
 
-These are the intro pages for Borg. Since they describe multiple release series,
-this is not in the main docs.
+These are the intro pages for Borg. They are hosted on GitHub pages with the project domain
+CNAMEd to GitHub pages.
+
+Since they describe multiple release series, they is not in the main docs, which only concern
+themselves with *one* specific release.
 
 The docs are managed on http://readthedocs.org/projects/borgbackup and available at https://borgbackup.readthedocs.io/en/latest/ (RTD).
 

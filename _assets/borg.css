@@ -26,6 +26,7 @@ main {
 	margin: 0 auto;
 }
 
+main #tagline,
 main h1.title {
 	font-size: 220%;
 	font-weight: normal;
@@ -80,4 +81,21 @@ main ul {
 
 .contributors .contributor {
 	white-space: nowrap;
+}
+
+#demo {
+	text-align: center;
+	width: 100%;
+}
+
+/* the size of the demo player is not very well defined and kinda depends on the
+ * default fonts and font sizes. This makes it so that it does never truncate lines if the
+ * window is large enough.
+ */
+#demo {
+	margin: 10px 0;
+	text-align: center;
+	position: absolute;
+	left: 0;
+	right: 0;
 }

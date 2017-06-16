@@ -1,78 +1,44 @@
 <!DOCTYPE html>
-<html lang="en">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
-	<meta charset="utf-8"/>
-	<title>BorgBackup – Deduplicating archiver with compression and authenticated encryption</title>
-	<style type="text/css">
-		body {
-			margin: 0;
-			font-family: verdana,arial,helvetica,sans-serif;
-		}
-
-		header {
-			background-color: black;
-			padding-top: 4em;
-			padding-bottom: 1em;
-			border-bottom: 2px solid #5afe57;
-		}
-
-		#logo {
-			width: 600px;
-			margin: 0 auto;
-		}
-
-		h1 {
-			margin: 0;
-			margin-left: -20px;
-		}
-
-		main {
-			width: 600px;
-			margin: 0 auto;
-		}
-
-		h2 {
-			font-size: 220%;
-			font-weight: normal;
-			padding-bottom: .7em;
-			border-bottom: 1px solid #666;
-		}
-
-		#demo {
-			margin: 10px 0;
-			text-align: center;
-			position: absolute;
-			left: 0;
-			right: 0;
-		}
-	</style>
-	<link rel="shortcut icon" href="favicon.ico"/>
-	<link rel="icon" type="image/ico" href="favicon.ico"/>
+<!-- <head> -->
+<meta charset="utf-8"/>
+<meta name="generator" content="Docutils 0.13.1: http://docutils.sourceforge.net/" />
+<title></title>
+<link rel="shortcut icon" href="favicon.ico"/>
+<link rel="icon" type="image/ico" href="favicon.ico"/>
+<link rel="stylesheet" href="_assets/minimal.css" type="text/css" />
+<link rel="stylesheet" href="_assets/plain.css" type="text/css" />
+<link rel="stylesheet" href="_assets/borg.css" type="text/css" />
+<!-- </head> -->
 </head>
 <body>
+<div class="document">
+<!-- <body> -->
 
-	<header>
-		<div id="logo">
-			<h1><a href="/"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="240pt" height="100pt">
-				<path id="p0" fill="#000200" d="M0 66.6667L0 0L160 0L320 0L320 66.6667L320 133.333L160 133.333L0 133.333Z"/>
-				<path id="p1" transform="translate(20.9086, 32.2192)" fill="#00dd00" d="M43.75 13.8021L26.6667 13.8021L26.6667 0L53.3854 0L67.2396 13.8021L67.2396 27.8646L60.3125 34.7917L67.2396 41.7187L67.2396 55.3125L53.3854 69.1146L26.6667 69.1146L26.6667 55.3125L43.75 55.3125L43.75 40.5729L26.6667 40.5729L26.6667 28.5417L43.75 28.5417ZM0 0L23.0208 0L23.0208 69.1146L0 69.1146Z"/>
-				<path id="p2" transform="translate(97.6794, 46.0213)" fill="#00dd00" d="M62.1354 41.5104L48.3333 55.3125L32.9167 55.3125L32.9167 42.3958L38.6458 42.3958L38.6458 13.8021L32.9167 13.8021L32.9167 0L48.3333 0L62.1354 13.8021ZM23.2813 42.3958L29.2708 42.3958L29.2708 55.3125L13.8021 55.3125L0 41.5104L0 13.8021L13.8021 0L29.2708 0L29.2708 13.8021L23.2813 13.8021Z"/>
-				<path id="p3" transform="translate(170.231, 46.0213)" fill="#00dd00" d="M36.5104 13.8021L26.7187 13.8021L26.7187 7.76042L34.4271 0L48.3854 0L59.5833 12.9167L59.5833 27.2396L36.5104 27.2396ZM0 55.3125L0 7.10543e-15L23.0208 7.10543e-15L23.0208 55.3125Z"/>
-				<path id="p4" transform="translate(236.429, 46.0213)" fill="#00dd00" d="M36.875 13.8021L26.6667 13.8021L26.6667 7.10543e-15L46.0937 7.10543e-15L59.8958 13.8021L59.8958 60.7812L46.0937 74.6875L15.7292 74.6875L8.80208 67.7083L8.80208 62.6042L36.875 62.6042ZM33.2292 42.3958L33.2292 48.4896L26.3542 55.3125L13.8021 55.3125L0 41.5104L0 13.8021L13.8021 0L23.0208 0L23.0208 42.3958Z"/>
-			</svg></a></h1>
-		</div>
-	</header>
+<header>
+	<div id="logo">
+		<h1><a href="/"><img src="/_assets/logo.svg" width="320px" height="133px"></a></h1>
+	</div>
+</header>
 
-	<main>
-		<h2 id="tagline">Deduplicating archiver<br>with compression and encryption</h2>
+<main>
+	<!-- document heading -->
+	
+	<!-- bibliographical data, if any -->
+	
+	<!-- document body -->
+	<h2 id="tagline">Deduplicating archiver<br>with compression and encryption</h2>
 
-		<a href="/">« back</a>
+<a href="/">« back</a>
 
-		<div id="demo">
-			<script type="text/javascript" src="https://asciinema.org/a/28691.js" id="asciicast-28691" async
-			        data-autoplay="1" data-speed="1.5"></script>
-			<noscript><p><strong>JavaScript from asciinema.org is needed to view the demo.</strong></p></noscript>
-		</div>
-	</main>
+<div id="demo">
+    <script type="text/javascript" src="https://asciinema.org/a/28691.js" id="asciicast-28691" async
+            data-autoplay="1" data-speed="1.5"></script>
+    <noscript><p><strong>JavaScript from asciinema.org is needed to view the demo.</strong></p></noscript>
+</div>
+</main>
+<!-- </body> -->
+</div>
 </body>
 </html>

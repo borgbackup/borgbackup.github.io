@@ -1,0 +1,108 @@
+body {
+	margin: 0;
+	font-family: verdana,arial,helvetica,sans-serif;
+	padding-bottom: 1em;
+}
+
+header {
+	background-color: black;
+	padding-top: 4em;
+	padding-bottom: 1em;
+	border-bottom: 2px solid #5afe57;
+}
+
+#logo {
+	width: 600px;
+	margin: 0 auto;
+}
+
+header h1 {
+	margin: 0;
+	margin-left: -20px;
+}
+
+main {
+	width: 600px;
+	margin: 0 auto;
+}
+
+main h1.title {
+	font-size: 220%;
+	font-weight: normal;
+	padding-bottom: .7em;
+	border-bottom: 1px solid #666;
+	text-align: left;
+}
+
+main h1 {
+	font-size: 150%;
+	font-weight: normal;
+}
+
+main ul {
+	line-height: 1.5em;
+}
+
+#links {
+	margin-top: 2em;
+}
+
+#links a {
+	text-decoration: none;
+	color: #00dd00;
+}
+
+#links a:hover {
+	color: #5afe57;
+}
+
+#links a:hover .action {
+	text-decoration: none;
+	font-weight: bold;
+	background: white;
+}
+
+#links .link {
+	float: left;
+	width: 199px;
+	height: 120px;
+	text-align: center;
+}
+
+#links .action {
+	font-size: 400%;
+}
+
+.contributors {
+	line-height: 1.5;
+	font-style: italic;
+}
+
+.contributors .contributor {
+	white-space: nowrap;
+}
+
+/*
+#contents .topic-title {
+	float: left;
+}
+
+#contents ul {
+	list-style: none;
+}
+
+#contents ul,
+#contents li,
+#contents li p {
+	margin: 0;
+	float: left;
+}
+
+#contents li {
+	margin-left: 1em;
+}
+
+#contents li:before {
+	content: " · ";
+}
+*/

@@ -81,28 +81,3 @@ main ul {
 .contributors .contributor {
 	white-space: nowrap;
 }
-
-/*
-#contents .topic-title {
-	float: left;
-}
-
-#contents ul {
-	list-style: none;
-}
-
-#contents ul,
-#contents li,
-#contents li p {
-	margin: 0;
-	float: left;
-}
-
-#contents li {
-	margin-left: 1em;
-}
-
-#contents li:before {
-	content: " · ";
-}
-*/

@@ -1,5 +1,6 @@
 
 PAGES=\
+demo.html\
 releases/index.html
 
 TEMPLATE=rst_template.txt
@@ -18,5 +19,5 @@ commit-rebuild: clean all
 	git add $(PAGES)
 	git commit -m "ran make commit-rebuild"
 
-%.html: %.rst
+%.html: %.rst rst_template.txt _assets/*
 	rst2html5 $(RST_OPTIONS) $< $@

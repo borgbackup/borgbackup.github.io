@@ -10,7 +10,7 @@ The docs are managed on http://readthedocs.org/projects/borgbackup and available
 
 The borgweb manual is on RTD as well: https://borgweb.readthedocs.io/
 
-Previously documetation was hosted directly here, before the move to RTD.
+Previously documentation was hosted directly here, before the move to RTD.
 There are still redirections (borgbackup/, borgweb/) to the RTD site here
 to keep old URLs working for a while, although that doesn't work with sub-pages.
 

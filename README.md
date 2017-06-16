@@ -22,4 +22,5 @@ The splash page (index.html) is meant to load very quickly with few external res
 Other pages are generated from rST and rely on external resources (mostly CSS in _assets).
 
 To update the HTML after editing a rST file, run `make`. Run `make commit-rebuild` to automatically
-rebuild and commit changed HTML files.
+rebuild and commit changed HTML files. This requires a relatively recent docutils release, since
+it uses rst2html5.

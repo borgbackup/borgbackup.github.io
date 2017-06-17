@@ -3,6 +3,8 @@ Borg release series
 
 `« back </>`_
 
+.. include:: releases.rst.inc
+
 Borg 1.1
 --------
 
@@ -18,7 +20,7 @@ Borg 1.0
 --------
 
 The current **stable** series is Borg 1.0, with the initial 1.0.0 release on 5th March 2016.
-The latest release in this series is Borg 1.0.10, released on 13th February 2017.
+The latest release in this series is Borg |current1.0|, released on |current1.0date|.
 This is the series shipped by most Linux distributions.
 
 - `Documentation <https://borgbackup.readthedocs.io/en/stable/>`__

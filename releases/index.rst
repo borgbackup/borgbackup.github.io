@@ -10,7 +10,8 @@ Borg 1.1
 
 Borg 1.1 is the current **development** branch of Borg and is in the **beta** phase.
 It is not recommended to use beta software in a production environment except
-for evaluation and testing.
+for evaluation and testing. The current beta release is |current1.1|, released on
+|current1.1date|.
 
 - `Documentation <https://borgbackup.readthedocs.io/en/latest/>`__
 - `Installation <https://borgbackup.readthedocs.io/en/latest/installation.html>`__

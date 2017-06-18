@@ -1,5 +1,6 @@
 
 PAGES=\
+index.html\
 demo.html\
 releases/index.html
 

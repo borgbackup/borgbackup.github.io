@@ -48,6 +48,10 @@ main ul {
 	line-height: 1.5em;
 }
 
+.main-index h2 {
+	margin: 0.8125em 0;
+}
+
 #links {
 	margin-top: 2em;
 }

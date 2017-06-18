@@ -20,7 +20,7 @@ To manage the documentation and releases, see the development guide at: https://
 
 All pages are meant to load very quickly with few/no external resources.
 
-Pages (except index.html) are generated from rST.
+All pages are generated from rST.
 
 To update the HTML after editing a rST file, run `make`.
 Run `make commit-rebuild` to automatically rebuild and commit changed HTML files.

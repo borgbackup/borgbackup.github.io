@@ -11,7 +11,7 @@ STYLESHEET_DIRS=_assets
 STYLESHEETS=minimal.css,plain.css,borg.css
 
 RST_OPTIONS=--template=$(TEMPLATE) \
-  --link-stylesheet --stylesheet-dirs=$(STYLESHEET_DIRS) --stylesheet-path=$(STYLESHEETS)
+  --embed-stylesheet --stylesheet-dirs=$(STYLESHEET_DIRS) --stylesheet-path=$(STYLESHEETS)
 
 all: $(PAGES)
 

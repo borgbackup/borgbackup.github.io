@@ -18,9 +18,10 @@ To manage the documentation and releases, see the development guide at: https://
 
 ------
 
-The splash page (index.html) is meant to load very quickly with few external resources.
-Other pages are generated from rST and rely on external resources (mostly CSS in _assets).
+All pages are meant to load very quickly with few/no external resources.
 
-To update the HTML after editing a rST file, run `make`. Run `make commit-rebuild` to automatically
-rebuild and commit changed HTML files. This requires a relatively recent docutils release, since
-it uses rst2html5.
+Pages (except index.html) are generated from rST.
+
+To update the HTML after editing a rST file, run `make`.
+Run `make commit-rebuild` to automatically rebuild and commit changed HTML files.
+This requires a relatively recent docutils release, since it uses rst2html5.

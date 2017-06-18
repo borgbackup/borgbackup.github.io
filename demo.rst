@@ -1,3 +1,9 @@
+
+.. class:: hide-rst-heading
+
+Demo — BorgBackup
+=================
+
 .. raw:: html
 
     <h2 id="tagline">Deduplicating archiver<br>with compression and encryption</h2>

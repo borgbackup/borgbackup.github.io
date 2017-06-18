@@ -26,6 +26,10 @@ main {
 	margin: 0 auto;
 }
 
+.hide-rst-heading main h1:first-child {
+	display: none;
+}
+
 main #tagline,
 main h1.title {
 	font-size: 220%;

@@ -13,7 +13,7 @@ make clean
 make
 
 git add --all .
-git commit -m "Automatically built pages at $(git rev-parse --short HEAD)"
+git commit -m "Automatically built pages at $(git rev-parse --short HEAD)" || exit 0
 
 # travis/github_deploy_key.enc is an encrypted SSH key.
 # The keys for this key are stored with Travis and are exposed in the
@@ -21,16 +21,16 @@ git commit -m "Automatically built pages at $(git rev-parse --short HEAD)"
 # The public key is set up as a deployment key in the GitHub repository.
 # The following document explains the process:
 # https://github.com/alrra/travis-scripts/blob/master/doc/github-deploy-keys.md
-openssl aes-256-cbc -K $encrypted_a86763407e2e_key -iv $encrypted_a86763407e2e_iv -in .travis/github_deploy_key.enc -out github_deploy_key -d
+openssl aes-256-cbc -K $encrypted_54b6162b97cf_key -iv $encrypted_54b6162b97cf_iv -in .travis/github_deploy_key.enc -out github_deploy_key -d
 
 # Add the SSH key
 chmod 600 github_deploy_key
 eval `ssh-agent -s`
-echo | ssh-add github_deploy_key
+ssh-add github_deploy_key
 
 # Push changes to the *master* branch
 # Remember, this is building the *source* branch.
-git push --force git@github.com:borgbackup/borgbackup.github.io.git origin HEAD:master
+git push --force git@github.com:borgbackup/borgbackup.github.io.git HEAD:master
 
 # Kill SSH agent, get rid of the key (Travis does that as well)
 kill $SSH_AGENT_PID

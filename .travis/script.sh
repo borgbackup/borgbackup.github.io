@@ -30,7 +30,7 @@ echo | ssh-add github_deploy_key
 
 # Push changes to the *master* branch
 # Remember, this is building the *source* branch.
-git push git@github.com:borgbackup/borgbackup.github.io.git origin HEAD:master
+git push --force git@github.com:borgbackup/borgbackup.github.io.git origin HEAD:master
 
 # Kill SSH agent, get rid of the key (Travis does that as well)
 kill $SSH_AGENT_PID

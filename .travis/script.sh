@@ -12,6 +12,9 @@ git config user.email "public@enkore.de"
 make clean
 make
 
+# Delete .travis.yml for the output ("master") branch,
+# so Travis won't even trigger a build for it.
+rm .travis.yml
 git add --all .
 git commit -m "Automatically built pages at $(git rev-parse --short HEAD)" || exit 0
 

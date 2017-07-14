@@ -16,6 +16,8 @@ script:
 
   # Build the pages
   - make clean all
+
+after_success:
   - git add --all .
   - git commit -m "Automatically built pages at $(git rev-parse --short HEAD)"
 
@@ -34,7 +36,7 @@ script:
 
   # Push changes to the *master* branch
   # Remember, this is building the *source* branch.
-  - git push origin HEAD:master
+  - git git@github.com:borgbackup/borgbackup.github.io.git origin HEAD:master
 
   # Kill SSH agent, get rid of the key (Travis does that as well)
   - kill $SSH_AGENT_PID

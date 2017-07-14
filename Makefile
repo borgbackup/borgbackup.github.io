@@ -24,4 +24,4 @@ commit-rebuild: clean all
 	git commit -m "ran make commit-rebuild"
 
 %.html: %.rst rst_template.txt _assets/* $(INCLUDES)
-	rst2html5 $(RST_OPTIONS) $< $@
+	rst2html5.py $(RST_OPTIONS) $< $@

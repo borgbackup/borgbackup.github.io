@@ -1,5 +1,7 @@
 # www.borgbackup.org
 
+[![Build Status](https://travis-ci.org/borgbackup/borgbackup.github.io.svg?branch=source)](https://travis-ci.org/borgbackup/borgbackup.github.io)
+
 This is the project web site of Borg.
 
 It is hosted on GitHub pages with the project domain CNAMEd to GitHub pages.

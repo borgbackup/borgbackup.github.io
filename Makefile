@@ -19,9 +19,5 @@ all: $(PAGES)
 clean:
 	rm -f $(PAGES)
 
-commit-rebuild: clean all
-	git add $(PAGES)
-	git commit -m "ran make commit-rebuild"
-
 %.html: %.rst rst_template.txt _assets/* $(INCLUDES)
 	rst2html5.py $(RST_OPTIONS) $< $@

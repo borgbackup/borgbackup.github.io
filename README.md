@@ -19,7 +19,7 @@ This requires a relatively recent docutils release, since it uses rst2html5.
 Release documentation is published on RTD and released as part of the official tarballs,
 as well as distributed in most distribution packages. They are only valid for their release.
 
-The *release* docs are managed on http://readthedocs.org/projects/borgbackup and available at https://borgbackup.readthedocs.io/en/latest/ (RTD).
+The *release* docs are managed on https://readthedocs.org/projects/borgbackup and available at https://borgbackup.readthedocs.io/en/latest/ (RTD).
 
 The *borgweb* manual is on RTD as well: https://borgweb.readthedocs.io/
 

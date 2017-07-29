@@ -5,16 +5,28 @@ Borg release series
 
 .. include:: releases.rst.inc
 
+Borg 1.2
+--------
+
+Borg 1.2 is the current **development** branch of Borg. There is no release in this series
+at this time.
+
+- `Wiki page <https://github.com/borgbackup/borg/wiki/Borg-1.2>`__
+- `Project board <https://github.com/borgbackup/borg/projects/4>`__
+- `Documentation <https://borgbackup.readthedocs.io/en/latest/>`__
+- `Installation <https://borgbackup.readthedocs.io/en/latest/installation.html>`__
+- `Downloads <https://github.com/borgbackup/borg/releases/>`__
+
 Borg 1.1
 --------
 
-Borg 1.1 is the current **development** branch of Borg and is in the **beta** phase.
+Borg 1.1 is currently in the **release candidate** phase.
 It is not recommended to use beta software in a production environment except
 for evaluation and testing. The current beta release is |current1.1|, released on
 |current1.1date|.
 
-- `Documentation <https://borgbackup.readthedocs.io/en/latest/>`__
-- `Installation <https://borgbackup.readthedocs.io/en/latest/installation.html>`__
+- `Documentation <https://borgbackup.readthedocs.io/en/1.1-maint/>`__
+- `Installation <https://borgbackup.readthedocs.io/en/1.1-maint/installation.html>`__
 - `Downloads <https://github.com/borgbackup/borg/releases/>`__
 
 Borg 1.0

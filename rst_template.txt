@@ -1,8 +1,8 @@
 %(head_prefix)s
 <!-- <head> -->
 %(head)s
-<link rel="shortcut icon" href="favicon.ico"/>
-<link rel="icon" type="image/ico" href="favicon.ico"/>
+<link rel="shortcut icon" href="/favicon.ico"/>
+<link rel="icon" type="image/ico" href="/favicon.ico"/>
 %(stylesheet)s
 <!-- </head> -->
 %(body_prefix)s

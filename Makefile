@@ -21,3 +21,8 @@ clean:
 
 %.html: %.rst rst_template.txt _assets/* $(INCLUDES)
 	rst2html5.py $(RST_OPTIONS) $< $@
+
+demo.html: demo.rst rst_template.txt _assets/* $(INCLUDES)
+	# The asciinema stylesheet is really big (50K), so only embed it into the demo page,
+	# not every page. To do this, we specialize on the pattern rule above.
+	rst2html5.py $(RST_OPTIONS) --stylesheet-path=$(STYLESHEETS),_assets/asciinema-player-v2.4.1.css $< $@

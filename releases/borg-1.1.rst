@@ -4,7 +4,7 @@ Borg 1.1
 `« back to all releases <.>`_
 
 :Links: `Documentation <https://borgbackup.readthedocs.io/en/stable/>`_ · `Installation <https://borgbackup.readthedocs.io/en/stable/installation.html>`_ · `Downloads <https://github.com/borgbackup/borg/releases/latest>`_
-:Date: 7th July 2017
+:Date: 8th October 2017
 
 This marks the first stable release in the Borg 1.1 series. Many improvements and new features
 were incorporated into Borg 1.1 since the 1.0 release of Borg in early 2016.

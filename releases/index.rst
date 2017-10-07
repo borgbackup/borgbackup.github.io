@@ -20,11 +20,10 @@ at this time.
 Borg 1.1
 --------
 
-Borg 1.1 is currently in the **release candidate** phase.
-It is not recommended to use beta software in a production environment except
-for evaluation and testing. The current beta release is |current1.1|, released on
-|current1.1date|.
+Borg 1.1 is the current **stable** series of Borg.
+The current release is |current1.1|, released on |current1.1date|.
 
+- `1.1.0 release announcement <borg-1.1.html>`_
 - `Documentation <https://borgbackup.readthedocs.io/en/1.1-maint/>`__
 - `Installation <https://borgbackup.readthedocs.io/en/1.1-maint/installation.html>`__
 - `Downloads <https://github.com/borgbackup/borg/releases/>`__
@@ -32,7 +31,7 @@ for evaluation and testing. The current beta release is |current1.1|, released o
 Borg 1.0
 --------
 
-The current **stable** series is Borg 1.0, with the initial 1.0.0 release on 5th March 2016.
+The old stable series is Borg 1.0, with the initial 1.0.0 release on 5th March 2016.
 The latest release in this series is Borg |current1.0|, released on |current1.0date|.
 This is the series shipped by most Linux distributions.
 

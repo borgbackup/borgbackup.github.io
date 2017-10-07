@@ -4,7 +4,7 @@ Borg 1.1
 `« back to all releases <.>`_
 
 :Links: `Documentation <https://borgbackup.readthedocs.io/en/stable/>`_ · `Installation <https://borgbackup.readthedocs.io/en/stable/installation.html>`_ · `Downloads <https://github.com/borgbackup/borg/releases/latest>`_
-:Date: 8th October 2017
+:Date: 7th October 2017
 
 This marks the first stable release in the Borg 1.1 series. Many improvements and new features
 were incorporated into Borg 1.1 since the 1.0 release of Borg in early 2016.
@@ -99,6 +99,11 @@ Deprecated options and commands in Borg 1.1, which will be removed in Borg 1.2:
   "borg change-passphrase" will be removed in Borg 1.2.
 - borg create: the --keep-tag-files option has been deprecated in favour of the new --keep-exclude-tags option.
   Both options have the same effect. --keep-tag-files will be removed in Borg 1.2.
+- borg create: the --ignore-inode option has been deprecated in favour of --files-cache=... modes without "inode".
+  --ignore-inode will be removed in Borg 1.2.
+- borg create: the --no-files-cache option has been deprecated in favour of --files-cache=disabled.
+  --no-files-cache will be removed in Borg 1.2.
+
 
 Contributors
 ------------

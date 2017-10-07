@@ -2,7 +2,8 @@
 PAGES=\
 index.html\
 demo.html\
-releases/index.html
+releases/index.html \
+releases/borg-1.1.html
 
 INCLUDES=\
 releases/releases.rst.inc

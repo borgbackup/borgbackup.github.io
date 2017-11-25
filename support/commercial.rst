@@ -1,7 +1,7 @@
 .. class:: hide-rst-heading
 
-Paid Support Services
-=====================
+Paid Support and Services
+=========================
 
 Here are some commercial support providers for borgbackup: 
 

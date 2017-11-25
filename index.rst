@@ -57,15 +57,12 @@ BorgBackup – Deduplicating archiver with compression and authenticated encrypt
                 to the project
             </a>
         </div>
-
     </div>
-
     <br>
-
     <div id="links">
         <div class="link" style="width: 400px;">
             <a href="/support/support.html">
-                <span class="action">Recieve</span><br>
+                <span class="action">Receive</span><br>
                 free support
             </a>
         </div>

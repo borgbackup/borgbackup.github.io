@@ -2,6 +2,8 @@
 PAGES=\
 index.html\
 demo.html\
+support/free.html\
+support/commercial.html\
 releases/index.html \
 releases/borg-1.1.html
 

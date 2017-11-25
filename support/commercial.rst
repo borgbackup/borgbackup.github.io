@@ -3,7 +3,7 @@
 Paid Support and Services
 =========================
 
-Here are some commercial support providers for borgbackup: 
+Here are some commercial service and support providers for borgbackup: 
 
 ::
 

@@ -7,6 +7,8 @@ Please first read the docs, the existing issue tracker issues and mailing
 list posts -- a lot of stuff is already documented / explained / discussed /
 filed there.
 
+.. _issue_tracker:
+
 Issue Tracker
 -------------
 
@@ -15,8 +17,11 @@ ticket on the project's `issue tracker`_.
 
 For more general questions or discussions, IRC or mailing list are preferred.
 
+.. _chat_irc:
+
 Chat (IRC)
 ----------
+
 Join us on channel #borgbackup on chat.freenode.net.
 
 As usual on IRC, just ask or tell directly and then patiently wait for replies.
@@ -37,6 +42,8 @@ unsubscribe and where you can find the archives of the list, see the
 `mailing list homepage
 <https://mail.python.org/mailman/listinfo/borgbackup>`_.
 
+.. _twitter:
+
 Twitter
 -------
 
@@ -45,6 +52,8 @@ would like to get retweeted for a borg related tweet.
 
 Please understand that Twitter is not suitable for longer / more complex
 discussions - use one of the other channels for that.
+
+.. _bounties_and_fundraisers:
 
 Bounties and Fundraisers
 ------------------------

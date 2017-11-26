@@ -86,8 +86,19 @@ Compatibility notes for upgrading from Borg 1.0 to Borg 1.1:
   - the short form of --append-only (-a) has been removed.
   - running "borg init" via a "borg serve --append-only" server will *not* create
     an append-only repository any more. Use "borg init --append-only" to initialize an append-only repository.
-- borg create: the --exclude-if-present option now supports tagging a folder with any file system
-  object type (file, folder, etc.), instead of accepting only files as tags.
+
+- borg create:
+
+  - A new option --files-cache MODE (default MODE is: ctime,size,inode) has been introduced and also the
+    default cache MODE has changed from "mtime,size,inode" in 1.0.x to "ctime,size,inode" in 1.1.x.
+  - **Be prepared that the first "borg create" after you upgrade to 1.1.x will run significantly slower than usual.**
+    This is due to a complete cache rebuild, caused by the changed cache mode.
+    Passing explicitly --files-cache with the old default: "mtime,size,inode" would avoid the slowdown,
+    but is not advisable as "ctime" is better as it reflects both file contents and metadata changes,
+    while "mtime" reflects only file contents changes.
+  - the --exclude-if-present option now supports tagging a folder with any file system
+    object type (file, folder, etc.), instead of accepting only files as tags.
+
 - borg upgrade: the short form of --inplace (-i) has been removed.
 - borg delete: the short form of --cache-only (-c) has been removed.
 - "borg migrate-to-repokey" has been renamed to "borg key migrate-to-repokey" with no deprecation notice,

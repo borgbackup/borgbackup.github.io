@@ -7,7 +7,7 @@ Please first read the docs, the existing issue tracker issues and mailing
 list posts -- a lot of stuff is already documented / explained / discussed /
 filed there.
 
-.. _issue_tracker: 
+.. _issue_tracker:
 
 Issue Tracker
 -------------
@@ -53,7 +53,7 @@ would like to get retweeted for a borg related tweet.
 Please understand that Twitter is not suitable for longer / more complex
 discussions - use one of the other channels for that.
 
-.. _bounties_and_fundraisers:   
+.. _bounties_and_fundraisers:
 
 Bounties and Fundraisers
 ------------------------

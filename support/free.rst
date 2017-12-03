@@ -13,7 +13,7 @@ Issue Tracker
 -------------
 
 If you've found a bug or have a concrete feature request, please create a new
-ticket on the project's `issue tracker`_.
+ticket on the project's `issue tracker <https://github.com/borgbackup/borg/issues>`_.
 
 For more general questions or discussions, IRC or mailing list are preferred.
 
@@ -68,7 +68,7 @@ the software / project you like.
 
 If you want to encourage developers to fix some specific issue or implement some
 specific feature suggestion, you can post a new bounty or back an existing one
-(they always refer to an issue in our `issue tracker`_).
+(they always refer to an issue in our `issue tracker <https://github.com/borgbackup/borg/issues>`_).
 
 As a developer, you can become a Bounty Hunter and win bounties (earn money) by
 contributing to Borg, a free and open source software project.

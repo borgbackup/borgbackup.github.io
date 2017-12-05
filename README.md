@@ -30,8 +30,10 @@ to keep old URLs working for a while, although that doesn't work with sub-pages.
 To manage the documentation and releases, see the development guide at:
 https://borgbackup.readthedocs.io/en/latest/development.html#building-the-docs-with-sphinx
 
-## Travis setup
+## Setup
 
 Travis builds the "source" branch, generates HTML, commits it and
 pushes it to the "master" branch with a GitHub deploy key.
 
+GitHub Pages is used as the host, while Cloudflare provides CDN services and TLS termination.
+Cloudflare caching is a few hours. Caching headers advise browsers to cache for a few hours as well.

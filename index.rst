@@ -45,7 +45,7 @@ BorgBackup – Deduplicating archiver with compression and authenticated encrypt
         <div style="clear: both;"></div>
 
         <div class="link">
-            <a href="/support/free.html#bounties-and-fundraisers">
+            <a href="https://borgbackup.readthedocs.io/en/stable/support.html#bounties-and-fundraisers">
                 <span class="action">Fund</span><br>
                 development
             </a>

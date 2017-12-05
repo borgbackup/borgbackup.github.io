@@ -9,7 +9,7 @@ It is hosted on GitHub pages with the project domain CNAMEd to GitHub pages.
 All pages are meant to load very quickly with few/no external resources. All pages are generated from rST.
 
 HTML files are **never** committed to this ("source") branch. Travis automatically updates
-the published ("master") branch.
+the published ("master") branch. **Therefore pull requests should be submitted only to the "source" branch.**
 
 To locally preview changes, update the HTML after editing a rST file, run `make`.
 This requires a relatively recent docutils release, since it uses rst2html5.

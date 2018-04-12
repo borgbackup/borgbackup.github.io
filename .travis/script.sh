@@ -6,7 +6,7 @@ test $TRAVIS_BRANCH == "source" || exit 0
 
 # Add git metadata
 git config user.name "Automated build"
-git config user.email "public@enkore.de"
+git config user.email "nobody@example.com"
 
 # Build the pages
 make clean

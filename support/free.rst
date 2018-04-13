@@ -13,7 +13,8 @@ Issue Tracker
 -------------
 
 If you've found a bug or have a concrete feature request, please create a new
-ticket on the project's `issue tracker`_.
+ticket on the project's `issue tracker
+<https://www.github.com/borgbackup/borg/issues>`_.
 
 For more general questions or discussions, IRC or mailing list are preferred.
 

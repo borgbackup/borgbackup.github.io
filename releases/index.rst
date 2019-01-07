@@ -15,7 +15,6 @@ at this time.
 - `Project board <https://github.com/borgbackup/borg/projects/4>`__
 - `Documentation <https://borgbackup.readthedocs.io/en/latest/>`__
 - `Installation <https://borgbackup.readthedocs.io/en/latest/installation.html>`__
-.. - `Downloads <https://github.com/borgbackup/borg/releases>`__
 
 Borg 1.1
 --------

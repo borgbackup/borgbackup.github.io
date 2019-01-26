@@ -27,4 +27,4 @@ Here are some commercial service and support providers for borgbackup:
 
   company: borgbase.com
   service: https://www.borgbase.com/
-  scope: simple and secure hosting for borg repositories, 5 GB free trial
+  scope: borg hosting service with support for monitoring, 2FA and append-only repos

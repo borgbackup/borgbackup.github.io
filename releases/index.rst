@@ -5,14 +5,13 @@ Borg release series
 
 .. include:: releases.rst.inc
 
-Borg 1.2
---------
+Borg Future
+-----------
 
-Borg 1.2 is the current **development** branch of Borg. There is no release in this series
-at this time.
+You can learn more about borg future plans there:
 
-- `Wiki page <https://github.com/borgbackup/borg/wiki/Borg-1.2-Hydrogen>`__
-- `Project board <https://github.com/borgbackup/borg/projects/4>`__
+- `Milestones <https://github.com/borgbackup/borg/milestones>`__
+- `Projects <https://github.com/borgbackup/borg/projects>`__
 - `Documentation <https://borgbackup.readthedocs.io/en/latest/>`__
 - `Installation <https://borgbackup.readthedocs.io/en/latest/installation.html>`__
 

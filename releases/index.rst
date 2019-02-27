@@ -30,9 +30,8 @@ The current release is |current1.1|, released on |current1.1date|.
 Borg 1.0
 --------
 
-The old stable series is Borg 1.0, with the initial 1.0.0 release on 5th March 2016.
-The latest release in this series is Borg |current1.0|, released on |current1.0date|.
-This is the series shipped by most Linux distributions.
+Borg 1.0 is the **oldstable** series of Borg.
+The latest and last release in this series is |current1.0|, released on |current1.0date|.
 
 - `Documentation <https://borgbackup.readthedocs.io/en/1.0-maint/>`__
 - `Installation <https://borgbackup.readthedocs.io/en/1.0-maint/installation.html>`__

@@ -43,3 +43,9 @@ Borg 0.xx
 Borg 0.xx was the development series leading up to the Borg 1.0 release and
 is not supported any more. It was active from early 2015 to early 2016 including
 releases from 0.23.0 to 0.30.1.
+
+
+Atom feed for releases
+======================
+
+https://github.com/borgbackup/borg/releases.atom

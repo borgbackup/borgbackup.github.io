@@ -28,10 +28,16 @@ Join us on channel #borgbackup on chat.freenode.net.
 As usual on IRC, just ask or tell directly and then patiently wait for replies.
 Stay connected.
 
-You could use the following link (after connecting, you can change the random
-nickname you get by typing "/nick mydesirednickname"):
+Using a IRC client and a registered nick is the preferred way to use our channel.
 
-http://webchat.freenode.net/?randomnick=1&channels=%23borgbackup&uio=MTY9dHJ1ZSY5PXRydWUa8
+In times of high spammer activity, the registered nick might be even required to
+join our channel.
+
+You could use the following link (after connecting, you can change the random
+nickname you get by typing "/nick mydesirednickname") - you might still need a
+registered nick to join our channel (see above):
+
+https://webchat.freenode.net/?randomnick=1&channels=%23borgbackup&uio=MTY9dHJ1ZSY5PXRydWUa8
 
 .. _mailing_list:
 

@@ -14,7 +14,7 @@ Here are some commercial service and support providers for borgbackup:
 ::
 
   company: rsync.net
-  service: http://rsync.net/products/attic.html
+  service: https://www.rsync.net/products/borg.html
   scope: cloud storage platform with borg support
 
 ::

@@ -2,9 +2,7 @@
 
 [![Build Status](https://travis-ci.org/borgbackup/borgbackup.github.io.svg?branch=source)](https://travis-ci.org/borgbackup/borgbackup.github.io)
 
-This is the project web site of Borg.
-
-It is hosted on GitHub pages with the project domain CNAMEd to GitHub pages.
+This is the project web site of BorgBackup.
 
 All pages are meant to load very quickly with few/no external resources. All pages are generated from rST.
 
@@ -35,5 +33,6 @@ https://borgbackup.readthedocs.io/en/latest/development.html#building-the-docs-w
 Travis builds the "source" branch, generates HTML, commits it and
 pushes it to the "master" branch with a GitHub deploy key.
 
-GitHub Pages is used as the host, while Cloudflare provides CDN services and TLS termination.
-Cloudflare caching is a few hours. Caching headers advise browsers to cache for a few hours as well.
+GitHub Pages is used as the host, TLS cert comes from LetsEncrypt (via GitHub).
+
+More details: https://github.com/borgbackup/borgbackup.github.io/issues/45

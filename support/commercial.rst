@@ -1,9 +1,9 @@
-.. class:: hide-rst-heading
-
 Paid Support and Services
 =========================
 
-Here are some commercial service and support providers for borgbackup: 
+`« back </>`_
+
+Here are some commercial service and support providers for borgbackup:
 
 - `Waldmann EDV <https://waldmann-edv.de/WedvHome>`_ - borgbackup consulting, support, development
 

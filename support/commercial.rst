@@ -5,10 +5,10 @@ Paid Support and Services
 
 Here are some commercial service and support providers for borgbackup: 
 
-- `Waldmann EDV Service GbR - borgbackup consulting, support, development <mailto:tw@waldmann-edv.de>`_
+- `Waldmann EDV <https://waldmann-edv.de/WedvHome>`_ - borgbackup consulting, support, development
 
-- `rsync.net - cloud storage platform with borg support <https://www.rsync.net/products/borg.html>`_
+- `rsync.net <https://www.rsync.net/products/borg.html>`_ - cloud storage platform with borg support
 
-- `hetzner.de - storage box with borg support <https://wiki.hetzner.de/index.php/BorgBackup/en>`_
+- `hetzner.de <https://wiki.hetzner.de/index.php/BorgBackup/en>`_ - storage box with borg support
 
-- `borgbase.com - specialized hosting for borg repos <https://www.borgbase.com/>`_
+- `borgbase.com <https://www.borgbase.com/>`_ - specialized hosting for borg repos

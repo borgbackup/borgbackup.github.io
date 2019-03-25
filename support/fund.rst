@@ -33,7 +33,7 @@ specific bounty (see below).
 
 If you want to encourage developers to fix some specific issue or implement some
 specific feature suggestion, you can post a new bounty or back an existing one
-(they always refer to an issue in our `issue tracker`_).
+(they always refer to an issue in our issue tracker).
 
 We might also use BountySource to fund raise for some bigger goals.
 

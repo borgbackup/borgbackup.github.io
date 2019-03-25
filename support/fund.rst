@@ -1,7 +1,10 @@
 Donations, Bounties and Fundraisers
------------------------------------
+===================================
 
 `« back </>`_
+
+Overview
+--------
 
 You can support the BorgBackup Project via:
 
@@ -15,7 +18,7 @@ Liberapay Patrons help us to create a long term sustainable project.
 Please help the software projects you use and love.
 
 Liberapay
-~~~~~~~~~
+---------
 
 On Liberapay, you can become a Patron and support us on a regular basis.
 
@@ -23,7 +26,7 @@ The funds are distributed to the borgbackup team members and as a borgbackup
 developer you can join the team.
 
 BountySource
-~~~~~~~~~~~~
+------------
 
 You can give general funds to the borgbackup members (the developers will
 then spend the funds as they deem fit, usually to create bounties).

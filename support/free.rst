@@ -68,8 +68,8 @@ Donations, Bounties and Fundraisers
 
 You can donate to the `BorgBackup Team on Liberapay <https://liberapay.com/borgbackup/donate>`_.
 
-You also can use `BountySource <https://www.bountysource.com/teams/borgbackup>`_ to give
-monetary contributions to the project and the developers, who push it forward.
+You also can give to the `BorgBackup Team on BountySource <https://www.bountysource.com/teams/borgbackup>`_
+to fund the project and the developers, who push it forward.
 
 There, you can give general funds to the borgbackup members (the developers will
 then spend the funds as they deem fit). If you do not have some specific bounty

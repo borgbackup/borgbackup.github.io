@@ -6,10 +6,11 @@ Donations, Bounties and Fundraisers
 Overview
 --------
 
-You can support the BorgBackup Project via:
+You can support the BorgBackup Project using these options:
 
-- the `BorgBackup Team on Liberapay <https://liberapay.com/borgbackup/donate>`_
-- the `BorgBackup Team on BountySource <https://www.bountysource.com/teams/borgbackup>`_
+- `BorgBackup Team on Liberapay <https://liberapay.com/borgbackup/donate>`_
+- `BorgBackup Team on BountySource <https://www.bountysource.com/teams/borgbackup>`_
+- `BorgBackup Team on BountySource Salt <https://salt.bountysource.com/teams/borgbackup>`_
 
 BountySource Bounties and Donations are a good short term help.
 
@@ -31,8 +32,9 @@ BountySource
 You can give general funds to the borgbackup members (the developers will
 then spend the funds as they deem fit, usually to create bounties).
 
-You can use this as a general way to support us, if you do not have some
-specific bounty (see below).
+You can support us best by doing regular donations via BountySource Salt.
+
+You can use the above, if you do not have some specific bounty (see below).
 
 If you want to encourage developers to fix some specific issue or implement some
 specific feature suggestion, you can post a new bounty or back an existing one

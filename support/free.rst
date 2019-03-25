@@ -79,15 +79,33 @@ discussions - use one of the other channels for that.
 Donations, Bounties and Fundraisers
 -----------------------------------
 
-You can donate to the `BorgBackup Team on Liberapay <https://liberapay.com/borgbackup/donate>`_.
+You can support borgbackup via:
 
-You also can give to the `BorgBackup Team on BountySource <https://www.bountysource.com/teams/borgbackup>`_
-to fund the project and the developers, who push it forward.
+- the `BorgBackup Team on Liberapay <https://liberapay.com/borgbackup/donate>`_
+- the `BorgBackup Team on BountySource <https://www.bountysource.com/teams/borgbackup>`_
 
-There, you can give general funds to the borgbackup members (the developers will
-then spend the funds as they deem fit). If you do not have some specific bounty
-(see below), you can use this as a general way to say "Thank You!" and support
-the software / project you like.
+Donations and Bounties are a good short term help for the project.
+
+Liberapay Patrons help us to create a long term sustainable project.
+
+Please help the software projects you use and love.
+
+Liberapay
+~~~~~~~~~
+
+On Liberapay, you can become a Patron and support us on a regular basis.
+
+The funds are distributed to the borgbackup team members and as a borgbackup
+developer you can join the team.
+
+BountySource
+~~~~~~~~~~~~
+
+You can give general funds to the borgbackup members (the developers will
+then spend the funds as they deem fit, usually to create bounties).
+
+You can use this as a general way to support us, if you do not have some
+specific bounty (see below).
 
 If you want to encourage developers to fix some specific issue or implement some
 specific feature suggestion, you can post a new bounty or back an existing one
@@ -96,5 +114,3 @@ specific feature suggestion, you can post a new bounty or back an existing one
 We might also use BountySource to fund raise for some bigger goals.
 
 As a developer, you can become a Bounty Hunter and win bounties (earn money).
-
-As a borgbackup developer you can also join the liberapay borgbackup team.

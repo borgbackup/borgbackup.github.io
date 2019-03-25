@@ -61,11 +61,14 @@ Please understand that Twitter is not suitable for longer / more complex
 discussions - use one of the other channels for that.
 
 .. _bounties_and_fundraisers:
+.. _funding:
 
-Bounties and Fundraisers
-------------------------
+Donations, Bounties and Fundraisers
+-----------------------------------
 
-We use `BountySource <https://www.bountysource.com/teams/borgbackup>`_ to allow
+You can donate to the `BorgBackup Team on Liberapay <https://liberapay.com/borgbackup/donate>`_.
+
+You also can use `BountySource <https://www.bountysource.com/teams/borgbackup>`_ to give
 monetary contributions to the project and the developers, who push it forward.
 
 There, you can give general funds to the borgbackup members (the developers will
@@ -77,7 +80,8 @@ If you want to encourage developers to fix some specific issue or implement some
 specific feature suggestion, you can post a new bounty or back an existing one
 (they always refer to an issue in our `issue tracker`_).
 
-As a developer, you can become a Bounty Hunter and win bounties (earn money) by
-contributing to Borg, a free and open source software project.
-
 We might also use BountySource to fund raise for some bigger goals.
+
+As a developer, you can become a Bounty Hunter and win bounties (earn money).
+
+As a borgbackup developer you can also join the liberapay borgbackup team.

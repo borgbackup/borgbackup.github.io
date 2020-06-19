@@ -44,6 +44,15 @@ BorgBackup – Deduplicating archiver with compression and authenticated encrypt
 
         <div style="clear: both;"></div>
 
+        <div class="link" style="width: 600px;">
+            <a href="https://github.com/borgbackup/community">
+                <span class="action">Browse</span><br>
+                community resources
+            </a>
+        </div>
+
+        <div style="clear: both;"></div>
+
         <div class="link">
             <a href="/support/fund.html">
                 <span class="action">Fund</span><br>

@@ -69,20 +69,20 @@ BorgBackup – Deduplicating archiver with compression and authenticated encrypt
     </div>
     <br>
     <div id="links">
-        <div class="link" style="width: 400px;">
+        <div class="link" style="width: 300px;">
             <a href="/support/free.html">
                 <span class="action">Receive</span><br>
                 free support
             </a>
         </div>
 
-        <div class="link" style="width: 400px;">
+        <div class="link" style="width: 299px;">
             <a href="/support/commercial.html">
                 <span class="action">Pay</span><br>
                 for services
             </a>
         </div>
     </div>
-    <br>
+    <br style="clear: both;">
 
     <em>... and always check your backups!</em>

@@ -1,6 +1,6 @@
 # www.borgbackup.org
 
-![Build Status](https://github.com/borgbackup/borgbackup.github.io/workflows/Update%20pages/badge.svg)
+[![Build Status](https://github.com/borgbackup/borgbackup.github.io/workflows/Update%20pages/badge.svg)](https://github.com/borgbackup/borgbackup.github.io/actions)
 
 This is the project web site of BorgBackup.
 

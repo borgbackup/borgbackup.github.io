@@ -12,8 +12,7 @@ jobs:
     - name: Publish pages to web
       shell: bash
       env:
-         encrypted_54b6162b97cf_key: ${{ secrets.encrypted_key }}
-         encrypted_54b6162b97cf_iv: ${{ secrets.encrypted_iv }}
+         GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
       run: |
         # Only build the "source" branch ("master" = built, published pages,
         # this can't be changed for organization GitHub Pages)
@@ -42,7 +41,7 @@ jobs:
         # The public key is set up as a deployment key in the GitHub repository.
         # The following document explains the process:
         # https://docs.github.com/en/free-pro-team@latest/actions/reference/encrypted-secrets
-        openssl aes-256-cbc -K $encrypted_54b6162b97cf_key -iv $encrypted_54b6162b97cf_iv -in .travis/github_deploy_key.enc -out github_deploy_key -d
+        gpg --quiet --batch --yes --decrypt --passphrase="$GPG_PASSPHRASE" --output github_deploy_key .github/keys/github_deploy_key.asc
 
         # Add the SSH key
         chmod 600 github_deploy_key

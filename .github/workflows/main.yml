@@ -21,7 +21,10 @@ jobs:
           # Build the pages
           make clean
           make
-
+          
+          # Delete workflow for the output ("master") branch,
+          # so GitHub won't even trigger a build for it.
+          rm .github/workflows/main.yml
           git add --all .
           git commit -m "Automatically built pages at $(git rev-parse --short HEAD)" || exit 0
 

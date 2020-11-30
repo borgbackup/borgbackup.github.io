@@ -8,7 +8,7 @@ jobs:
       - shell: bash
         env:
           encrypted_54b6162b97cf_key: ${{ secrets.encrypted_key }}
-          $encrypted_54b6162b97cf_iv: ${{ secrets.encrypted_iv }}
+          encrypted_54b6162b97cf_iv: ${{ secrets.encrypted_iv }}
         run: |
           # Only build the "source" branch ("master" = built, published pages,
           # this can't be changed for organization GitHub Pages)

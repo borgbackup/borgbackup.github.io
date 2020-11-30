@@ -5,9 +5,11 @@ jobs:
   update-web:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
-    - name: Publish pages to web
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v2
+      with:
+         python-version: '3.8'   
+   - name: Publish pages to web
       shell: bash
       env:
          encrypted_54b6162b97cf_key: ${{ secrets.encrypted_key }}
@@ -16,7 +18,10 @@ jobs:
         # Only build the "source" branch ("master" = built, published pages,
         # this can't be changed for organization GitHub Pages)
         test ${GITHUB_REF##*/} == "source" || exit 0
-
+        
+        # Install dependency
+        pip install docutils
+        
         # Add git metadata
         git config user.name "Automated build"
         git config user.email "nobody@example.com"

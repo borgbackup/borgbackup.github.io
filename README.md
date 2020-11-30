@@ -1,12 +1,12 @@
 # www.borgbackup.org
 
-[![Build Status](https://travis-ci.org/borgbackup/borgbackup.github.io.svg?branch=source)](https://travis-ci.org/borgbackup/borgbackup.github.io)
+[![Build Status](https://github.com/borgbackup/borgbackup.github.io/workflows/Update%20pages/badge.svg)](https://github.com/borgbackup/borgbackup.github.io/actions)
 
 This is the project web site of BorgBackup.
 
 All pages are meant to load very quickly with few/no external resources. All pages are generated from rST.
 
-HTML files are **never** committed to this ("source") branch. Travis automatically updates
+HTML files are **never** committed to this ("source") branch. Github Actions automatically updates
 the published ("master") branch. **Therefore pull requests should be submitted only to the "source" branch.**
 
 To locally preview changes, update the HTML after editing a rST file, run `make`.
@@ -30,7 +30,7 @@ https://borgbackup.readthedocs.io/en/latest/development.html#building-the-docs-w
 
 ## Setup
 
-Travis builds the "source" branch, generates HTML, commits it and
+Github Actions builds the "source" branch, generates HTML, commits it and
 pushes it to the "master" branch with a GitHub deploy key.
 
 GitHub Pages is used as the host, TLS cert comes from LetsEncrypt (via GitHub).

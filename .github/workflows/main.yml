@@ -5,46 +5,49 @@ jobs:
   update-web:
     runs-on: ubuntu-latest
     steps:
-      - shell: bash
-        env:
-          encrypted_54b6162b97cf_key: ${{ secrets.encrypted_key }}
-          encrypted_54b6162b97cf_iv: ${{ secrets.encrypted_iv }}
-        run: |
-          # Only build the "source" branch ("master" = built, published pages,
-          # this can't be changed for organization GitHub Pages)
-          test ${GITHUB_REF##*/} == "source" || exit 0
+    - name: Checkout repository
+      uses: actions/checkout@v2
+    - name: Publish pages to web
+      shell: bash
+      env:
+         encrypted_54b6162b97cf_key: ${{ secrets.encrypted_key }}
+         encrypted_54b6162b97cf_iv: ${{ secrets.encrypted_iv }}
+      run: |
+        # Only build the "source" branch ("master" = built, published pages,
+        # this can't be changed for organization GitHub Pages)
+        test ${GITHUB_REF##*/} == "source" || exit 0
 
-          # Add git metadata
-          git config user.name "Automated build"
-          git config user.email "nobody@example.com"
+        # Add git metadata
+        git config user.name "Automated build"
+        git config user.email "nobody@example.com"
 
-          # Build the pages
-          make clean
-          make
-          
-          # Delete workflow for the output ("master") branch,
-          # so GitHub won't even trigger a build for it.
-          rm .github/workflows/main.yml
-          git add --all .
-          git commit -m "Automatically built pages at $(git rev-parse --short HEAD)" || exit 0
+        # Build the pages
+        make clean
+        make
 
-          # travis/github_deploy_key.enc is an encrypted SSH key.
-          # The keys for this key are stored with GitHub and are exposed in the
-          # $encrypted... environment variables. (These are *not* available in pull request builds!)
-          # The public key is set up as a deployment key in the GitHub repository.
-          # The following document explains the process:
-          # https://docs.github.com/en/free-pro-team@latest/actions/reference/encrypted-secrets
-          openssl aes-256-cbc -K $encrypted_54b6162b97cf_key -iv $encrypted_54b6162b97cf_iv -in .travis/github_deploy_key.enc -out github_deploy_key -d
+        # Delete workflow for the output ("master") branch,
+        # so GitHub won't even trigger a build for it.
+        rm .github/workflows/main.yml
+        git add --all .
+        git commit -m "Automatically built pages at $(git rev-parse --short HEAD)" || exit 0
 
-          # Add the SSH key
-          chmod 600 github_deploy_key
-          eval `ssh-agent -s`
-          ssh-add github_deploy_key
+        # travis/github_deploy_key.enc is an encrypted SSH key.
+        # The keys for this key are stored with GitHub and are exposed in the
+        # $encrypted... environment variables. (These are *not* available in pull request builds!)
+        # The public key is set up as a deployment key in the GitHub repository.
+        # The following document explains the process:
+        # https://docs.github.com/en/free-pro-team@latest/actions/reference/encrypted-secrets
+        openssl aes-256-cbc -K $encrypted_54b6162b97cf_key -iv $encrypted_54b6162b97cf_iv -in .travis/github_deploy_key.enc -out github_deploy_key -d
 
-          # Push changes to the *master* branch
-          # Remember, this is building the *source* branch.
-          git push --force git@github.com:borgbackup/borgbackup.github.io.git HEAD:master
+        # Add the SSH key
+        chmod 600 github_deploy_key
+        eval `ssh-agent -s`
+        ssh-add github_deploy_key
 
-          # Kill SSH agent, get rid of the key (GitHub does that as well)
-          kill $SSH_AGENT_PID
-          shred -u github_deploy_key
+        # Push changes to the *master* branch
+        # Remember, this is building the *source* branch.
+        git push --force git@github.com:borgbackup/borgbackup.github.io.git HEAD:master
+
+        # Kill SSH agent, get rid of the key (GitHub does that as well)
+        kill $SSH_AGENT_PID
+        shred -u github_deploy_key

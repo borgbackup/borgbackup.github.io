@@ -9,7 +9,7 @@ jobs:
     - uses: actions/setup-python@v2
       with:
          python-version: '3.8'   
-   - name: Publish pages to web
+    - name: Publish pages to web
       shell: bash
       env:
          encrypted_54b6162b97cf_key: ${{ secrets.encrypted_key }}

@@ -1,5 +1,8 @@
 name: Update pages
-on: [push]
+on:
+  push:
+    branches: 
+      - source # Only build the "source" branch ("master" = built, published pages, this can't be changed for organization GitHub Pages)
 
 jobs:
   update-web:
@@ -13,11 +16,7 @@ jobs:
       shell: bash
       env:
          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-      run: |
-        # Only build the "source" branch ("master" = built, published pages,
-        # this can't be changed for organization GitHub Pages)
-        test ${GITHUB_REF##*/} == "source" || exit 0
-        
+      run: |      
         # Install dependency
         pip install docutils
         
@@ -29,9 +28,6 @@ jobs:
         make clean
         make
 
-        # Delete workflow for the output ("master") branch,
-        # so GitHub won't even trigger a build for it.
-        rm .github/workflows/main.yml
         git add --all .
         git commit -m "Automatically built pages at $(git rev-parse --short HEAD)" || exit 0
 

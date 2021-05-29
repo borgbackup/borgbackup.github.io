@@ -49,7 +49,7 @@ join our channel.
 You could also use the web based IRC client, choose some nickname and join our
 channel (you might still need a registered nick to join our channel, see above):
 
-https://web.libera.chat/
+https://web.libera.chat/?nick=Guest&#borgbackup
 
 .. _mailing_list:
 

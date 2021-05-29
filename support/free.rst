@@ -36,7 +36,7 @@ For more general questions or discussions, IRC or mailing list are preferred.
 Chat (IRC)
 ----------
 
-Join us on channel #borgbackup on chat.freenode.net.
+Join us on channel #borgbackup on libera.chat.
 
 As usual on IRC, just ask or tell directly and then patiently wait for replies.
 Stay connected.
@@ -46,11 +46,10 @@ Using a IRC client and a registered nick is the preferred way to use our channel
 In times of high spammer activity, the registered nick might be even required to
 join our channel.
 
-You could use the following link (after connecting, you can change the random
-nickname you get by typing "/nick mydesirednickname") - you might still need a
-registered nick to join our channel (see above):
+You could also use the web based IRC client, choose some nickname and join our
+channel (you might still need a registered nick to join our channel, see above):
 
-https://webchat.freenode.net/?randomnick=1&channels=%23borgbackup&uio=MTY9dHJ1ZSY5PXRydWUa8
+https://web.libera.chat/
 
 .. _mailing_list:
 

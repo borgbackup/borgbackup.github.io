@@ -29,8 +29,8 @@ The current release is |current1.1|, released on |current1.1date|.
 Borg 1.0
 --------
 
-Borg 1.0 is the **oldstable** series of Borg.
-The latest and last release in this series is |current1.0|, released on |current1.0date|.
+Borg 1.0 is not supported any more, please use 1.1.x.
+The last release in this series was |current1.0|, released on |current1.0date|.
 
 - `Documentation <https://borgbackup.readthedocs.io/en/1.0-maint/>`__
 - `Installation <https://borgbackup.readthedocs.io/en/1.0-maint/installation.html>`__

@@ -72,6 +72,16 @@ would like to get retweeted for a borg related tweet.
 Please understand that Twitter is not suitable for longer / more complex
 discussions - use one of the other channels for that.
 
+.. _reddit:
+
+Reddit
+------
+
+Our official subreddit is a great place to get support from other users
+or discuss your current setup or project.
+
+See `r/BorgBackup <https://www.reddit.com/r/BorgBackup/>`_
+
 .. _bounties_and_fundraisers:
 
 Donations, Bounties and Fundraisers

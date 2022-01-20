@@ -3,7 +3,7 @@ Borg 1.1
 
 `« back to all releases <.>`_
 
-:Links: `Documentation <https://borgbackup.readthedocs.io/en/stable/>`_ · `Installation <https://borgbackup.readthedocs.io/en/stable/installation.html>`_ · `Downloads <https://github.com/borgbackup/borg/releases/latest>`_
+:Links: `Documentation <https://borgbackup.readthedocs.io/en/1.1-maint/>`_ · `Installation <https://borgbackup.readthedocs.io/en/1.1-maint/installation.html>`_ · `Downloads <https://github.com/borgbackup/borg/releases/latest>`_
 :Date: 7th October 2017
 
 This marks the first stable release in the Borg 1.1 series. Many improvements and new features
@@ -20,7 +20,7 @@ Changelog summary
 -----------------
 
 This is only a summary of the changes between 1.0 and 1.1.
-Check the `full changelog <https://borgbackup.readthedocs.io/en/stable/changes.html>`_
+Check the `full changelog <https://borgbackup.readthedocs.io/en/1.1-maint/changes.html>`_
 to see all changes.
 
 Major new features in the 1.1 release series are:

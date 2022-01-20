@@ -15,10 +15,21 @@ You can learn more about borg future plans there:
 - `Documentation <https://borgbackup.readthedocs.io/en/latest/>`__
 - `Installation <https://borgbackup.readthedocs.io/en/latest/installation.html>`__
 
+Borg 1.2
+--------
+
+Borg 1.2 is the current **stable** series of Borg.
+The current release is |current1.2|, released on |current1.2date|.
+
+- `1.2.0 release announcement <borg-1.2.html>`_
+- `Documentation <https://borgbackup.readthedocs.io/en/1.2-maint/>`__
+- `Installation <https://borgbackup.readthedocs.io/en/1.2-maint/installation.html>`__
+- `Downloads <https://github.com/borgbackup/borg/releases>`__
+
 Borg 1.1
 --------
 
-Borg 1.1 is the current **stable** series of Borg.
+Borg 1.1 is the current **oldstable** series of Borg.
 The current release is |current1.1|, released on |current1.1date|.
 
 - `1.1.0 release announcement <borg-1.1.html>`_

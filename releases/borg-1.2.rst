@@ -68,17 +68,17 @@ Major new features in the 1.2 release series are:
 
 Other changes:
 
-- create/recreate: showing the current file name **before** starting to back it
+- create/recreate: Showing the current file name **before** starting to back it
   up makes life easier, especially for very big files which take a while...
-- create: first ctrl-c (SIGINT) triggers checkpoint creation and then aborts
-- create --remote-buffer: use an upload buffer for remote repos
-- prune: show which rule was applied to keep archive (kind of self-explaining)
-- check: much faster when recovering data from corrupted segment files
-- new BORG_WORKAROUNDS mechanism
-- works with recent Python, msgpack, PyInstaller, etc. versions
-- major setup code refactoring (esp. library handling), needs pypi "pkgconfig"
-- other major internal refactorings / cleanups
-- internal AEAD-style crypto api (not all you see in there is used already)
-- internal msgpack-wrapper to avoid current and future compatibility issues
-- improved C code portability / basic MSC compatibility
-- improved documentation (a lot of this was also backported to 1.1.x though)
+- create: First ctrl-c (SIGINT) triggers checkpoint creation and then aborts.
+- create: --remote-buffer: Use an upload buffer for remote repos.
+- prune: Show which rule was applied to keep archive (kind of self-explanatory).
+- check: Much faster when recovering data from corrupted segment files.
+- New BORG_WORKAROUNDS mechanism.
+- Works with recent Python, msgpack, PyInstaller, etc. versions.
+- Major setup code refactoring (especially library handling), needs pypi "pkgconfig".
+- Other major internal refactors / cleanups.
+- Internal AEAD-style crypto API (not all you see in there is used already).
+- Internal msgpack-wrapper to avoid current and future compatibility issues.
+- Improved C code portability / basic MSC compatibility.
+- Improved documentation (a lot of this was also backported to 1.1.x though).

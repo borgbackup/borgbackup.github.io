@@ -18,7 +18,7 @@ Special thanks also go to everyone and every organization donating funds to supp
 and maintenance!
 
 Since Borg 1.2 is now stable, it will primarily receive fixes and minor additions,
-but not potentially problematic code changes. Principal development continues in master branch.
+but not potentially problematic code changes. Principal development continues in the master branch.
 
 Changelog summary
 -----------------

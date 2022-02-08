@@ -12,7 +12,7 @@ were made "under the hood": cleanups and refactors.
 
 Many people contributed to this release — see the AUTHORS file in the git repo and the
 git history for details. Even more people contributed otherwise, e.g. by giving feedback
-or helped with testing.
+or helping with testing.
 
 Special thanks also go to everyone and every organization donating funds to support development
 and maintenance!

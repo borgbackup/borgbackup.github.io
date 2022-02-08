@@ -8,7 +8,7 @@ Borg 1.2
 
 This marks the first stable release in the Borg 1.2 series. Many improvements and new features
 were incorporated into Borg 1.2 since the 1.1 release of Borg in early 2017. Even more changes
-were made "under the hood": cleanups and refactorings.
+were made "under the hood": cleanups and refactors.
 
 Many people contributed to this release — see the AUTHORS file in the git repo and the
 git history for details. Even more people contributed otherwise, e.g. by giving feedback

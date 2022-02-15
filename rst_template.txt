@@ -20,7 +20,7 @@
 	</div>
 </header>
 
-<main>
+<main class="content">
 	<!-- document heading -->
 	%(body_pre_docinfo)s
 	<!-- bibliographical data, if any -->

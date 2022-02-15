@@ -21,7 +21,7 @@ header h1 {
 	text-align: center;
 }
 
-main {
+main.content {
 	width: 600px;
 	margin: 0 auto;
 }

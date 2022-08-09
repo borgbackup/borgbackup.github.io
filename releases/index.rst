@@ -15,6 +15,15 @@ You can learn more about borg future plans there:
 - `Documentation <https://borgbackup.readthedocs.io/en/latest/>`__
 - `Installation <https://borgbackup.readthedocs.io/en/latest/installation.html>`__
 
+Borg 2.0
+--------
+
+Borg 2.0 is currently in beta/rc testing - do not use it for production.
+
+- `borg 2.0 news overview (preliminary) <borg-2.0.html>`_
+- `Documentation <https://borgbackup.readthedocs.io/en/master/>`__
+- `Downloads <https://github.com/borgbackup/borg/releases>`__
+
 Borg 1.2
 --------
 

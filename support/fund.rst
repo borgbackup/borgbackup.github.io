@@ -10,7 +10,6 @@ You can support the BorgBackup Project using these options:
 
 - `BorgBackup Team on Liberapay <https://liberapay.com/borgbackup/donate>`_
 - `BorgBackup Team on BountySource <https://www.bountysource.com/teams/borgbackup>`_
-- `BorgBackup Team on BountySource Salt <https://salt.bountysource.com/teams/borgbackup>`_
 
 BountySource Bounties and Donations are a good short term help.
 

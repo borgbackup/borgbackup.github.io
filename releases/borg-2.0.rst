@@ -60,7 +60,7 @@ Major new features
     that way, we can safely read header infos without having to also read all the data.
   - vastly different speeds in misc. crc32 implementations do not matter any more.
     because of this, we can just use python's zlib.crc32 and do not need libdeflate's crc32.
-  - the repo index now also stores "size" (less random I/O for some ops)
+  - the repo index now also stores "csize" (less random I/O for some ops)
   - the repo index now has an API to store and query misc. "flags" (can be used e.g. for
     bookkeeping of long-running whole-repo operations)
 
@@ -104,6 +104,7 @@ Major new features
 Other changes
 ~~~~~~~~~~~~~
 
+- support archive timestamps with utc offsets
 - internal data format / processing changes
 
   - using msgpack spec 2.0 now, cleanly differentiating between text and binary bytes.
@@ -114,8 +115,10 @@ Other changes
     chunks list, if any). the old way was just a big pain (e.g. for partial extracting),
     ugly and spread all over the code. the new way simplified the code a lot.
   - item metadata: clean up, remove, rename, fix, precompute stuff
-  - chunks: compression header now also stores the level (not only the type).
+  - chunks have separate encrypted metadata (size, csize, ctype, clevel).
     this saves time for borg recreate when recompressing to same compressor, but other level.
+    this also makes it possible to query size or csize without reading/transmitting/decompressing
+    the chunk.
   - remove legacy zlib compression header hack, so zlib works like all the other compressors.
     that hack was something we had to do back in the days because attic backup did not have
     a compression header at all (because it only supported zlib).
@@ -127,8 +130,8 @@ Other changes
 
 - source code changes
 
-  - borg 1.x borg.archiver monster module got split into a package of modules,
-    now usually 1 module per borg cli command.
+  - borg 1.x borg.archiver (and also the related tests in borg.testsuite.archiver) monster
+    modules got split into packages of modules, now usually 1 module per borg cli command.
   - using "black" (automated pep8 source code formatting), this reformatted ALL the code
   - added infrastructure so we can use "mypy" for type checking
 

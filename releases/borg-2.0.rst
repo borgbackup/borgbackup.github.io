@@ -55,6 +55,7 @@ Major new features
 
 - repos are faster, safer and easier to deal with
 
+  - borg rcompress can do a repo-wide efficient recompression.
   - the new PUT2 data format uses much less crc32 and more xxh64 and offers
     a header-only checksum (PUT1 only offered one checksum for header+data).
     that way, we can safely read header infos without having to also read all the data.
@@ -89,6 +90,7 @@ Major new features
 - added commands / options:
 
   - you will usually need to give either -r (aka --repo) or BORG_REPO env var.
+  - --match-archives now has support for regex or glob/shell style matching
   - borg key change-location: usable for repokey <-> keyfile location change
   - borg benchmark cpu (so you can actually see what's fastest for your CPU)
   - borg import/export-tar --tar-format=GNU/PAX/BORG, support ctime/atime PAX headers.
@@ -116,7 +118,7 @@ Other changes
     ugly and spread all over the code. the new way simplified the code a lot.
   - item metadata: clean up, remove, rename, fix, precompute stuff
   - chunks have separate encrypted metadata (size, csize, ctype, clevel).
-    this saves time for borg recreate when recompressing to same compressor, but other level.
+    this saves time for borg rcompress/recreate when recompressing to same compressor, but other level.
     this also makes it possible to query size or csize without reading/transmitting/decompressing
     the chunk.
   - remove legacy zlib compression header hack, so zlib works like all the other compressors.

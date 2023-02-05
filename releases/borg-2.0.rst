@@ -99,14 +99,18 @@ Major new features
 
 - removed commands / options:
 
-  - removed -P (aka --prefix) option, use -a (aka --glob-archives) instead, e.g.: -a 'PREFIX*'
+  - removed -P (aka --prefix) option, use -a (aka --match-archives) instead, e.g.: -a 'PREFIX*'
   - borg upgrade (was only relevant for attic / old borg)
   - removed deprecated cli options
 
 Other changes
 ~~~~~~~~~~~~~
 
-- support archive timestamps with utc offsets
+- show files / archives with local timezone offsets, store archive timestamps with tz offset
+- make user/group/uid/gid optional in archived files
+- do not store .borg_part files in final archive, simplify statistics (no parts stats any more)
+- avoid orphan chunks on input files with OSErrors
+- make sure archive name/comment, stuff that get into JSON is pure valid utf-8 (no surrogate escapes)
 - internal data format / processing changes
 
   - using msgpack spec 2.0 now, cleanly differentiating between text and binary bytes.

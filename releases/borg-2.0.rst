@@ -41,6 +41,8 @@ and GUIs for borg also need to get adapted.
 Major new features
 ~~~~~~~~~~~~~~~~~~
 
+- added retries for input files (e.g. if there is a read error or file changed while reading)
+
 - better, more modern, faster crypto
 
   - new keys/repos only use new crypto: AEAD, AES-OCB, chacha20-poly1305, argon2.
@@ -106,6 +108,7 @@ Major new features
 Other changes
 ~~~~~~~~~~~~~
 
+- using platformdirs python package to determine locations for configs and caches
 - show files / archives with local timezone offsets, store archive timestamps with tz offset
 - make user/group/uid/gid optional in archived files
 - do not store .borg_part files in final archive, simplify statistics (no parts stats any more)

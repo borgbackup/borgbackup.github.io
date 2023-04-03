@@ -12,7 +12,7 @@ header {
 }
 
 #logo {
-	width: 600px;
+	max-width: 600px;
 	margin: 0 auto;
 }
 
@@ -22,7 +22,8 @@ header h1 {
 }
 
 main.content {
-	width: 600px;
+	max-width: 600px;
+	padding: 0 1rem 0 1rem;
 	margin: 0 auto;
 }
 

@@ -42,16 +42,12 @@ BorgBackup – Deduplicating archiver with compression and authenticated encrypt
             </a>
         </div>
 
-        <div style="clear: both;"></div>
-
-        <div class="link" style="width: 600px;">
+        <div class="link">
             <a href="https://github.com/borgbackup/community">
                 <span class="action">Browse</span><br>
                 community resources
             </a>
         </div>
-
-        <div style="clear: both;"></div>
 
         <div class="link">
             <a href="/support/fund.html">
@@ -60,29 +56,28 @@ BorgBackup – Deduplicating archiver with compression and authenticated encrypt
             </a>
         </div>
 
-        <div class="link" style="width: 400px;">
+        <div class="link">
             <a href="https://github.com/borgbackup/borg">
                 <span class="action">Contribute</span><br>
                 to the project
             </a>
         </div>
-    </div>
-    <br>
-    <div id="links">
-        <div class="link" style="width: 300px;">
+
+        <div class="link">
             <a href="/support/free.html">
                 <span class="action">Receive</span><br>
                 free support
             </a>
         </div>
 
-        <div class="link" style="width: 299px;">
+        <div class="link">
             <a href="/support/commercial.html">
                 <span class="action">Pay</span><br>
                 for services
             </a>
         </div>
     </div>
-    <br style="clear: both;">
 
+    <div></div>
+    
     <em>... and always check your backups!</em>

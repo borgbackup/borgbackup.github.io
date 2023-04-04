@@ -9,8 +9,8 @@ All pages are meant to load very quickly with few/no external resources. All pag
 HTML files are **never** committed to this ("source") branch. Github Actions automatically updates
 the published ("master") branch. **Therefore pull requests should be submitted only to the "source" branch.**
 
-To locally preview changes, update the HTML after editing a rST file, run `make`.
-This requires a relatively recent docutils release, since it uses rst2html5.
+To locally preview changes, update the HTML after editing a rST file, run `make`. To clean all rendered HTML and remake, run `make clean all`. 
+This requires a relatively recent docutils release, since it uses rst2html5. To install rst2html5 `python3 -m pip install rst2html5`
 
 ## Release docs
 

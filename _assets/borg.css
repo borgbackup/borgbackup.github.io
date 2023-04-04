@@ -1,18 +1,18 @@
 body {
 	margin: 0;
 	font-family: verdana,arial,helvetica,sans-serif;
-	padding-bottom: 1em;
+	padding-bottom: 1rem;
 }
 
 header {
 	background-color: black;
-	padding-top: 1.5em;
-	padding-bottom: 1em;
+	padding-top: 1.5rem;
+	padding-bottom: 1rem;
 	border-bottom: 2px solid #22D045;
 }
 
 #logo {
-	width: 600px;
+	max-width: 600px;
 	margin: 0 auto;
 }
 
@@ -22,7 +22,8 @@ header h1 {
 }
 
 main.content {
-	width: 600px;
+	max-width: 600px;
+	padding: 0 1rem;
 	margin: 0 auto;
 }
 
@@ -34,7 +35,7 @@ main #tagline,
 main h1.title {
 	font-size: 220%;
 	font-weight: normal;
-	padding-bottom: .7em;
+	padding-bottom: 1.5rem;
 	border-bottom: 1px solid #666;
 	text-align: left;
 }
@@ -46,36 +47,34 @@ main h1 {
 
 main ul {
 	line-height: 1.5em;
+	padding-bottom: 0.75rem;
 }
 
 .main-index h2 {
-	margin: 0.8125em 0;
+	margin: 1.5rem 0;
 }
 
 #links {
-	margin-top: 2em;
+	padding-bottom: 1.5rem;
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-around;
 }
 
 #links a {
-	text-decoration: none;
 	color: #22D045;
 }
 
-#links a:hover {
-	color: #00dd00;
-}
-
 #links a:hover .action {
-	text-decoration: none;
-	font-weight: bold;
 	background: white;
+	text-shadow: 0 0 5px #22D045;
 }
 
 #links .link {
-	float: left;
-	width: 199px;
-	height: 120px;
+	display: flex;
 	text-align: center;
+	padding: 0.75rem 1.5rem;
+	float: left;
 }
 
 #links .action {

@@ -1,1 +1,2 @@
-*.html
+# .gitignore must not contain *.html - we need to commit/push the html files
+# as part of the github-actions based web page build / deployment process!

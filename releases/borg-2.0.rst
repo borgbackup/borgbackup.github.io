@@ -48,9 +48,6 @@ Major new features
   - new keys/repos only use new crypto: AEAD, AES-OCB, chacha20-poly1305, argon2.
   - using session keys: more secure and easier to manage, especially in multi-client or multi-repo
     contexts. doing this, we could get rid of problematic long term nonce/counter management.
-  - faster by AEAD: adding the chunk ID into the AD part automatically makes sure we get the
-    right data: if we can authenticate/decrypt it, it is the data for the ID we asked for.
-    older borg needed an additional MAC(plaintext of chunk) step to make sure.
   - the old crypto code will get removed in borg 2.1 (currently we still need it to read from
     your old borg 1.x repos). removing AES-CTR, pbkdf2, encrypt-and-mac, counter/nonce management
     will make borg more secure, easier to use and develop.
@@ -75,14 +72,15 @@ Major new features
   - borg rcreate can create "related repositories" of an existing repo, e.g. to use them
     for efficient archive transfers using borg transfer.
   - borg transfer can copy and convert archives from a borg 1.x repo to a related borg 2 repo.
-    to save time, it will not decompress / recompress the file content chunks.
+    to save time, it will transfer the compressed file content chunks (without compressing them
+    again).
     but, to make your repo more secure, it will decrypt / re-encrypt all the chunks.
   - borg transfer can copy archives from one borg 2 repo to a related other borg 2 repo,
     without doing any conversion.
 
 - command line interface cleanups
 
-  - no scp style repo parameters any more (parsing issues, no :port possible),
+  - no scp style repo parameters any more (parsing ambiguity issues, no :port possible),
     just use the better ssh://user@host:port/path .
   - separated repo and archive, no "::" any more
   - split some commands that worked on archives and repos into 2 separate commands

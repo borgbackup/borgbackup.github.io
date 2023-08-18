@@ -51,6 +51,17 @@ channel (you might still need a registered nick to join our channel, see above):
 
 `#borgbackup channel web IRC <https://web.libera.chat/?nick=Guest&#borgbackup>`_
 
+.. _matrix:
+
+Matrix Chat
+-----------
+
+You can also use a matrix protocol based chat client like e.g.
+`Element <https://app.element.io>`_ to join the
+`#borgbackup room <https://matrix.to/#/!KnTJxMbCJuuVyjTSeJ:libera.chat?via=libera.chat&via=matrix.org&via=rudd-o.com>`_.
+
+Note: This room is bridged to the #borgbackup IRC channel on libera.chat.
+
 .. _mailing_list:
 
 Mailing list

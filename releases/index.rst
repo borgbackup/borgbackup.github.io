@@ -38,7 +38,7 @@ The current release is |current1.2|, released on |current1.2date|.
 Borg 1.1
 --------
 
-Borg 1.1 is the current **oldstable** series of Borg.
+Borg 1.1 is not supported any more, please use Borg 1.2.x.
 The current release is |current1.1|, released on |current1.1date|.
 
 - `1.1.0 release announcement <borg-1.1.html>`_
@@ -49,7 +49,7 @@ The current release is |current1.1|, released on |current1.1date|.
 Borg 1.0
 --------
 
-Borg 1.0 is not supported any more, please use 1.1.x.
+Borg 1.0 is not supported any more, please use Borg 1.2.x.
 The last release in this series was |current1.0|, released on |current1.0date|.
 
 - `Documentation <https://borgbackup.readthedocs.io/en/1.0-maint/>`__

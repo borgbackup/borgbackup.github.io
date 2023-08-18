@@ -51,6 +51,17 @@ channel (you might still need a registered nick to join our channel, see above):
 
 `#borgbackup channel web IRC <https://web.libera.chat/?nick=Guest&#borgbackup>`_
 
+.. _matrix:
+
+Matrix Chat
+-----------
+
+You can also use a matrix protocol based chat client like e.g.
+`Element <https://app.element.io>`_ to join the
+`#borgbackup room <https://matrix.to/#/!KnTJxMbCJuuVyjTSeJ:libera.chat?via=libera.chat&via=matrix.org&via=rudd-o.com>`_.
+
+Note: This room is bridged to the #borgbackup IRC channel on libera.chat.
+
 .. _mailing_list:
 
 Mailing list
@@ -63,24 +74,18 @@ unsubscribe and where you can find the archives of the list, see the
 
 .. _twitter:
 
-Twitter
--------
+.. _mastodon:
 
-Follow @borgbackup for announcements. You can also add @borgbackup if you
-would like to get retweeted for a borg related tweet.
+Mastodon / Twitter / X
+-----------------------
 
-Please understand that Twitter is not suitable for longer / more complex
-discussions - use one of the other channels for that.
+Follow us there for announcements:
 
-.. _reddit:
+- Mastodon: https://fosstodon.org/@borgbackup
+- Twitter/X: https://twitter.com/borgbackup
 
-Reddit
-------
-
-Our official subreddit is a great place to get support from other users
-or discuss your current setup or project.
-
-See `r/BorgBackup <https://www.reddit.com/r/BorgBackup/>`_
+Please understand that Twitter/X and mastodon are not suitable for longer / more
+complex discussions - use one of the other channels for that.
 
 .. _bounties_and_fundraisers:
 

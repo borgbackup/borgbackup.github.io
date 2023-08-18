@@ -13,7 +13,7 @@ BorgBackup – Deduplicating archiver with compression and authenticated encrypt
     <ul>
         <li>Space efficient storage of backups.
         <li>Secure, authenticated encryption.
-        <li>Compression: LZ4, zlib, LZMA, zstd (since borg 1.1.4).
+        <li>Compression: lz4, zstd, zlib, lzma or none.
         <li>Mountable backups with FUSE.
         <li>Easy installation on multiple platforms: Linux, macOS, BSD, ...
         <li>Free software (BSD license).

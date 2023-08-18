@@ -63,14 +63,18 @@ unsubscribe and where you can find the archives of the list, see the
 
 .. _twitter:
 
-Twitter
--------
+.. _mastodon:
 
-Follow @borgbackup for announcements. You can also add @borgbackup if you
-would like to get retweeted for a borg related tweet.
+Mastodon / Twitter / X
+-----------------------
 
-Please understand that Twitter is not suitable for longer / more complex
-discussions - use one of the other channels for that.
+Follow us there for announcements:
+
+- Mastodon: https://fosstodon.org/@borgbackup
+- Twitter/X: https://twitter.com/borgbackup
+
+Please understand that Twitter/X and mastodon are not suitable for longer / more
+complex discussions - use one of the other channels for that.
 
 .. _bounties_and_fundraisers:
 

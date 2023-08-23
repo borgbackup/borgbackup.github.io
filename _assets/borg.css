@@ -8,7 +8,7 @@ header {
 	background-color: black;
 	padding-top: 1.5rem;
 	padding-bottom: 1rem;
-	border-bottom: 2px solid #22D045;
+	border-bottom: 5px solid #22D045;
 }
 
 #logo {
@@ -19,6 +19,45 @@ header {
 header h1 {
 	margin: 0;
 	text-align: center;
+}
+
+nav {
+	display: flex;
+	justify-content: center;
+}
+
+nav > ol {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 1rem;
+	padding: 0;
+}
+
+nav > ol > li {
+	list-style: none;
+}
+
+/* mono system font stack courtesy of https://qwtel.com/posts/software/the-monospaced-system-ui-css-font-stack/ */
+nav > ol > li > a {
+	font-size: 1.1rem;
+	font-weight: bold;
+	color: #22D045;
+	font-family: ui-monospace, 
+		Menlo, Monaco, 
+		"Cascadia Mono", "Segoe UI Mono", 
+		"Roboto Mono", 
+		"Oxygen Mono", 
+		"Ubuntu Monospace", 
+		"Source Code Pro",
+		"Fira Mono", 
+		"Droid Sans Mono", 
+		"Courier New", monospace;
+}
+
+nav > ol > li > a:hover {
+	text-shadow: 0 0 5px black;
+	background: radial-gradient(#22D045, transparent);
 }
 
 main.content {
@@ -52,33 +91,6 @@ main ul {
 
 .main-index h2 {
 	margin: 1.5rem 0;
-}
-
-#links {
-	padding-bottom: 1.5rem;
-	display: flex;
-	flex-wrap: wrap;
-	justify-content: space-around;
-}
-
-#links a {
-	color: #22D045;
-}
-
-#links a:hover .action {
-	background: white;
-	text-shadow: 0 0 5px #22D045;
-}
-
-#links .link {
-	display: flex;
-	text-align: center;
-	padding: 0.75rem 1.5rem;
-	float: left;
-}
-
-#links .action {
-	font-size: 400%;
 }
 
 .contributors {

@@ -18,6 +18,18 @@
 			<path id="p4" transform="translate(236.429, 46.0213)" fill="#00dd00" d="M36.875 13.8021L26.6667 13.8021L26.6667 7.10543e-15L46.0937 7.10543e-15L59.8958 13.8021L59.8958 60.7812L46.0937 74.6875L15.7292 74.6875L8.80208 67.7083L8.80208 62.6042L36.875 62.6042ZM33.2292 42.3958L33.2292 48.4896L26.3542 55.3125L13.8021 55.3125L0 41.5104L0 13.8021L13.8021 0L23.0208 0L23.0208 42.3958Z"/>
 		</svg></a></h1>
 	</div>
+	<nav>
+        <ol>
+            <li><a href="/demo.html">Demo</a></li>
+            <li><a href="/releases/">Install</a></li>
+            <li><a href="https://borgbackup.readthedocs.io/">Docs</a></li>
+            <li><a href="https://github.com/borgbackup/community">Community</a></li>
+            <li><a href="/support/fund.html">Fund</a></li>
+            <li><a href="https://github.com/borgbackup/borg">Contribute</a></li>
+            <li><a href="/support/free.html">Support</a></li>
+            <li><a href="/support/commercial.html">Services</a></li>
+        </ol>
+    </nav>
 </header>
 
 <main class="content">

@@ -1,8 +1,6 @@
 Donations, Bounties and Fundraisers
 ===================================
 
-`« back </>`_
-
 Overview
 --------
 

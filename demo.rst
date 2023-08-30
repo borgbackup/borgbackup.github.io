@@ -11,8 +11,6 @@ Demo — BorgBackup
 
     <h2 id="tagline">Deduplicating archiver<br>with compression and encryption</h2>
 
-    <a href="/">« back</a>
-
     <div id="demo">
         <h3>BorgBackup 1.1 - basic usage</h3>
         <asciinema-player src="_assets/asciicast-133292.json" speed="1.0"></asciinema-player>

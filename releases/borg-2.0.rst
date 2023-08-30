@@ -1,8 +1,6 @@
 Borg 2.0 (preliminary infos)
 ============================
 
-`« back to all releases <.>`_
-
 :Links: `Documentation <https://borgbackup.readthedocs.io/en/master/>`_ · `Downloads <https://github.com/borgbackup/borg/releases/latest>`_
 :Date: (testing releases out, no final release yet)
 

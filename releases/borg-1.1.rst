@@ -1,8 +1,6 @@
 Borg 1.1
 ========
 
-`« back to all releases <.>`_
-
 :Links: `Documentation <https://borgbackup.readthedocs.io/en/1.1-maint/>`_ · `Installation <https://borgbackup.readthedocs.io/en/1.1-maint/installation.html>`_ · `Downloads <https://github.com/borgbackup/borg/releases/latest>`_
 :Date: 7th October 2017
 

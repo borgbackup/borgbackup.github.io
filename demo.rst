@@ -11,6 +11,8 @@ Demo — BorgBackup
 
     <h2 id="tagline">Deduplicating archiver<br>with compression and encryption</h2>
 
+    <p>All text in the following screencasts can be highlighted and copied!</p>
+
     <a href="/">« back</a>
 
     <div id="demo">

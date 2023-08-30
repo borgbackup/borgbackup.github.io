@@ -16,6 +16,11 @@ header {
 	margin: 0 auto;
 }
 
+/* apply drop shadow to logo paths */
+#logo path {
+	filter: drop-shadow(0 0 2px black)
+}
+
 header h1 {
 	margin: 0;
 	text-align: center;
@@ -30,8 +35,8 @@ nav > ol {
 	display: flex;
 	flex-wrap: wrap;
 	justify-content: center;
-	gap: 1rem;
-	padding: 0;
+	gap: 0.5rem;
+	padding: 0 0.75rem;
 }
 
 nav > ol > li {
@@ -53,11 +58,13 @@ nav > ol > li > a {
 		"Fira Mono", 
 		"Droid Sans Mono", 
 		monospace;
+	padding: 0.25rem;
 }
 
-nav > ol > li > a:hover {
-	text-shadow: 0 0 5px black;
-	background: radial-gradient(#22D045, transparent);
+nav > ol > li > a:hover, 
+#logo svg:hover {
+	text-shadow: 0 0 2px black;
+	background: radial-gradient(closest-side, #22D045, transparent);
 }
 
 main.content {

@@ -1,8 +1,6 @@
 Support
 =======
 
-`« back </>`_
-
 Please first read the docs, the existing issue tracker issues and mailing
 list posts -- a lot of stuff is already documented / explained / discussed /
 filed there.

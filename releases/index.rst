@@ -1,8 +1,6 @@
 Borg release series
 ===================
 
-`« back </>`_
-
 .. include:: releases.rst.inc
 
 Borg Future

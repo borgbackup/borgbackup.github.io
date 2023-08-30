@@ -1,8 +1,6 @@
 Paid Support and Services
 =========================
 
-`« back </>`_
-
 Here are some commercial service and support providers for borgbackup:
 
 

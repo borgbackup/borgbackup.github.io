@@ -52,7 +52,7 @@ nav > ol > li > a {
 		"Source Code Pro",
 		"Fira Mono", 
 		"Droid Sans Mono", 
-		"Courier New", monospace;
+		monospace;
 }
 
 nav > ol > li > a:hover {

@@ -125,3 +125,11 @@ main ul {
 	left: 0;
 	right: 0;
 }
+
+ul > li > p {
+	margin: 0;
+}
+
+a {
+	text-decoration: none;
+}

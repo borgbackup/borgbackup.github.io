@@ -133,3 +133,12 @@ ul > li > p {
 a {
 	text-decoration: none;
 }
+
+main > dl > dt {
+	float: left;
+	font-weight: bold;
+}
+
+main > dl > dd {
+	margin-left: 4.5rem;
+}

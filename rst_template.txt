@@ -22,12 +22,29 @@
         <ol>
             <li><a href="/demo.html">Demo</a></li>
             <li><a href="/releases/">Install</a></li>
-            <li><a href="https://borgbackup.readthedocs.io/">Docs</a></li>
-            <li><a href="https://github.com/borgbackup/community">Community</a></li>
             <li><a href="/support/fund.html">Fund</a></li>
-            <li><a href="https://github.com/borgbackup/borg">Contribute</a></li>
             <li><a href="/support/free.html">Support</a></li>
             <li><a href="/support/commercial.html">Services</a></li>
+            <!-- no space between nav label and svg deliberately per https://davidwalsh.name/remove-whitespace-inline-block -->
+            <!-- external link icon: https://commons.wikimedia.org/wiki/File:Link-external-small-ltr-progressive.svg -->
+            <li><a href="https://borgbackup.readthedocs.io/">Docs<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
+              <title>
+                external link
+              </title>
+              <path fill="currentColor" d="M6 1h5v5L8.86 3.85 4.7 8 4 7.3l4.15-4.16L6 1Z M2 3h2v1H2v6h6V8h1v2a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/>
+            </svg></a></li>
+            <li><a href="https://github.com/borgbackup/community">Community<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
+              <title>
+                external link
+              </title>
+              <path fill="currentColor" d="M6 1h5v5L8.86 3.85 4.7 8 4 7.3l4.15-4.16L6 1Z M2 3h2v1H2v6h6V8h1v2a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/>
+            </svg></a></li>
+            <li><a href="https://github.com/borgbackup/borg">Contribute<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
+              <title>
+                external link
+              </title>
+              <path fill="currentColor" d="M6 1h5v5L8.86 3.85 4.7 8 4 7.3l4.15-4.16L6 1Z M2 3h2v1H2v6h6V8h1v2a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/>
+            </svg></a></li>
         </ol>
     </nav>
 </header>

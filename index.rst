@@ -6,7 +6,7 @@ BorgBackup – Deduplicating archiver with compression and authenticated encrypt
 
 .. raw:: html
 
-    <h2 id="tagline">Deduplicating archiver<br>with compression and encryption</h2>
+    <h2 id="tagline">Deduplicating archiver with compression and encryption</h2>
 
     BorgBackup (short: Borg) gives you:
 

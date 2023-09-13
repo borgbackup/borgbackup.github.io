@@ -63,6 +63,6 @@ releases from 0.23.0 to 0.30.1.
 
 
 Atom feed for releases
-======================
+----------------------
 
 https://github.com/borgbackup/borg/releases.atom

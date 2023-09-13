@@ -125,3 +125,20 @@ main ul {
 	left: 0;
 	right: 0;
 }
+
+ul > li > p {
+	margin: 0;
+}
+
+a {
+	text-decoration: none;
+}
+
+main > dl > dt {
+	float: left;
+	font-weight: bold;
+}
+
+main > dl > dd {
+	margin-left: 4.5rem;
+}

@@ -9,7 +9,7 @@ Demo — BorgBackup
     <script type="text/javascript" src="_assets/asciinema-player-v2.4.1.js"></script>
     <noscript><p><strong>JavaScript is needed to view the demos.</strong></p></noscript>
 
-    <h2 id="tagline">Deduplicating archiver<br>with compression and encryption</h2>
+    <h2 id="tagline">Borg demos</h2>
 
     <p>All text in the following screencasts can be highlighted and copied!</p>
 

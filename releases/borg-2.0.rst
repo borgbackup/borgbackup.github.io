@@ -160,3 +160,6 @@ Other changes
   - removed some code only needed to deal with very old attic or borg repos.
     users are expected to first upgrade to borg 1.2 before jumping to borg 2.0,
     thus we do not have to deal with any ancient stuff any more.
+  - Manifest and archive TAMs now are always required.
+    Manifest TAMs should be there since borg 1.0.9 upgrade.
+    All archives should have TAMs since borg 1.2.5/1.2.6 upgrade.

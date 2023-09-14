@@ -39,7 +39,9 @@ and GUIs for borg also need to get adapted.
 Major new features
 ~~~~~~~~~~~~~~~~~~
 
-- added retries for input files (e.g. if there is a read error or file changed while reading)
+- create: added retries for input files (e.g. if there is a read error or file changed while reading)
+- extract --continue: continue a previously interrupted extraction
+- additionally to ssh: repos, also implement repos via unix domain (ipc) socket
 
 - better, more modern, faster crypto
 
@@ -70,11 +72,12 @@ Major new features
   - borg rcreate can create "related repositories" of an existing repo, e.g. to use them
     for efficient archive transfers using borg transfer.
   - borg transfer can copy and convert archives from a borg 1.x repo to a related borg 2 repo.
-    to save time, it will transfer the compressed file content chunks (without compressing them
-    again).
+    to save time, it will transfer the compressed file content chunks without recompressing.
     but, to make your repo more secure, it will decrypt / re-encrypt all the chunks.
   - borg transfer can copy archives from one borg 2 repo to a related other borg 2 repo,
     without doing any conversion.
+  - borg transfer usually transfers compressed chunks (avoids recompression), but there is
+    also the option to recompress them using a specific compressor.
 
 - command line interface cleanups
 
@@ -110,6 +113,7 @@ Other changes
 - do not store .borg_part files in final archive, simplify statistics (no parts stats any more)
 - avoid orphan chunks on input files with OSErrors
 - make sure archive name/comment, stuff that get into JSON is pure valid utf-8 (no surrogate escapes)
+- new remote and progress logging (tunneled through RPC result channel)
 - internal data format / processing changes
 
   - using msgpack spec 2.0 now, cleanly differentiating between text and binary bytes.

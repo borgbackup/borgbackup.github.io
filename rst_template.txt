@@ -3,6 +3,7 @@
 %(head)s
 <link rel="shortcut icon" href="/favicon.ico"/>
 <link rel="icon" type="image/ico" href="/favicon.ico"/>
+<link rel="me" href="https://fosstodon.org/@borgbackup"/>
 %(stylesheet)s
 <!-- </head> -->
 %(body_prefix)s

@@ -12,7 +12,6 @@ You can support the BorgBackup Project using these options:
 - `BorgBackup Team on Liberapay <https://liberapay.com/borgbackup/donate>`_
 - `BorgBackup Github Sponsors <https://github.com/sponsors/borgbackup>`_
 - `BorgBackup on OpenCollective <https://opencollective.com/borgbackup>`_
-- `BorgBackup on BountySource <https://www.bountysource.com/teams/borgbackup>`_
 
 PayPal
 ------
@@ -43,20 +42,3 @@ You can also give funds directly via OpenCollective, they also go to OC EU then.
 
 The funds held by OC EU for us can be used to pay misc. project-related expenses
 submitted by borgbackup team members.
-
-BountySource
-------------
-
-You can give general funds to the borgbackup members (the developers will
-then spend the funds as they deem fit, usually to create bounties).
-
-A bounty is a reward for whoever fixes a specific issue, e.g. to fix a bug,
-update the docs, implement a feature, ...
-
-You can use the above, if you do not have some specific bounty (see below).
-
-If you want to encourage developers to fix some specific issue or implement some
-specific feature suggestion, you can post a new bounty or back an existing one
-(they always refer to an issue in our issue tracker).
-
-As a developer, you can become a Bounty Hunter and win bounties (earn money).

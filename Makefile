@@ -8,6 +8,7 @@ support/commercial.html \
 releases/index.html \
 releases/borg-1.1.html \
 releases/borg-1.2.html \
+releases/borg-1.4.html \
 releases/borg-2.0.html
 
 INCLUDES=\

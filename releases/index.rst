@@ -16,10 +16,20 @@ You can learn more about borg future plans there:
 Borg 2.0
 --------
 
-Borg 2.0 is currently in beta/rc testing - do not use it for production.
+Borg 2.0 is currently in testing - do not use it for production.
 
 - `borg 2.0 news overview (preliminary) <borg-2.0.html>`_
 - `Documentation <https://borgbackup.readthedocs.io/en/master/>`__
+- `Downloads <https://github.com/borgbackup/borg/releases>`__
+
+Borg 1.4
+--------
+
+Borg 1.4 is currently in testing - do not use it for production.
+
+- `borg 1.4 news overview (preliminary) <borg-1.4.html>`_
+- `Documentation <https://borgbackup.readthedocs.io/en/1.4-maint/>`__
+- `Installation <https://borgbackup.readthedocs.io/en/1.4-maint/installation.html>`__
 - `Downloads <https://github.com/borgbackup/borg/releases>`__
 
 Borg 1.2

@@ -115,7 +115,6 @@ Other changes
 - BORG_CACHE_IMPL defaults to "adhocwithfiles" now, not using a persistent chunks cache anymore
 - improve acl_get / acl_set error handling, refactor acl code
 - crypto: use a one-step kdf for session keys
-- replace TAMs by typed repo objects
 - use less setup.py, use pip, build and make.py
 - using platformdirs python package to determine locations for configs and caches
 - show files / archives with local timezone offsets, store archive timestamps with tz offset
@@ -160,8 +159,7 @@ Other changes
   - we unbundled all 3rd party code and require the respective libraries to be
     available and installed. this makes packaging easier for dist package maintainers.
   - discovery is done via pkg-config or (if that does not work) BORG_*_PREFIX env vars.
-  - our setup*.py is now much simpler, a lot moved to setup.cfg and we also use
-    pyproject.toml now.
+  - our setup*.py is now much simpler, a lot moved to pyproject.toml now.
   - we had to stop supporting LibreSSL (e.g. on OpenBSD) due to their different API.
     borg on OpenBSD now also uses OpenSSL.
 
@@ -170,6 +168,4 @@ Other changes
   - removed some code only needed to deal with very old attic or borg repos.
     users are expected to first upgrade to borg 1.2 before jumping to borg 2.0,
     thus we do not have to deal with any ancient stuff any more.
-  - Manifest and archive TAMs now are always required.
-    Manifest TAMs should be there since borg 1.0.9 upgrade.
-    All archives should have TAMs since borg 1.2.5/1.2.6 upgrade.
+  - removed archive and manifest TAMs, using simpler approach with typed repo objects.

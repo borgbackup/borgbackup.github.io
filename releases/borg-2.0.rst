@@ -7,7 +7,7 @@ Borg 2.0 (preliminary infos)
 Changelog summary
 -----------------
 
-This is only a summary of the changes between 1.2 and 2.0.
+This is only a summary of the changes between 1.2/1.4 and 2.0.
 Check the `full changelog <https://borgbackup.readthedocs.io/en/master/changes.html>`_
 to see all changes as well as important compatibility and upgrade notes.
 
@@ -87,6 +87,8 @@ Major new features
   - split some commands that worked on archives and repos into 2 separate commands
     (makes the code/docs/help easier)
   - renamed borg init to borg rcreate for better consistency
+  - BORG_EXIT_CODES=modern is the default now to get more specific process exit codes
+
 
 - added commands / options:
 
@@ -97,16 +99,24 @@ Major new features
   - borg import/export-tar --tar-format=GNU/PAX/BORG, support ctime/atime PAX headers.
     GNU and PAX are standard formats, while BORG is a very low-level custom format only
     for borg usage.
+  - borg create: add the "slashdot hack" to strip path prefixes in created archives
+  - borg version: show local/remote borg version
 
 - removed commands / options:
 
   - removed -P (aka --prefix) option, use -a (aka --match-archives) instead, e.g.: -a 'PREFIX*'
   - borg upgrade (was only relevant for attic / old borg)
   - removed deprecated cli options
+  - remove recreate --recompress option, the repo-wide "rcompress" is more efficient.
 
 Other changes
 ~~~~~~~~~~~~~
 
+- BORG_CACHE_IMPL defaults to "adhocwithfiles" now, not using a persistent chunks cache anymore
+- improve acl_get / acl_set error handling, refactor acl code
+- crypto: use a one-step kdf for session keys
+- replace TAMs by typed repo objects
+- use less setup.py, use pip, build and make.py
 - using platformdirs python package to determine locations for configs and caches
 - show files / archives with local timezone offsets, store archive timestamps with tz offset
 - make user/group/uid/gid optional in archived files

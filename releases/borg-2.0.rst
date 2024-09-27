@@ -41,12 +41,24 @@ Wrappers and GUIs for borg also need to get adapted.
 Major new features
 ~~~~~~~~~~~~~~~~~~
 
+- archive series
+
+  Archives do not need to have unique names anymore, they may have the same
+  name and we strongly recommend using this when appropriate as it simplifies
+  and optimizes working with archives (caching, pruning, repo-list output).
+
+  An archives series is now simply all the archives in a repository that have
+  the same name. OTOH, the unique identifier for a single archive is now its ID
+  (the hash, it can be shortened as long as it is unique).
+
 - new repository and locking implementation based on borgstore project
 
-  - borgstore is a key/value store in python, currently supporting file: and
-    sftp: backends. borgstore backends are easy to implement, so there might
-    be more in future, like direct access to cloud storage repos.
-  - borg uses these to implement file: and ssh: repos and (new) sftp: repos.
+  - borgstore is a key/value store in python, currently supporting file:, sftp:
+    and rclone: backends.
+    borgstore backends are easy to implement, so there might be even more in
+    future.
+  - borg uses these to implement file: and ssh: repos and (new) sftp: and
+    rclone: repos. Via rclone, borg can use cloud repositories now!
   - additionally to ssh: repos, we also have socket: repos now.
   - concurrent parallel access to a repository is now possible for most borg
     commands (except check and compact).
@@ -144,8 +156,10 @@ Other changes
 
 - create: added retries for input files (e.g. if there is a read error or
   file changed while reading)
-- BORG_CACHE_IMPL defaults to "adhocwithfiles" now, not using a persistent
-  chunks cache anymore, solving all issues related to chunks cache sync.
+- new cache implementation, using a chunks cache stored in the repository and
+  a files cache per archive series. the files cache now stores ctime AND mtime
+  and also updates both from the filesystem. the files cache can be rebuilt by
+  reading the latest archive in the series from the repository.
 - improve acl_get / acl_set error handling, refactor acl code
 - crypto: use a one-step kdf for session keys
 - use less setup.py, use pip, build and make.py

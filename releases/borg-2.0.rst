@@ -51,6 +51,16 @@ Major new features
   the same name. OTOH, the unique identifier for a single archive is now its ID
   (the hash, it can be shortened as long as it is unique).
 
+- separation of archive metadata: name, tags, user, host, timestamp
+
+  To support having a simple, clean archive (series) name, borg now tracks and
+  displays name, tags, user, host and timestamp separately (so you don't need to
+  put everything into the archive name like when using borg 1.x).
+
+  It's now possible to tag (label) archives.
+
+  Matching can be done on archive (series) name, tags, user, host and archive ID.
+
 - new repository and locking implementation based on borgstore project
 
   - borgstore is a key/value store in python, currently supporting file:, sftp:
@@ -123,9 +133,14 @@ Major new features
 - added commands / options:
 
   - you will usually need to give either -r (aka --repo) or BORG_REPO env var.
-  - --match-archives now has support for regex or glob/shell style matching
+  - --match-archives now has support for:
+
+    - identical, regex or glob/shell style matching on the archive name
+    - matching on archive tags, user, host, ID (prefix)
+    - giving the option multiple times (logical AND)
   - extract --continue: continue a previously interrupted extraction
   - new borg repo-compress command can do a repo-wide efficient recompression.
+  - borg analyze: list changed chunks' sizes per directory.
   - borg key change-location: usable for repokey <-> keyfile location change
   - borg benchmark cpu (so you can actually see what's fastest for your CPU)
   - borg import/export-tar --tar-format=GNU/PAX/BORG, support ctime/atime PAX

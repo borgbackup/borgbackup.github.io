@@ -57,7 +57,8 @@ Major new features
   displays name, tags, user, host and timestamp separately (so you don't need to
   put everything into the archive name like when using borg 1.x).
 
-  It's now possible to tag (label) archives.
+  It's now possible to tag (label) archives. There is a special tag for
+  protecting archives against delete/prune/recreate.
 
   Matching can be done on archive (series) name, tags, user, host and archive ID.
 
@@ -90,6 +91,12 @@ Major new features
       garbage collection, no repo index needed, simplicity, mostly works with
       a shared lock, no need for checkpointing or .part files.
 
+- new hashtable (used for indexes, caches) based on the borghash project
+
+  - less memory overhead, especially lower memory usage spikes when resizing
+    the hashtable.
+  - pure Cython implementation, easier to maintain than the previous C code.
+
 - multi-repo improvements
 
   - borg 1.x only could deal with 1 repository per borg invocation. borg 2.0
@@ -121,6 +128,8 @@ Major new features
 
 - command line interface cleanups
 
+  - remote repository URLs default to relative paths, using an absolute path
+    is possible.
   - no scp style repo parameters any more (parsing ambiguity issues, no
     :port possible), just use the better ssh://user@host:port/path .
   - separated repo and archive, no "::" any more
@@ -144,13 +153,15 @@ Major new features
   - borg key change-location: usable for repokey <-> keyfile location change
   - borg benchmark cpu (so you can actually see what's fastest for your CPU)
   - borg import/export-tar --tar-format=GNU/PAX/BORG, support ctime/atime PAX
-    headers. GNU and PAX are standard formats, while BORG is a very low-level
-    custom format only for borg usage.
+    headers, support for PAX xattr headers. GNU and PAX are standard formats,
+    while BORG is a very low-level custom format only for borg usage. PAX is
+    now the default format.
   - borg create: add the "slashdot hack" to strip path prefixes in created
     archives
   - borg repo-space: optionally, you can allocate some reserved space in the
     repo to free in "file system full" conditions.
   - borg version: show local/remote borg version
+  - borg prune: add quarterly pruning strategies (3M and 13W)
 
 - removed commands / options:
 

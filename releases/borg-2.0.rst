@@ -91,10 +91,14 @@ Major new features
       garbage collection, no repo index needed, simplicity, mostly works with
       a shared lock, no need for checkpointing or .part files.
 
-- new hashtable (used for indexes, caches) based on the borghash project
+- uses new hashtable (used for indexes, caches) based on the borghash project
 
-  - less memory overhead, especially lower memory usage spikes when resizing
+  - chunks index: less memory overhead, lower memory usage spikes when resizing
     the hashtable.
+  - files cache: less memory usage by referring to data already stored in the
+    chunk index.
+  - optimizes borg operations (e.g. create, compact, repo-compress) without
+    needing any additional memory.
   - pure Cython implementation, easier to maintain than the previous C code.
 
 - multi-repo improvements
@@ -162,6 +166,11 @@ Major new features
     repo to free in "file system full" conditions.
   - borg version: show local/remote borg version
   - borg prune: add quarterly pruning strategies (3M and 13W)
+  - borg delete: it now SOFT-deletes archives and there is "borg undelete"
+    to undo that. "borg compact" will free all space in the repository that
+    belongs to soft-deleted archives, thus undelete only works for soft-deleted
+    archives until you run the compaction.
+  - borg prune: also only SOFT-deletes archives, see previous item.
 
 - removed commands / options:
 

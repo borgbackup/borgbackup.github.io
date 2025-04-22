@@ -64,8 +64,8 @@ Major new features
 
 - new repository and locking implementation based on borgstore project
 
-  - borgstore is a key/value store in python, currently supporting file:, sftp:
-    and rclone: backends.
+  - borgstore is a key/value store in python, currently supporting file:, sftp:,
+    rclone: and s3:/b2: backends.
     borgstore backends are easy to implement, so there might be even more in
     future.
   - borg uses these to implement file: and ssh: repos and (new) sftp: and
@@ -231,6 +231,8 @@ Other changes
     of other (re)compression related features.
   - massively increase the archive metadata stream size limitation (so it is
     practically not relevant any more)
+  - dynamic handling of missing (or reappearing) chunks replaces the borg 1.x
+    "chunks_healthy" metadata approach.
 
 - source code changes
 

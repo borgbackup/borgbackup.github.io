@@ -116,7 +116,7 @@ Major new features
     borg 2 repo, without doing any conversion.
   - borg transfer usually transfers compressed chunks (avoids recompression),
     but there is also the option to recompress them using a specific
-    compressor.
+    compressor or re-chunk them with other chunker params.
 
 - better, more modern, faster crypto
 
@@ -181,10 +181,9 @@ Major new features
   - remove recreate --recompress option, the repo-wide "repo-compress" is
     more efficient.
   - remove borg config command (it only worked locally anyway)
-  - repository storage quota limit (might come back if we find a more useful
-    implementation)
-  - repository append-only mode (might come back later, likely implemented
-    very differently)
+  - repository storage quota limit
+  - repository append-only mode (was replaced by borgstore posixfs backend
+    permissions [all, read-only, write-only, no-delete])
 
 Other changes
 ~~~~~~~~~~~~~

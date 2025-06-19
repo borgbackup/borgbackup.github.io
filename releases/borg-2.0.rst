@@ -130,6 +130,16 @@ Major new features
     encrypt-and-mac, counter/nonce management will make borg more secure,
     easier to use and develop.
 
+- chunker improvements
+
+  - new and improved "buzhash64" chunker
+  - all chunker code is now in Cython (the buzhash chunker used to be a big,
+    hard to maintain piece of C code that included file reading and buffer
+    management). the file reading and buffer management code has been moved
+    to a separate module.
+  - all chunkers now use the same input file reading code, that supports
+    sparse files (and fmaps), posix_fadvise and buffer management.
+
 - command line interface cleanups
 
   - remote repository URLs default to relative paths, using an absolute path
@@ -190,6 +200,7 @@ Other changes
 
 - create: added retries for input files (e.g. if there is a read error or
   file changed while reading)
+- create: auto-exclude items based on xattrs or NODUMP
 - new cache implementation, using a chunks cache stored in the repository and
   a files cache per archive series. the files cache now stores ctime AND mtime
   and also updates both from the filesystem. the files cache can be rebuilt by
@@ -235,15 +246,15 @@ Other changes
 
 - source code changes
 
-  - borg 1.x borg.archiver (and also the related tests) monster modules got
-    split into packages of modules, now usually 1 module per borg cli command.
+  - borg 1.x borg.archiver and borg.helpers (and also the related tests)
+    monster modules got split into packages of modules.
   - using "black" (automated pep8 source code formatting), this reformatted
     ALL the code
   - added infrastructure so we can use "mypy" for type checking
 
 - python, packaging and library changes
 
-  - minimum requirement: Python 3.9
+  - minimum requirement: Python 3.10
   - we unbundled all 3rd party code and require the respective libraries to
     be available and installed. this makes packaging easier for dist package
     maintainers.

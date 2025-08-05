@@ -1,8 +1,8 @@
 .. |current1.4| replace:: 1.4.1
 .. |current1.4date| replace:: 2025-04-19
 
-.. |current1.2| replace:: 1.2.8
-.. |current1.2date| replace:: 2024-03-29
+.. |current1.2| replace:: 1.2.9
+.. |current1.2date| replace:: 2025-08-04
 
 .. |current1.1| replace:: 1.1.18
 .. |current1.1date| replace:: 2022-06-05

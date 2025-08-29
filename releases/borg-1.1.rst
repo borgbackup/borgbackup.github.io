@@ -144,7 +144,6 @@ Contributors to the main repository for this release were:
     <span class='contributor'>Ben Creasy ·</span>
     <span class='contributor'>Benedikt Heine ·</span>
     <span class='contributor'>Benedikt Neuffer ·</span>
-    <span class='contributor'>Benjamin Pereto ·</span>
     <span class='contributor'>Björn Ketelaars ·</span>
     <span class='contributor'>Carlo Teubner ·</span>
     <span class='contributor'>Chris Lamb ·</span>

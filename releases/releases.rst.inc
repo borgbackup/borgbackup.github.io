@@ -1,5 +1,5 @@
-.. |current1.4| replace:: 1.4.2
-.. |current1.4date| replace:: 2025-10-31
+.. |current1.4| replace:: 1.4.3
+.. |current1.4date| replace:: 2025-12-02
 
 .. |current1.2| replace:: 1.2.9
 .. |current1.2date| replace:: 2025-08-04

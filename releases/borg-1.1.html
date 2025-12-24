@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<!-- <head> -->
+<meta charset="utf-8" />
+<meta name="generator" content="Docutils 0.22.4: https://docutils.sourceforge.io/" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="dcterms.date" content="7th October 2017" />
+<title>Borg 1.1</title>
+<link rel="schema.dcterms" href="http://purl.org/dc/terms/"/>
+<link rel="shortcut icon" href="/favicon.ico"/>
+<link rel="icon" type="image/ico" href="/favicon.ico"/>
+<link rel="me" href="https://fosstodon.org/@borgbackup"/>
+<style type="text/css">
+
+body {
+	margin: 0;
+	font-family: verdana,arial,helvetica,sans-serif;
+	padding-bottom: 1rem;
+}
+
+header {
+	background-color: black;
+	padding-top: 1.5rem;
+	padding-bottom: 1rem;
+	border-bottom: 5px solid #22D045;
+}
+
+#logo {
+	max-width: 600px;
+	margin: 0 auto;
+}
+
+/* apply drop shadow to logo paths */
+#logo path {
+	filter: drop-shadow(0 0 2px black)
+}
+
+header h1 {
+	margin: 0;
+	text-align: center;
+}
+
+nav {
+	display: flex;
+	justify-content: center;
+}
+
+nav > ol {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 0.5rem;
+	padding: 0 0.75rem;
+}
+
+nav > ol > li {
+	list-style: none;
+}
+
+/* mono system font stack courtesy of https://qwtel.com/posts/software/the-monospaced-system-ui-css-font-stack/ */
+nav > ol > li > a {
+	font-size: 1.1rem;
+	font-weight: bold;
+	color: #22D045;
+	font-family: ui-monospace, 
+		Menlo, Monaco, 
+		"Cascadia Mono", "Segoe UI Mono", 
+		"Roboto Mono", 
+		"Oxygen Mono", 
+		"Ubuntu Monospace", 
+		"Source Code Pro",
+		"Fira Mono", 
+		"Droid Sans Mono", 
+		monospace;
+	padding: 0.25rem;
+}
+
+nav > ol > li > a:hover, 
+#logo svg:hover {
+	text-shadow: 0 0 2px black;
+	background: radial-gradient(closest-side, #22D045, transparent);
+}
+
+main.content {
+	max-width: 600px;
+	padding: 0 1rem;
+	margin: 0 auto;
+}
+
+.hide-rst-heading main h1:first-child {
+	display: none;
+}
+
+main #tagline,
+main h1.title {
+	font-size: 220%;
+	font-weight: normal;
+	padding-bottom: 1.5rem;
+	border-bottom: 1px solid #666;
+	text-align: left;
+}
+
+main h1 {
+	font-size: 150%;
+	font-weight: normal;
+}
+
+main ul {
+	line-height: 1.5em;
+	padding-bottom: 0.75rem;
+}
+
+.main-index h2 {
+	margin: 1.5rem 0;
+}
+
+.contributors {
+	line-height: 1.5;
+	font-style: italic;
+}
+
+.contributors .contributor {
+	white-space: nowrap;
+}
+
+#demo {
+	text-align: center;
+	width: 100%;
+}
+
+/* the size of the demo player is not very well defined and kinda depends on the
+ * default fonts and font sizes. This makes it so that it does never truncate lines if the
+ * window is large enough.
+ */
+#demo {
+	margin: 10px 0;
+	text-align: center;
+	position: absolute;
+	left: 0;
+	right: 0;
+}
+
+ul > li > p {
+	margin: 0;
+}
+
+a {
+	text-decoration: none;
+}
+
+main > dl > dt {
+	float: left;
+	font-weight: bold;
+}
+
+main > dl > dd {
+	margin-left: 4.5rem;
+}
+
+</style>
+<!-- </head> -->
+</head>
+<body>
+<main id="borg-1-1">
+<!-- <body> -->
+
+<header>
+	<div id="logo">
+		<h1><a href="/"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="240pt" height="100pt">
+			<path id="p0" fill="transparent" d="M0 66.6667L0 0L160 0L320 0L320 66.6667L320 133.333L160 133.333L0 133.333Z"/>
+			<path id="p1" transform="translate(20.9086, 32.2192)" fill="#00dd00" d="M43.75 13.8021L26.6667 13.8021L26.6667 0L53.3854 0L67.2396 13.8021L67.2396 27.8646L60.3125 34.7917L67.2396 41.7187L67.2396 55.3125L53.3854 69.1146L26.6667 69.1146L26.6667 55.3125L43.75 55.3125L43.75 40.5729L26.6667 40.5729L26.6667 28.5417L43.75 28.5417ZM0 0L23.0208 0L23.0208 69.1146L0 69.1146Z"/>
+			<path id="p2" transform="translate(97.6794, 46.0213)" fill="#00dd00" d="M62.1354 41.5104L48.3333 55.3125L32.9167 55.3125L32.9167 42.3958L38.6458 42.3958L38.6458 13.8021L32.9167 13.8021L32.9167 0L48.3333 0L62.1354 13.8021ZM23.2813 42.3958L29.2708 42.3958L29.2708 55.3125L13.8021 55.3125L0 41.5104L0 13.8021L13.8021 0L29.2708 0L29.2708 13.8021L23.2813 13.8021Z"/>
+			<path id="p3" transform="translate(170.231, 46.0213)" fill="#00dd00" d="M36.5104 13.8021L26.7187 13.8021L26.7187 7.76042L34.4271 0L48.3854 0L59.5833 12.9167L59.5833 27.2396L36.5104 27.2396ZM0 55.3125L0 7.10543e-15L23.0208 7.10543e-15L23.0208 55.3125Z"/>
+			<path id="p4" transform="translate(236.429, 46.0213)" fill="#00dd00" d="M36.875 13.8021L26.6667 13.8021L26.6667 7.10543e-15L46.0937 7.10543e-15L59.8958 13.8021L59.8958 60.7812L46.0937 74.6875L15.7292 74.6875L8.80208 67.7083L8.80208 62.6042L36.875 62.6042ZM33.2292 42.3958L33.2292 48.4896L26.3542 55.3125L13.8021 55.3125L0 41.5104L0 13.8021L13.8021 0L23.0208 0L23.0208 42.3958Z"/>
+		</svg></a></h1>
+	</div>
+	<nav>
+        <ol>
+            <li><a href="/demo.html">Demo</a></li>
+            <li><a href="/releases/">Install</a></li>
+            <li><a href="/support/fund.html">Fund</a></li>
+            <li><a href="/support/free.html">Support</a></li>
+            <li><a href="/support/commercial.html">Services</a></li>
+            <!-- no space between nav label and svg deliberately per https://davidwalsh.name/remove-whitespace-inline-block -->
+            <!-- external link icon: https://commons.wikimedia.org/wiki/File:Link-external-small-ltr-progressive.svg -->
+            <li><a href="https://borgbackup.readthedocs.io/">Docs<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
+              <title>
+                external link
+              </title>
+              <path fill="currentColor" d="M6 1h5v5L8.86 3.85 4.7 8 4 7.3l4.15-4.16L6 1Z M2 3h2v1H2v6h6V8h1v2a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/>
+            </svg></a></li>
+            <li><a href="https://github.com/borgbackup/community">Community<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
+              <title>
+                external link
+              </title>
+              <path fill="currentColor" d="M6 1h5v5L8.86 3.85 4.7 8 4 7.3l4.15-4.16L6 1Z M2 3h2v1H2v6h6V8h1v2a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/>
+            </svg></a></li>
+            <li><a href="https://github.com/borgbackup/borg">Contribute<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
+              <title>
+                external link
+              </title>
+              <path fill="currentColor" d="M6 1h5v5L8.86 3.85 4.7 8 4 7.3l4.15-4.16L6 1Z M2 3h2v1H2v6h6V8h1v2a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/>
+            </svg></a></li>
+        </ol>
+    </nav>
+</header>
+
+<main class="content">
+	<!-- document heading -->
+	<h1 class="title">Borg 1.1</h1>
+	<!-- bibliographical data, if any -->
+	<dl class="docinfo simple">
+<dt class="links">Links<span class="colon">:</span></dt>
+<dd class="links"><p><a class="reference external" href="https://borgbackup.readthedocs.io/en/1.1-maint/">Documentation</a> · <a class="reference external" href="https://borgbackup.readthedocs.io/en/1.1-maint/installation.html">Installation</a> · <a class="reference external" href="https://github.com/borgbackup/borg/releases/latest">Downloads</a></p>
+</dd>
+<dt class="date">Date<span class="colon">:</span></dt>
+<dd class="date">7th October 2017</dd>
+</dl>
+	<!-- document body -->
+	<p>This marks the first stable release in the Borg 1.1 series. Many improvements and new features
+were incorporated into Borg 1.1 since the 1.0 release of Borg in early 2016.</p>
+<p>More than sixty people contributed code to this release — see <a class="reference internal" href="#contributors">Contributors</a> on this page —
+and 2016-2017 has been a fantastic time for the Borg project.</p>
+<p>Since Borg 1.1 is now stable, it will only receive fixes and minor additions,
+no larger new features. Principal development continues in the
+<a class="reference external" href="https://github.com/borgbackup/borg/wiki/Borg-1.2">Borg 1.2</a> series.</p>
+<section id="changelog-summary">
+<h2>Changelog summary</h2>
+<p>This is only a summary of the changes between 1.0 and 1.1.
+Check the <a class="reference external" href="https://borgbackup.readthedocs.io/en/1.1-maint/changes.html">full changelog</a>
+to see all changes.</p>
+<p>Major new features in the 1.1 release series are:</p>
+<ul class="simple">
+<li><p>borg recreate: remove files from existing archives and re-chunk or re-compress them.
+This finally allows deduplication between legacy Attic/Borg 0.xx archives and Borg 1.x archives.
+This is an experimental feature.</p></li>
+<li><p>borg diff: show differences between two archives.</p></li>
+<li><p>borg mount: show all recorded versions of files with the &quot;versions view&quot;.</p></li>
+<li><p>borg list: more formatting options, including generation of hashes and per-file chunk statistics.</p></li>
+<li><p>borg create: automatic compression mode (-C auto,zlib/lz4/...), faster handling of many files,
+experimental support for inclusion patterns (--patterns, --patterns-from), files cache mode control (mtime/ctime)</p></li>
+<li><p>borg export-tar: streaming export of GNU tar-compatible archives.</p></li>
+<li><p>Archive comments</p></li>
+<li><p>BLAKE2b256-based encryption modes, and &quot;authenticated&quot; modes that provide data integrity without encryption.
+These provide better performance than the existing SHA-256-based modes on most hardware, except where
+the x86 SHA extensions are available (e.g. AMD Ryzen).</p></li>
+<li><p>Repository indices and the Borg cache now use checksums to detect bit rot and other corruption.</p></li>
+<li><p>A documented JSON API has been added to the most vital commands (borg list, borg info, and borg create).</p></li>
+<li><p>Structured JSON logging is available for all commands.</p></li>
+<li><p><span class="docutils literal"><span class="pre">--prefix</span></span> has been supplemented with <span class="docutils literal"><span class="pre">--glob-archives</span></span> (<span class="docutils literal"><span class="pre">-a</span></span>), <span class="docutils literal"><span class="pre">--sort-by</span></span>, <span class="docutils literal"><span class="pre">--last</span></span> and <span class="docutils literal"><span class="pre">--first</span></span> options.
+These can be used for <span class="docutils literal">borg list</span>, <span class="docutils literal">borg info</span>, <span class="docutils literal">borg mount</span>, <span class="docutils literal">borg check</span>, <span class="docutils literal">borg delete</span> and <span class="docutils literal">borg prune</span>.</p></li>
+</ul>
+<p>Quality of life improvements:</p>
+<ul class="simple">
+<li><p>options that imply output (--show-rc, --show-version, --list, --stats, --progress) no longer need -v/--info to display that output.</p></li>
+<li><p>borg check is silent by default (finally!).</p></li>
+<li><p>borg can now checkpoint within (big) files, not only between files.</p></li>
+<li><p>borg delete can delete multiple archives by giving their names.</p></li>
+<li><p>Automatic removal of stale locks, which should make &quot;borg break-lock&quot; essentially superfluous.
+This is enabled by default, see BORG_HOSTNAME_IS_UNIQUE.</p></li>
+<li><p>Answers to prompts like &quot;Accessing previously unknown repository&quot; are now saved immediately.</p></li>
+<li><p>Cache synchronization and &quot;borg info&quot; are now faster.</p></li>
+<li><p>Reduced space usage of chunks.archive.d in the cache by 30-40%. Existing caches are migrated during a cache sync.</p></li>
+<li><p>The cache used for remote cache syncs and mounting remote repositories does not grow indefinitely anymore,
+but adapts to the available space. Good riddance, TMP=/var/tmp!</p></li>
+<li><p>BORG_PASSCOMMAND makes using keyrings and hardware keys much easier.</p></li>
+</ul>
+<p>Documentation improvements:</p>
+<ul class="simple">
+<li><p>The online command reference has been significantly revamped:
+better presentation of options, commands are now separate pages
+(improves search, and old links still work), many formatting improvements,
+revised examples, a new theme, ...</p></li>
+<li><p>New deployment guides</p></li>
+<li><p>The internals docs saw many corrections and extensions.</p></li>
+<li><p>man pages are now provided in source releases.</p></li>
+<li><p><span class="docutils literal"><span class="pre">--help</span></span> uses ANSI sequences in terminals for basic markup</p></li>
+<li><p>New asciinema screencasts.</p></li>
+</ul>
+<p>Compatibility notes for upgrading from Borg 1.0 to Borg 1.1:</p>
+<ul class="simple">
+<li><p><strong>No explicit &quot;borg upgrade&quot; is required.</strong></p></li>
+<li><p>Borg 1.1 uses some new data structures that are backward-compatible with Borg 1.0.4 and newer.</p></li>
+<li><p>Borg 1.0 can't make use of Borg 1.1's &quot;compact cache&quot; and will silently ignore it.</p></li>
+<li><p>The default compression has been changed from &quot;none&quot; to &quot;lz4&quot;.</p></li>
+<li><p>Repositories in the &quot;repokey&quot; and &quot;repokey-blake2&quot; modes with an empty passphrase are now treated as
+unencrypted repositories for security checks (e.g. BORG_UNKNOWN_UNENCRYPTED_REPO_ACCESS_IS_OK).</p></li>
+<li><p>borg init:</p>
+<ul>
+<li><p>-e/--encryption is now a mandatory option with no default value.
+Previously the default value was &quot;repokey&quot;.</p></li>
+<li><p>The short form of --append-only (-a) has been removed.</p></li>
+<li><p>Running &quot;borg init&quot; via a &quot;borg serve --append-only&quot; server will <em>not</em> create
+an append-only repository anymore. Use &quot;borg init --append-only&quot; to initialize an append-only repository.</p></li>
+</ul>
+</li>
+<li><p>borg create:</p>
+<ul>
+<li><p>A new option --files-cache MODE (default MODE is: ctime,size,inode) has been introduced and also the
+default cache MODE has changed from &quot;mtime,size,inode&quot; in 1.0.x to &quot;ctime,size,inode&quot; in 1.1.x.</p></li>
+<li><p><strong>Be prepared that the first &quot;borg create&quot; after you upgrade to 1.1.x will run significantly slower than usual.</strong>
+This is due to a complete cache rebuild, caused by the changed cache mode.
+Passing explicitly --files-cache with the old default: &quot;mtime,size,inode&quot; would avoid the slowdown,
+but is not advisable as &quot;ctime&quot; is better as it reflects both file contents and metadata changes,
+while &quot;mtime&quot; reflects only file contents changes.</p></li>
+<li><p>The --exclude-if-present option now supports tagging a folder with any file system
+object type (file, folder, etc.), instead of accepting only files as tags.</p></li>
+</ul>
+</li>
+<li><p>borg upgrade: The short form of --inplace (-i) has been removed.</p></li>
+<li><p>borg delete: The short form of --cache-only (-c) has been removed.</p></li>
+<li><p>&quot;borg migrate-to-repokey&quot; has been renamed to &quot;borg key migrate-to-repokey&quot; with no deprecation notice,
+since it is rarely and only manually used.</p></li>
+</ul>
+<p>Deprecated options and commands in Borg 1.1, which will be removed in Borg 1.2:</p>
+<ul class="simple">
+<li><p>&quot;borg change-passphrase&quot; is deprecated; use &quot;borg key change-passphrase&quot; instead.
+&quot;borg change-passphrase&quot; will be removed in Borg 1.2.</p></li>
+<li><p>borg create: the --keep-tag-files option has been deprecated in favour of the new --keep-exclude-tags option.
+Both options have the same effect. &quot;--keep-tag-files&quot; will be removed in Borg 1.2.</p></li>
+<li><p>borg create: the --ignore-inode option has been deprecated in favour of --files-cache=... modes without &quot;inode&quot;.
+--ignore-inode will be removed in Borg 1.2.</p></li>
+<li><p>borg create: the --no-files-cache option has been deprecated in favour of --files-cache=disabled.
+--no-files-cache will be removed in Borg 1.2.</p></li>
+</ul>
+</section>
+<section id="contributors">
+<h2>Contributors</h2>
+<p>We'd like to thank everyone who contributed to Borg, be it code, bug reports, testing,
+documentation, creating packages or spreading the word.</p>
+<p>Contributors to the main repository for this release were:</p>
+<!-- git log 1.0.0..1.1.0  - -format=format:%an | sort | uniq -->
+<!-- The .contributor spans avoid word wrapping names, since that's a rude thing to do. -->
+<div class="contributors docutils container">
+<span class='contributor'>Abdel-Rahman A. ·</span>
+<span class='contributor'>Aleksander Charatonik ·</span>
+<span class='contributor'>Alexander 'Leo' Bergolth ·</span>
+<span class='contributor'>Alexander Meshcheryakov ·</span>
+<span class='contributor'>Alexander-N ·</span>
+<span class='contributor'>Alexander Pyhalov ·</span>
+<span class='contributor'>anarcat ·</span>
+<span class='contributor'>Andrea Gelmini ·</span>
+<span class='contributor'>Andrew Engelbrecht ·</span>
+<span class='contributor'>Andrew Skalski ·</span>
+<span class='contributor'>Antonio Larrosa ·</span>
+<span class='contributor'>Ben Creasy ·</span>
+<span class='contributor'>Benedikt Heine ·</span>
+<span class='contributor'>Benedikt Neuffer ·</span>
+<span class='contributor'>Björn Ketelaars ·</span>
+<span class='contributor'>Carlo Teubner ·</span>
+<span class='contributor'>Chris Lamb ·</span>
+<span class='contributor'>Dan Christensen ·</span>
+<span class='contributor'>Dan Helfman ·</span>
+<span class='contributor'>Daniel Reichelt ·</span>
+<span class='contributor'>Danny Edel ·</span>
+<span class='contributor'>Ed Blackman ·</span>
+<span class='contributor'>edgimar ·</span>
+<span class='contributor'>Félix Sipma ·</span>
+<span class='contributor'>Florent Hemmi ·</span>
+<span class='contributor'>Florian Klink ·</span>
+<span class='contributor'>Frank Sachsenheim ·</span>
+<span class='contributor'>Fredrik Mikker ·</span>
+<span class='contributor'>Hans-Peter Jansen ·</span>
+<span class='contributor'>Hartmut Goebel ·</span>
+<span class='contributor'>infectormp ·</span>
+<span class='contributor'>James Clarke ·</span>
+<span class='contributor'>Janne K ·</span>
+<span class='contributor'>Jens Rantil ·</span>
+<span class='contributor'>Joachim Breitner ·</span>
+<span class='contributor'>Johann Bauer ·</span>
+<span class='contributor'>Johannes Wienke ·</span>
+<span class='contributor'>Jonathan Zacsh ·</span>
+<span class='contributor'>Julian Andres Klode ·</span>
+<span class='contributor'>klemens ·</span>
+<span class='contributor'>kmq ·</span>
+<span class='contributor'>Lauri Niskanen ·</span>
+<span class='contributor'>Lee Bousfield ·</span>
+<span class='contributor'>Leo Antunes ·</span>
+<span class='contributor'>lfam ·</span>
+<span class='contributor'>Lukas Fleischer ·</span>
+<span class='contributor'>Marian Beermann ·</span>
+<span class='contributor'>Mark Edgington ·</span>
+<span class='contributor'>Markus Engelbrecht ·</span>
+<span class='contributor'>Martin Hostettler ·</span>
+<span class='contributor'>Michael Gajda ·</span>
+<span class='contributor'>Michael Herold ·</span>
+<span class='contributor'>Milkey Mouse ·</span>
+<span class='contributor'>Mitch Bigelow ·</span>
+<span class='contributor'>Narendra Vardi ·</span>
+<span class='contributor'>Nathan Musoke ·</span>
+<span class='contributor'>Oleg Drokin ·</span>
+<span class='contributor'>ololoru ·</span>
+<span class='contributor'>Pankaj Garg ·</span>
+<span class='contributor'>Patrick Goering ·</span>
+<span class='contributor'>philippje ·</span>
+<span class='contributor'>Radu Ciorba ·</span>
+<span class='contributor'>Robert Marcano ·</span>
+<span class='contributor'>Ronny Pfannschmidt ·</span>
+<span class='contributor'>rugk ·</span>
+<span class='contributor'>schuft69 ·</span>
+<span class='contributor'>sherbang ·</span>
+<span class='contributor'>Simon Frei ·</span>
+<span class='contributor'>Simon Heath ·</span>
+<span class='contributor'>Stefano Probst ·</span>
+<span class='contributor'>Stefan Tatschner ·</span>
+<span class='contributor'>Steve Groesz ·</span>
+<span class='contributor'>sven ·</span>
+<span class='contributor'>textshell ·</span>
+<span class='contributor'>Thomas Kluyver ·</span>
+<span class='contributor'>Thomas Waldmann ·</span>
+<span class='contributor'>TuXicc ·</span>
+<span class='contributor'>Wladimir Palant ·</span>
+<span class='contributor'>wormingdead ·</span>
+<span class='contributor'>Zhuoyun Wei</span></div>
+<p>Special thanks also go to everyone and every organization donating funds
+to support development and maintainers:</p>
+<!-- Manually gathered from Bountysource, https://www.bountysource.com/teams/borgbackup/backers -->
+<div class="contributors docutils container">
+<span class='contributor'>storcium ·</span>
+<span class='contributor'>IT Service Group of the Department of Computer Science, ETH Zürich ·</span>
+<span class='contributor'>TheVillux ·</span>
+<span class='contributor'>Daniel Parks ·</span>
+<span class='contributor'>Dave Barker ·</span>
+<span class='contributor'>Roland Moriz ·</span>
+<span class='contributor'>alraban ·</span>
+<span class='contributor'>level323 ·</span>
+<span class='contributor'>Magnus Månsson ·</span>
+<span class='contributor'>Bluebeep ·</span>
+<span class='contributor'>William Weiskopf ·</span>
+<span class='contributor'>kleptos ·</span>
+<span class='contributor'>lf ·</span>
+<span class='contributor'>rmiceli ·</span>
+<span class='contributor'>Kirrus ·</span>
+<span class='contributor'>DrTyrell ·</span>
+<span class='contributor'>Thomas Waldmann ·</span>
+<span class='contributor'>stevesbrain ·</span>
+<span class='contributor'>martin ·</span>
+<span class='contributor'>neutrinus ·</span>
+<span class='contributor'>Jeremy Audet (=lchimonji10) ·</span>
+<span class='contributor'>DrupaListo ·</span>
+<span class='contributor'>mario ·</span>
+<span class='contributor'>Jason Harris ·</span>
+<span class='contributor'>iamnumbersix ·</span>
+<span class='contributor'>(unknown) ·</span>
+<span class='contributor'>kwaa ·</span>
+<span class='contributor'>Michael Gajda ·</span>
+<span class='contributor'>Twilek ·</span>
+<span class='contributor'>lazlor ·</span>
+<span class='contributor'>Christopher Lijlenstolpe ·</span>
+<span class='contributor'>Marian Beermann ·</span>
+<span class='contributor'>twink0r ·</span>
+<span class='contributor'>Andreas Schamanek ·</span>
+<span class='contributor'>Abdel-Rahman A. ·</span>
+<span class='contributor'>multikatt ·</span>
+<span class='contributor'>kiz ·</span>
+<span class='contributor'>jgtimm ·</span>
+<span class='contributor'>infectormp ·</span>
+<span class='contributor'>Paolo Dina ·</span>
+<span class='contributor'>Aravindh ·</span>
+<span class='contributor'>Quallenauge ·</span>
+<span class='contributor'>reyman</div>
+</section>
+</main>
+<!-- </body> -->
+</main>
+</body>
+</html>

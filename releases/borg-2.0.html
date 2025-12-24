@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<!-- <head> -->
+<meta charset="utf-8" />
+<meta name="generator" content="Docutils 0.22.4: https://docutils.sourceforge.io/" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="dcterms.date" content="(testing releases out, no final release yet)" />
+<title>Borg 2.0 (preliminary information)</title>
+<link rel="schema.dcterms" href="http://purl.org/dc/terms/"/>
+<link rel="shortcut icon" href="/favicon.ico"/>
+<link rel="icon" type="image/ico" href="/favicon.ico"/>
+<link rel="me" href="https://fosstodon.org/@borgbackup"/>
+<style type="text/css">
+
+body {
+	margin: 0;
+	font-family: verdana,arial,helvetica,sans-serif;
+	padding-bottom: 1rem;
+}
+
+header {
+	background-color: black;
+	padding-top: 1.5rem;
+	padding-bottom: 1rem;
+	border-bottom: 5px solid #22D045;
+}
+
+#logo {
+	max-width: 600px;
+	margin: 0 auto;
+}
+
+/* apply drop shadow to logo paths */
+#logo path {
+	filter: drop-shadow(0 0 2px black)
+}
+
+header h1 {
+	margin: 0;
+	text-align: center;
+}
+
+nav {
+	display: flex;
+	justify-content: center;
+}
+
+nav > ol {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 0.5rem;
+	padding: 0 0.75rem;
+}
+
+nav > ol > li {
+	list-style: none;
+}
+
+/* mono system font stack courtesy of https://qwtel.com/posts/software/the-monospaced-system-ui-css-font-stack/ */
+nav > ol > li > a {
+	font-size: 1.1rem;
+	font-weight: bold;
+	color: #22D045;
+	font-family: ui-monospace, 
+		Menlo, Monaco, 
+		"Cascadia Mono", "Segoe UI Mono", 
+		"Roboto Mono", 
+		"Oxygen Mono", 
+		"Ubuntu Monospace", 
+		"Source Code Pro",
+		"Fira Mono", 
+		"Droid Sans Mono", 
+		monospace;
+	padding: 0.25rem;
+}
+
+nav > ol > li > a:hover, 
+#logo svg:hover {
+	text-shadow: 0 0 2px black;
+	background: radial-gradient(closest-side, #22D045, transparent);
+}
+
+main.content {
+	max-width: 600px;
+	padding: 0 1rem;
+	margin: 0 auto;
+}
+
+.hide-rst-heading main h1:first-child {
+	display: none;
+}
+
+main #tagline,
+main h1.title {
+	font-size: 220%;
+	font-weight: normal;
+	padding-bottom: 1.5rem;
+	border-bottom: 1px solid #666;
+	text-align: left;
+}
+
+main h1 {
+	font-size: 150%;
+	font-weight: normal;
+}
+
+main ul {
+	line-height: 1.5em;
+	padding-bottom: 0.75rem;
+}
+
+.main-index h2 {
+	margin: 1.5rem 0;
+}
+
+.contributors {
+	line-height: 1.5;
+	font-style: italic;
+}
+
+.contributors .contributor {
+	white-space: nowrap;
+}
+
+#demo {
+	text-align: center;
+	width: 100%;
+}
+
+/* the size of the demo player is not very well defined and kinda depends on the
+ * default fonts and font sizes. This makes it so that it does never truncate lines if the
+ * window is large enough.
+ */
+#demo {
+	margin: 10px 0;
+	text-align: center;
+	position: absolute;
+	left: 0;
+	right: 0;
+}
+
+ul > li > p {
+	margin: 0;
+}
+
+a {
+	text-decoration: none;
+}
+
+main > dl > dt {
+	float: left;
+	font-weight: bold;
+}
+
+main > dl > dd {
+	margin-left: 4.5rem;
+}
+
+</style>
+<!-- </head> -->
+</head>
+<body>
+<main id="borg-2-0-preliminary-information">
+<!-- <body> -->
+
+<header>
+	<div id="logo">
+		<h1><a href="/"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="240pt" height="100pt">
+			<path id="p0" fill="transparent" d="M0 66.6667L0 0L160 0L320 0L320 66.6667L320 133.333L160 133.333L0 133.333Z"/>
+			<path id="p1" transform="translate(20.9086, 32.2192)" fill="#00dd00" d="M43.75 13.8021L26.6667 13.8021L26.6667 0L53.3854 0L67.2396 13.8021L67.2396 27.8646L60.3125 34.7917L67.2396 41.7187L67.2396 55.3125L53.3854 69.1146L26.6667 69.1146L26.6667 55.3125L43.75 55.3125L43.75 40.5729L26.6667 40.5729L26.6667 28.5417L43.75 28.5417ZM0 0L23.0208 0L23.0208 69.1146L0 69.1146Z"/>
+			<path id="p2" transform="translate(97.6794, 46.0213)" fill="#00dd00" d="M62.1354 41.5104L48.3333 55.3125L32.9167 55.3125L32.9167 42.3958L38.6458 42.3958L38.6458 13.8021L32.9167 13.8021L32.9167 0L48.3333 0L62.1354 13.8021ZM23.2813 42.3958L29.2708 42.3958L29.2708 55.3125L13.8021 55.3125L0 41.5104L0 13.8021L13.8021 0L29.2708 0L29.2708 13.8021L23.2813 13.8021Z"/>
+			<path id="p3" transform="translate(170.231, 46.0213)" fill="#00dd00" d="M36.5104 13.8021L26.7187 13.8021L26.7187 7.76042L34.4271 0L48.3854 0L59.5833 12.9167L59.5833 27.2396L36.5104 27.2396ZM0 55.3125L0 7.10543e-15L23.0208 7.10543e-15L23.0208 55.3125Z"/>
+			<path id="p4" transform="translate(236.429, 46.0213)" fill="#00dd00" d="M36.875 13.8021L26.6667 13.8021L26.6667 7.10543e-15L46.0937 7.10543e-15L59.8958 13.8021L59.8958 60.7812L46.0937 74.6875L15.7292 74.6875L8.80208 67.7083L8.80208 62.6042L36.875 62.6042ZM33.2292 42.3958L33.2292 48.4896L26.3542 55.3125L13.8021 55.3125L0 41.5104L0 13.8021L13.8021 0L23.0208 0L23.0208 42.3958Z"/>
+		</svg></a></h1>
+	</div>
+	<nav>
+        <ol>
+            <li><a href="/demo.html">Demo</a></li>
+            <li><a href="/releases/">Install</a></li>
+            <li><a href="/support/fund.html">Fund</a></li>
+            <li><a href="/support/free.html">Support</a></li>
+            <li><a href="/support/commercial.html">Services</a></li>
+            <!-- no space between nav label and svg deliberately per https://davidwalsh.name/remove-whitespace-inline-block -->
+            <!-- external link icon: https://commons.wikimedia.org/wiki/File:Link-external-small-ltr-progressive.svg -->
+            <li><a href="https://borgbackup.readthedocs.io/">Docs<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
+              <title>
+                external link
+              </title>
+              <path fill="currentColor" d="M6 1h5v5L8.86 3.85 4.7 8 4 7.3l4.15-4.16L6 1Z M2 3h2v1H2v6h6V8h1v2a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/>
+            </svg></a></li>
+            <li><a href="https://github.com/borgbackup/community">Community<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
+              <title>
+                external link
+              </title>
+              <path fill="currentColor" d="M6 1h5v5L8.86 3.85 4.7 8 4 7.3l4.15-4.16L6 1Z M2 3h2v1H2v6h6V8h1v2a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/>
+            </svg></a></li>
+            <li><a href="https://github.com/borgbackup/borg">Contribute<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
+              <title>
+                external link
+              </title>
+              <path fill="currentColor" d="M6 1h5v5L8.86 3.85 4.7 8 4 7.3l4.15-4.16L6 1Z M2 3h2v1H2v6h6V8h1v2a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/>
+            </svg></a></li>
+        </ol>
+    </nav>
+</header>
+
+<main class="content">
+	<!-- document heading -->
+	<h1 class="title">Borg 2.0 (preliminary information)</h1>
+	<!-- bibliographical data, if any -->
+	<dl class="docinfo simple">
+<dt class="links">Links<span class="colon">:</span></dt>
+<dd class="links"><p><a class="reference external" href="https://borgbackup.readthedocs.io/en/master/">Documentation</a> · <a class="reference external" href="https://github.com/borgbackup/borg/releases/latest">Downloads</a></p>
+</dd>
+<dt class="date">Date<span class="colon">:</span></dt>
+<dd class="date">(testing releases out, no final release yet)</dd>
+</dl>
+	<!-- document body -->
+	<section id="changelog-summary">
+<h2>Changelog summary</h2>
+<p>This is only a summary of the changes between 1.2/1.4 and 2.0.
+Check the <a class="reference external" href="https://borgbackup.readthedocs.io/en/master/changes.html">full changelog</a>
+to see all changes as well as important compatibility and upgrade notes.</p>
+<section id="breaking-compatibility">
+<h3>Breaking compatibility</h3>
+<p><strong>The &quot;bad&quot; news first:</strong></p>
+<p>This is a breaking release; it is not directly compatible with Borg 1.x repositories
+and thus not a quick upgrade.</p>
+<p>Also, there were CLI changes; thus, you will need to review/edit your scripts.
+Wrappers and GUIs for Borg also need to be adapted.</p>
+<p><strong>The good news is:</strong></p>
+<ul class="simple">
+<li><p>If you like, you can efficiently copy your existing archives from old Borg
+1.x repositories to new Borg 2 repositories using &quot;borg transfer&quot; (you will need space
+and time for this, though).</p></li>
+<li><p>by doing a breaking release, we could:</p>
+<ul>
+<li><p>fix a lot of long-term issues that could not (easily) be fixed in a non-
+breaking release</p></li>
+<li><p>make the code cleaner and simpler, get rid of cruft and legacy</p></li>
+<li><p>improve security, speed and parallelism</p></li>
+<li><p>open doors for new features and applications that were not possible yet</p></li>
+<li><p>make the docs shorter and make using Borg easier</p></li>
+</ul>
+</li>
+<li><p>This is the first breaking release in many years, and we do not plan
+another one anytime soon.</p></li>
+</ul>
+</section>
+<section id="major-new-features">
+<h3>Major new features</h3>
+<ul>
+<li><p>archive series</p>
+<p>Archives do not need to have unique names anymore, they may have the same
+name and we strongly recommend using this when appropriate as it simplifies
+and optimizes working with archives (caching, pruning, repo-list output).</p>
+<p>An archive series is now simply all the archives in a repository that have
+the same name. On the other hand, the unique identifier for a single archive is now its ID
+(the hash, which can be shortened as long as it is unique).</p>
+</li>
+<li><p>separation of archive metadata: name, tags, user, host, timestamp</p>
+<p>To support having a simple, clean archive (series) name, Borg now tracks and
+displays name, tags, user, host, and timestamp separately (so you don't need to
+put everything into the archive name as when using Borg 1.x).</p>
+<p>It's now possible to tag (label) archives. There is a special tag for
+protecting archives against delete/prune/recreate.</p>
+<p>Matching can be done on archive (series) name, tags, user, host, and archive ID.</p>
+</li>
+<li><p>new repository and locking implementation based on the borgstore project</p>
+<ul class="simple">
+<li><p>borgstore is a key/value store in Python, currently supporting file:, sftp:,
+rclone:, and s3:/b2: backends.
+Borgstore backends are easy to implement, so there might be even more in
+the future.</p></li>
+<li><p>Borg uses these to implement file: and ssh: repositories and (new) sftp: and
+rclone: repositories. Via rclone, Borg can use cloud repositories now!</p></li>
+<li><p>In addition to ssh: repositories, we also have socket: repositories now.</p></li>
+<li><p>Concurrent parallel access to a repository is now possible for most Borg
+commands (except check and compact).</p></li>
+<li><p>A &quot;repository index&quot; is no longer needed because objects are directly
+found by their ID. The memory requirements of this index were proportional to
+the object count in the repository. Thus, Borg now needs less RAM.</p></li>
+<li><p>Stale repository locks get auto-removed if they don't get refreshed or if
+their owner process is known dead.</p></li>
+<li><p>Borg compact does much less I/O because it does not need to compact large
+&quot;segment files&quot; to free space; each repository object is now stored separately
+and thus can also be deleted individually.</p></li>
+<li><p>Borg delete and prune are much faster now.</p></li>
+<li><p>The repository works very differently now:</p>
+<ul>
+<li><p>borg 1.x: transaction-based (commit or roll back), log-like, append-only
+segment files, precise refcounting, repo index needed, exclusive lock
+needed, checkpointing and .part files needed.</p></li>
+<li><p>borg 2: convergence, write order, separate objects, no refcounting,
+garbage collection, no repo index needed, simplicity, mostly works with
+a shared lock, no need for checkpointing or .part files.</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>uses a new hashtable (used for indexes, caches) based on the borghash project</p>
+<ul class="simple">
+<li><p>chunks index: less memory overhead, lower memory usage spikes when resizing
+the hashtable.</p></li>
+<li><p>files cache: less memory usage by referring to data already stored in the
+chunk index.</p></li>
+<li><p>optimizes borg operations (e.g. create, compact, repo-compress) without
+needing any additional memory.</p></li>
+<li><p>pure Cython implementation, easier to maintain than the previous C code.</p></li>
+</ul>
+</li>
+<li><p>multi-repo improvements</p>
+<ul class="simple">
+<li><p>Borg 1.x could only deal with one repository per Borg invocation. Borg 2.0
+now also knows about another repository (see --other-repo option) for some
+commands, like borg transfer, borg repo-create, ...</p></li>
+<li><p>borg repo-create can create &quot;related repositories&quot; of an existing repo,
+e.g. to use them for efficient archive transfers using borg transfer.</p></li>
+<li><p>borg transfer can copy and convert archives from a Borg 1.x repository to a
+related Borg 2 repository. To save time, it will transfer the compressed file
+content chunks without recompressing, but to make your repository more secure,
+it will decrypt/re-encrypt all the chunks.</p></li>
+<li><p>borg transfer can copy archives from one Borg 2 repository to another related
+Borg 2 repository, without doing any conversion.</p></li>
+<li><p>borg transfer usually transfers compressed chunks (avoids recompression),
+but there is also the option to recompress them using a specific
+compressor or re-chunk them with other chunker parameters.</p></li>
+</ul>
+</li>
+<li><p>better, more modern, faster crypto</p>
+<ul class="simple">
+<li><p>New keys/repos only use new crypto: AEAD, AES-OCB, ChaCha20-Poly1305,
+Argon2.</p></li>
+<li><p>Using session keys: more secure and easier to manage, especially in multi-
+client or multi-repo contexts. By doing this, we could get rid of problematic
+long-term nonce/counter management.</p></li>
+<li><p>The old crypto code will be removed in Borg 2.1 (currently we still need
+it to read from your old Borg 1.x repositories). Removing AES-CTR, PBKDF2,
+encrypt-and-mac, counter/nonce management will make Borg more secure,
+easier to use and develop.</p></li>
+</ul>
+</li>
+<li><p>chunker improvements</p>
+<ul class="simple">
+<li><p>New and improved &quot;buzhash64&quot; chunker</p></li>
+<li><p>All chunker code is now in Cython (the buzhash chunker used to be a big,
+hard-to-maintain piece of C code that included file reading and buffer
+management). The file reading and buffer management code has been moved
+to a separate module.</p></li>
+<li><p>All chunkers now use the same input file reading code that supports
+sparse files (and fmaps), posix_fadvise, and buffer management.</p></li>
+</ul>
+</li>
+<li><p>borg cockpit: full-screen console-based status display (experimental)</p></li>
+<li><p>borg mount: added a new implementation based on mfusepy, compatible with
+fuse2 and 3 (experimental)</p></li>
+<li><p>shell completions: automatically generate completion scripts (based on shtab)</p></li>
+<li><p>Command-line interface cleanups</p>
+<ul class="simple">
+<li><p>remote repository URLs default to relative paths, using an absolute path
+is possible.</p></li>
+<li><p>no longer supports SCP-style repo parameters (parsing ambiguity issues; no
+:port possible); just use <a class="reference external" href="ssh://user&#64;host:port/path">ssh://user&#64;host:port/path</a>.</p></li>
+<li><p>Separated repo and archive; no &quot;::&quot; anymore</p></li>
+<li><p>Split some commands that worked on archives and repositories into two separate
+commands (makes the code/docs/help easier).</p></li>
+<li><p>Renamed Borg init to Borg repo-create for better consistency</p></li>
+<li><p>BORG_EXIT_CODES=modern is the default now to get more specific process
+exit codes</p></li>
+</ul>
+</li>
+<li><p>added commands/options:</p>
+<ul class="simple">
+<li><p>you will usually need to give either -r (aka --repo) or BORG_REPO env var.</p></li>
+<li><p>--match-archives now has support for:</p>
+<ul>
+<li><p>identical, regex, or glob/shell-style matching on the archive name</p></li>
+<li><p>matching on archive tags, user, host, and ID (prefix)</p></li>
+<li><p>giving the option multiple times (logical AND)</p></li>
+</ul>
+</li>
+<li><p>extract --continue: continue a previously interrupted extraction</p></li>
+<li><p>new borg repo-compress command can do a repo-wide efficient recompression.</p></li>
+<li><p>borg analyze: list changed chunks' sizes per directory.</p></li>
+<li><p>borg key change-location: usable for repokey &lt;-&gt; keyfile location change</p></li>
+<li><p>borg benchmark cpu (so you can actually see what's fastest for your CPU)</p></li>
+<li><p>borg import/export-tar --tar-format=GNU/PAX/BORG, support ctime/atime PAX
+headers, support for PAX xattr headers. GNU and PAX are standard formats,
+while BORG is a very low-level custom format only for borg usage. PAX is
+now the default format.</p></li>
+<li><p>borg create: add the &quot;slashdot hack&quot; to strip path prefixes in created
+archives</p></li>
+<li><p>borg repo-space: optionally, you can allocate some reserved space in the
+repo to free in &quot;file system full&quot; conditions.</p></li>
+<li><p>borg version: show local/remote Borg version</p></li>
+<li><p>borg prune: add quarterly pruning strategies (3M and 13W)</p></li>
+<li><p>borg delete: it now SOFT-deletes archives and there is &quot;borg undelete&quot;
+to undo that. &quot;borg compact&quot; will free all space in the repository that
+belongs to soft-deleted archives, thus undelete only works for soft-deleted
+archives until you run the compaction.</p></li>
+<li><p>borg prune: also only SOFT-deletes archives, see previous item.</p></li>
+</ul>
+</li>
+<li><p>removed commands/options:</p>
+<ul class="simple">
+<li><p>removed -P (aka --prefix) option; use -a (aka --match-archives) instead,
+e.g., -a 'PREFIX*'</p></li>
+<li><p>borg upgrade (was only relevant for Attic/old Borg)</p></li>
+<li><p>removed deprecated CLI options</p></li>
+<li><p>Remove recreate --recompress option; the repo-wide &quot;repo-compress&quot; is
+more efficient.</p></li>
+<li><p>Remove borg config command (it only worked locally anyway)</p></li>
+<li><p>repository storage quota limit</p></li>
+<li><p>repository append-only mode (was replaced by borgstore posixfs backend
+permissions [all, read-only, write-only, no-delete])</p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="other-changes">
+<h3>Other changes</h3>
+<ul class="simple">
+<li><p>create: added retries for input files (e.g., if there is a read error or
+a file changes while reading)</p></li>
+<li><p>create: auto-exclude items based on xattrs or NODUMP</p></li>
+<li><p>new cache implementation, using a chunks cache stored in the repository and
+a files cache per archive series. The files cache now stores ctime AND mtime
+and also updates both from the filesystem. The files cache can be rebuilt by
+reading the latest archive in the series from the repository.</p></li>
+<li><p>Improve acl_get/acl_set error handling, refactor ACL code</p></li>
+<li><p>Linux ACLs: use acl_to_any_text to avoid libacl name lookups - this can be a
+major speedup when source files have ACLs and user/group name lookup is slow,
+like e.g. on network shares.</p></li>
+<li><p>export-tar/import-tar: added support for POSIX ACLs (PAX format)</p></li>
+<li><p>NetBSD: added xattr support</p></li>
+<li><p>crypto: use a one-step KDF for session keys</p></li>
+<li><p>use setup.py less; use pip, build, and make.py</p></li>
+<li><p>using the platformdirs Python package to determine locations for configs and
+caches</p></li>
+<li><p>show files/archives with local timezone offsets, store archive timestamps
+with TZ offset</p></li>
+<li><p>make user/group/uid/gid optional in archived files</p></li>
+<li><p>make sure archive name/comment and other data that get into JSON are valid
+UTF-8 (no surrogate escapes)</p></li>
+<li><p>new remote and progress logging (tunneled through the RPC result channel)</p></li>
+<li><p>internal data format/processing changes</p>
+<ul>
+<li><p>Using msgpack spec 2.0 now, cleanly differentiating between text and
+binary bytes. The older msgpack spec that Attic and Borg &lt; 2.0 used did not
+have the binary type, so it was not pretty...
+Also using the msgpack Timestamp data type instead of self-made bigint
+stuff.</p></li>
+<li><p>Archives: simpler, more symmetric handling of hard links (&quot;hlid&quot;, all
+hard links have the same chunks list, if any). The old way was just a big
+pain (e.g., for partial extracting), ugly, and spread all over the code.
+The new way simplified the code a lot.</p></li>
+<li><p>Item metadata: clean up, remove, rename, fix, precompute stuff</p></li>
+<li><p>Chunks have separate encrypted metadata (size, csize, ctype, clevel).
+This saves time for borg repo-compress/recreate when recompressing to the same
+compressor, but another level. This also makes it possible to query size or
+csize without reading/transmitting/decompressing the chunk.</p></li>
+<li><p>Remove legacy zlib compression header hack, so zlib works like all the
+other compressors. That hack was something we had to do back in the days
+because Attic backup did not have a compression header at all (because it
+only supported zlib).</p></li>
+<li><p>Got rid of &quot;csize&quot; (compressed size of a chunk) in chunks index and
+archives. This often was just &quot;in the way&quot; and blocked the implementation
+of other (re)compression-related features.</p></li>
+<li><p>Massively increase the archive metadata stream size limitation (so it is
+practically not relevant anymore)</p></li>
+<li><p>Dynamic handling of missing (or reappearing) chunks replaces the Borg 1.x
+&quot;chunks_healthy&quot; metadata approach.</p></li>
+</ul>
+</li>
+<li><p>source code changes</p>
+<ul>
+<li><p>Borg 1.x borg.archiver and borg.helpers (and also the related tests)
+monster modules got split into packages of modules.</p></li>
+<li><p>using &quot;black&quot; (automated PEP 8 source code formatting), this reformatted
+ALL the code</p></li>
+<li><p>added infrastructure so we can use &quot;mypy&quot; for type checking</p></li>
+</ul>
+</li>
+<li><p>python, packaging and library changes</p>
+<ul>
+<li><p>minimum requirement: Python 3.10</p></li>
+<li><p>we unbundled all third-party code and require the respective libraries to
+be available and installed. This makes packaging easier for distribution package
+maintainers.</p></li>
+<li><p>discovery is done via pkg-config or (if that does not work) BORG_*_PREFIX
+env vars.</p></li>
+<li><p>our setup*.py is now much simpler; a lot moved to pyproject.toml now.</p></li>
+<li><p>we had to stop supporting LibreSSL (e.g., on OpenBSD) due to their
+different API. Borg on OpenBSD now also uses OpenSSL.</p></li>
+</ul>
+</li>
+<li><p>getting rid of legacy stuff</p>
+<ul>
+<li><p>removed some code only needed to deal with very old Attic or Borg repositories.
+Users are expected to first upgrade to Borg 1.2 before jumping to Borg
+2.0, thus we do not have to deal with any ancient stuff anymore.</p></li>
+<li><p>removed archive and manifest TAMs, using a simpler approach with typed repo
+objects.</p></li>
+</ul>
+</li>
+</ul>
+</section>
+</section>
+</main>
+<!-- </body> -->
+</main>
+</body>
+</html>

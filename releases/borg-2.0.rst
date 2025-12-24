@@ -140,6 +140,13 @@ Major new features
   - All chunkers now use the same input file reading code that supports
     sparse files (and fmaps), posix_fadvise, and buffer management.
 
+- borg cockpit: full-screen console-based status display (experimental)
+
+- borg mount: added a new implementation based on mfusepy, compatible with
+  fuse2 and 3 (experimental)
+
+- shell completions: automatically generate completion scripts (based on shtab)
+
 - Command-line interface cleanups
 
   - remote repository URLs default to relative paths, using an absolute path
@@ -206,6 +213,11 @@ Other changes
   and also updates both from the filesystem. The files cache can be rebuilt by
   reading the latest archive in the series from the repository.
 - Improve acl_get/acl_set error handling, refactor ACL code
+- Linux ACLs: use acl_to_any_text to avoid libacl name lookups - this can be a
+  major speedup when source files have ACLs and user/group name lookup is slow,
+  like e.g. on network shares.
+- export-tar/import-tar: added support for POSIX ACLs (PAX format)
+- NetBSD: added xattr support
 - crypto: use a one-step KDF for session keys
 - use setup.py less; use pip, build, and make.py
 - using the platformdirs Python package to determine locations for configs and

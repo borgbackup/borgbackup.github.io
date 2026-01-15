@@ -70,20 +70,17 @@ where you can find the list archives—see the
 `mailing list homepage
 <https://mail.python.org/mailman/listinfo/borgbackup>`_.
 
-.. _twitter:
-
 .. _mastodon:
 
-Mastodon / Twitter / X
------------------------
+Mastodon
+--------
 
 Follow us there for announcements:
 
 - Mastodon: https://fosstodon.org/@borgbackup
-- Twitter/X: https://twitter.com/borgbackup
 
-Please note that Twitter/X and Mastodon are not suitable for longer/more
-complex discussions—use one of the other channels for that.
+Please note that Mastodon is not suitable for longer/more
+complex discussions — use one of the other channels for that.
 
 .. _bounties_and_fundraisers:
 

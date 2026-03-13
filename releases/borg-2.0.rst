@@ -159,6 +159,8 @@ Major new features
   - Renamed Borg init to Borg repo-create for better consistency
   - BORG_EXIT_CODES=modern is the default now to get more specific process
     exit codes
+  - Use jsonargparse as CLI argument/option parser, also supporting YAML configs
+    for defaults and auto-generated environment variables to override defaults.
 
 - added commands/options:
 
@@ -205,6 +207,7 @@ Major new features
 Other changes
 ~~~~~~~~~~~~~
 
+- y2038+ support (32bit platforms with 64bit time_t will still work).
 - create: added retries for input files (e.g., if there is a read error or
   a file changes while reading)
 - create: auto-exclude items based on xattrs or NODUMP

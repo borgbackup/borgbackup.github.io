@@ -64,8 +64,9 @@ Major new features
 
 - new repository and locking implementation based on the borgstore project
 
-  - borgstore is a key/value store in Python, currently supporting file:, sftp:,
-    rclone:, and s3:/b2: backends.
+  - borgstore is a key/value store in Python, currently supporting file:, REST
+    (https/http talking to the REST server that comes with borgstore also),
+    sftp:, rclone:, and s3:/b2: backends.
     Borgstore backends are easy to implement, so there might be even more in
     the future.
   - Borg uses these to implement file: and ssh: repositories and (new) sftp: and

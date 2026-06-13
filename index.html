@@ -422,6 +422,91 @@ section.block p.lead {
   color: var(--text-dim);
 }
 
+/* ---------- demo player ---------- */
+.demo-term .term-bar { flex-wrap: wrap; }
+
+.demo-tabs { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-left: auto; }
+
+.demo-tabs button {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+  background: transparent;
+  border: 1px solid transparent;
+  padding: 0.25rem 0.55rem;
+  cursor: pointer;
+}
+
+.demo-tabs button:hover { color: var(--green); }
+
+.demo-tabs button[aria-selected="true"] {
+  color: var(--green);
+  border-color: var(--panel-line);
+  background: rgba(34, 208, 69, 0.08);
+}
+
+.demo-stage {
+  min-height: 22rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 0.6rem;
+  overflow-x: auto;
+}
+
+.demo-stage .asciinema-player-wrapper { max-width: 100%; }
+
+.demo-hint { color: var(--text-dim); font-size: 0.8rem; }
+
+.demo-meta { margin: 0.8rem 0 0; color: var(--text-dim); font-size: 0.78rem; }
+
+/* ---------- release / channel / provider cards ---------- */
+.badge {
+  display: inline-block;
+  margin-left: 0.55rem;
+  padding: 0.16rem 0.5rem;
+  border: 1px solid var(--green-dim);
+  background: rgba(34, 208, 69, 0.08);
+  color: var(--green);
+  font-size: 0.6rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  vertical-align: 2px;
+}
+
+.badge.stable { background: var(--green); border-color: var(--green); color: #021006; }
+.badge.testing { border-style: dashed; }
+.badge.eol { color: var(--text-dim); border-color: rgba(138, 168, 146, 0.35); background: transparent; }
+
+.feature .ver {
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  color: var(--green);
+  text-shadow: 0 0 18px rgba(34, 208, 69, 0.4);
+}
+
+.feature .when { color: var(--text-dim); font-size: 0.75rem; margin: 0.2rem 0 0.7rem; }
+
+.mini-links {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 1.1rem;
+  margin: 1rem 0 0;
+  padding: 0.8rem 0 0;
+  border-top: 1px dashed var(--panel-line);
+  font-size: 0.8rem;
+}
+
+a.ext::after { content: "\2197"; font-size: 0.75em; margin-left: 0.25em; }
+
+.aside {
+  margin: 2rem 0 0;
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  line-height: 1.8;
+}
+
 /* ---------- footer ---------- */
 footer {
   border-top: 1px solid var(--panel-line);
@@ -489,11 +574,11 @@ noscript .hero-fallback {
   </a>
   <nav aria-label="Main">
     <ol>
-      <li><a href="/demo.html">Demo</a></li>
-      <li><a href="/releases/">Install</a></li>
-      <li><a href="/support/fund.html">Fund</a></li>
-      <li><a href="/support/free.html">Support</a></li>
-      <li><a href="/support/commercial.html">Services</a></li>
+      <li><a href="#demo">Demo</a></li>
+      <li><a href="#install">Install</a></li>
+      <li><a href="#support">Support</a></li>
+      <li><a href="#services">Services</a></li>
+      <li><a href="#fund">Fund</a></li>
       <li><a href="https://borgbackup.readthedocs.io/">Docs<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 12 12"><path fill="currentColor" d="M6 1h5v5L8.86 3.85 4.7 8 4 7.3l4.15-4.16L6 1Z M2 3h2v1H2v6h6V8h1v2a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/></svg></a></li>
       <li><a href="https://github.com/borgbackup/community">Community<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 12 12"><path fill="currentColor" d="M6 1h5v5L8.86 3.85 4.7 8 4 7.3l4.15-4.16L6 1Z M2 3h2v1H2v6h6V8h1v2a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/></svg></a></li>
       <li><a href="https://github.com/borgbackup/borg">Contribute<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 12 12"><path fill="currentColor" d="M6 1h5v5L8.86 3.85 4.7 8 4 7.3l4.15-4.16L6 1Z M2 3h2v1H2v6h6V8h1v2a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/></svg></a></li>
@@ -515,8 +600,8 @@ noscript .hero-fallback {
   <h1 data-hero>Backups with <em>deduplication</em>, <em>compression</em> and <em>authenticated&nbsp;encryption</em>.</h1>
   <p class="futile" data-hero>Redundancy is futile. <b>Your data will be deduplicated.</b></p>
   <div class="cta-row" data-hero>
-    <a class="btn solid" href="/releases/">Install Borg</a>
-    <a class="btn" href="/demo.html">Watch the demo</a>
+    <a class="btn solid" href="#install">Install Borg</a>
+    <a class="btn" href="#demo">Watch the demo</a>
     <button class="btn" id="stopBtn" type="button" aria-pressed="false"
             title="Calm the background animation">Stop</button>
   </div>
@@ -625,6 +710,247 @@ noscript .hero-fallback {
   </div>
 </section>
 
+<!-- ============================ DEMO ============================ -->
+<section class="block" id="demo">
+  <p class="kicker">// demo</p>
+  <h2>Watch real sessions, not marketing.</h2>
+  <p class="lead">Recorded terminal sessions — every frame is real text, so you can pause
+     the player and select and copy anything you see.</p>
+  <div class="term demo-term">
+    <div class="term-bar">
+      <i></i><i></i><i></i><span>asciinema</span>
+      <div class="demo-tabs" role="tablist" aria-label="Demo recordings" id="demoTabs"></div>
+    </div>
+    <div class="demo-stage" id="demoStage">
+      <p class="demo-hint">loading player…</p>
+      <noscript><p><strong>JavaScript is needed to view the demos.</strong></p></noscript>
+    </div>
+  </div>
+  <p class="demo-meta" id="demoMeta"></p>
+</section>
+
+<!-- ============================ INSTALL ============================ -->
+<section class="block" id="install">
+  <p class="kicker">// install</p>
+  <h2>Get Borg. Choose your series.</h2>
+  <p class="lead">Install from your distribution&rsquo;s packages, as a single-file binary, or via
+     pip — the <a class="ext" href="https://borgbackup.readthedocs.io/en/stable/installation.html">installation
+     docs</a> cover all of them.</p>
+  <div class="features releases">
+    <div class="feature">
+      <h3>Borg 1.4<span class="badge stable">stable</span></h3>
+      <div class="ver">1.4.4</div>
+      <div class="when">released 2026-03-19</div>
+      <p>The current stable series — the right choice for production use.</p>
+      <ul class="mini-links">
+        <li><a href="/releases/borg-1.4.html">announcement</a></li>
+        <li><a class="ext" href="https://borgbackup.readthedocs.io/en/1.4-maint/">docs</a></li>
+        <li><a class="ext" href="https://borgbackup.readthedocs.io/en/1.4-maint/installation.html">installation</a></li>
+        <li><a class="ext" href="https://github.com/borgbackup/borg/releases">downloads</a></li>
+      </ul>
+    </div>
+    <div class="feature">
+      <h3>Borg 1.2<span class="badge">oldstable</span></h3>
+      <div class="ver">1.2.9</div>
+      <div class="when">released 2025-08-04</div>
+      <p>The previous stable series, still maintained.</p>
+      <ul class="mini-links">
+        <li><a href="/releases/borg-1.2.html">announcement</a></li>
+        <li><a class="ext" href="https://borgbackup.readthedocs.io/en/1.2-maint/">docs</a></li>
+        <li><a class="ext" href="https://borgbackup.readthedocs.io/en/1.2-maint/installation.html">installation</a></li>
+        <li><a class="ext" href="https://github.com/borgbackup/borg/releases">downloads</a></li>
+      </ul>
+    </div>
+    <div class="feature">
+      <h3>Borg 2.0<span class="badge testing">testing</span></h3>
+      <div class="ver">2.0&hairsp;β</div>
+      <div class="when">the next generation</div>
+      <p>Currently in testing — do <b>not</b> use it in production yet.</p>
+      <ul class="mini-links">
+        <li><a href="/releases/borg-2.0.html">news overview</a></li>
+        <li><a class="ext" href="https://borgbackup.readthedocs.io/en/master/">docs</a></li>
+        <li><a class="ext" href="https://github.com/borgbackup/borg/releases">downloads</a></li>
+      </ul>
+    </div>
+    <div class="feature">
+      <h3>Borg 1.1, 1.0, 0.xx<span class="badge eol">end of life</span></h3>
+      <div class="ver">1.1.18 / 1.0.13</div>
+      <div class="when">2022-06-05 / 2019-02-15</div>
+      <p>No longer supported — please use Borg 1.4.x or 1.2.x. The 0.xx development
+         series (2015–2016) led up to Borg 1.0.</p>
+      <ul class="mini-links">
+        <li><a href="/releases/borg-1.1.html">1.1 announcement</a></li>
+        <li><a class="ext" href="https://borgbackup.readthedocs.io/en/1.1-maint/">1.1 docs</a></li>
+        <li><a class="ext" href="https://borgbackup.readthedocs.io/en/1.0-maint/">1.0 docs</a></li>
+      </ul>
+    </div>
+  </div>
+  <p class="aside">Borg&rsquo;s future:
+     <a class="ext" href="https://github.com/borgbackup/borg/milestones">milestones</a> ·
+     <a class="ext" href="https://github.com/borgbackup/borg/projects">projects</a> —
+     follow new releases via the
+     <a class="ext" href="https://github.com/borgbackup/borg/releases.atom">atom feed</a>.</p>
+</section>
+
+<!-- ============================ SUPPORT ============================ -->
+<section class="block" id="support">
+  <p class="kicker">// support</p>
+  <h2>You are not alone. It&rsquo;s a collective.</h2>
+  <p class="lead">Free community support. Please check the docs, the existing issues and the
+     mailing list posts first — a lot of topics are already documented, explained,
+     discussed and filed.</p>
+  <div class="features channels">
+    <div class="feature">
+      <span class="glyph">▤</span>
+      <h3>Documentation</h3>
+      <p>Quite nice docs: installation, a reference for all Borg commands, examples and
+         an FAQ, internals documentation, and docs for developers.</p>
+      <ul class="mini-links">
+        <li><a class="ext" href="https://borgbackup.readthedocs.io/">read the docs</a></li>
+      </ul>
+    </div>
+    <div class="feature">
+      <span class="glyph">◉</span>
+      <h3>Issue tracker</h3>
+      <p>Found a bug or have a concrete feature request? Create a ticket. For more
+         general questions or discussions, prefer the chat or the mailing list.</p>
+      <ul class="mini-links">
+        <li><a class="ext" href="https://www.github.com/borgbackup/borg/issues">github issues</a></li>
+      </ul>
+    </div>
+    <div class="feature">
+      <span class="glyph">#</span>
+      <h3>Chat (IRC)</h3>
+      <p>Join #borgbackup on libera.chat: just ask or tell directly, then patiently wait
+         for replies — stay connected. A registered nick is preferred, and may even be
+         required during times of high spam activity.</p>
+      <ul class="mini-links">
+        <li><a class="ext" href="https://web.libera.chat/?nick=Guest&amp;#borgbackup">web IRC client</a></li>
+      </ul>
+    </div>
+    <div class="feature">
+      <span class="glyph">▣</span>
+      <h3>Matrix chat</h3>
+      <p>Prefer Matrix? Use a client such as Element to join the #borgbackup room —
+         it is bridged to the IRC channel, same people on both sides.</p>
+      <ul class="mini-links">
+        <li><a class="ext" href="https://matrix.to/#/!KnTJxMbCJuuVyjTSeJ:libera.chat?via=libera.chat&amp;via=matrix.org&amp;via=rudd-o.com">#borgbackup room</a></li>
+        <li><a class="ext" href="https://app.element.io">element</a></li>
+      </ul>
+    </div>
+    <div class="feature">
+      <span class="glyph">✉</span>
+      <h3>Mailing list</h3>
+      <p>The list homepage explains its topic, how to subscribe or unsubscribe, and
+         where to find the list archives.</p>
+      <ul class="mini-links">
+        <li><a class="ext" href="https://mail.python.org/mailman/listinfo/borgbackup">mailing list</a></li>
+      </ul>
+    </div>
+    <div class="feature">
+      <span class="glyph">◍</span>
+      <h3>Mastodon</h3>
+      <p>Follow @borgbackup@fosstodon.org for announcements. Mastodon is not suitable
+         for longer or more complex discussions — use one of the other channels for that.</p>
+      <ul class="mini-links">
+        <li><a class="ext" href="https://fosstodon.org/@borgbackup">@borgbackup</a></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ SERVICES ============================ -->
+<section class="block" id="services">
+  <p class="kicker">// services</p>
+  <h2>Paid support and services.</h2>
+  <p class="lead">Commercial service and support providers for BorgBackup:</p>
+  <div class="features providers">
+    <div class="feature">
+      <span class="glyph">⚒</span>
+      <h3>Waldmann EDV</h3>
+      <p>BorgBackup consulting, support, and development — the company of Thomas
+         Waldmann, Borg&rsquo;s lead developer and maintainer.</p>
+      <ul class="mini-links">
+        <li><a class="ext" href="https://waldmann-edv.de/WedvHome">waldmann-edv.de</a></li>
+      </ul>
+    </div>
+    <div class="feature">
+      <span class="glyph">⛁</span>
+      <h3>BorgBase</h3>
+      <p>Specialized hosting for Borg repositories.</p>
+      <ul class="mini-links">
+        <li><a class="ext" href="https://www.borgbase.com/">borgbase.com</a></li>
+      </ul>
+    </div>
+    <div class="feature">
+      <span class="glyph">⛃</span>
+      <h3>Hetzner</h3>
+      <p>Storage Box with Borg support.</p>
+      <ul class="mini-links">
+        <li><a class="ext" href="https://wiki.hetzner.de/index.php/BorgBackup/en">hetzner.de</a></li>
+      </ul>
+    </div>
+    <div class="feature">
+      <span class="glyph">☁</span>
+      <h3>rsync.net</h3>
+      <p>Cloud storage platform with Borg support.</p>
+      <ul class="mini-links">
+        <li><a class="ext" href="https://www.rsync.net/products/borg.html">rsync.net</a></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ FUND ============================ -->
+<section class="block" id="fund">
+  <p class="kicker">// fund</p>
+  <h2>Resistance is futile. Donations are not.</h2>
+  <p class="lead">Please help the software projects you use and love. You can support the
+     BorgBackup project using these options:</p>
+  <div class="features funding">
+    <div class="feature">
+      <span class="glyph">⬡</span>
+      <h3>PayPal</h3>
+      <p>May be the easiest way (if you already use PayPal or a credit card) to directly
+         support a specific developer. Waldmann EDV is the company of Thomas Waldmann,
+         BorgBackup&rsquo;s lead developer and maintainer.</p>
+      <ul class="mini-links">
+        <li><a class="ext" href="https://www.paypal.com/donate/?hosted_button_id=58A7SUQJZLBQ8">donate via paypal</a></li>
+      </ul>
+    </div>
+    <div class="feature">
+      <span class="glyph">♥</span>
+      <h3>Liberapay</h3>
+      <p>Become a patron and support us regularly to help make the project sustainable in
+         the long term. The funds are distributed to the BorgBackup team members — and as
+         a BorgBackup developer, you can join the team.</p>
+      <ul class="mini-links">
+        <li><a class="ext" href="https://liberapay.com/borgbackup/donate">donate via liberapay</a></li>
+      </ul>
+    </div>
+    <div class="feature">
+      <span class="glyph">★</span>
+      <h3>GitHub Sponsors</h3>
+      <p>Become a sponsor and support us regularly, or alternatively make a one-time
+         donation. Those funds are transferred to Open Collective Europe (OC&nbsp;EU),
+         our fiscal host.</p>
+      <ul class="mini-links">
+        <li><a class="ext" href="https://github.com/sponsors/borgbackup">sponsor on github</a></li>
+      </ul>
+    </div>
+    <div class="feature">
+      <span class="glyph">◎</span>
+      <h3>Open Collective</h3>
+      <p>Contribute directly via Open Collective; those funds also go to OC&nbsp;EU. The
+         funds held on our behalf can be used to pay miscellaneous project-related
+         expenses submitted by BorgBackup team members.</p>
+      <ul class="mini-links">
+        <li><a class="ext" href="https://opencollective.com/borgbackup">open collective</a></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
 <!-- ============================ COUNTERS ============================ -->
 <section class="block" id="numbers">
   <p class="kicker">// the collective</p>
@@ -642,11 +968,11 @@ noscript .hero-fallback {
 <!-- ============================ FOOTER ============================ -->
 <footer>
   <div class="links">
-    <a href="/demo.html">Demo</a>
-    <a href="/releases/">Install</a>
-    <a href="/support/fund.html">Fund</a>
-    <a href="/support/free.html">Support</a>
-    <a href="/support/commercial.html">Services</a>
+    <a href="#demo">Demo</a>
+    <a href="#install">Install</a>
+    <a href="#support">Support</a>
+    <a href="#services">Services</a>
+    <a href="#fund">Fund</a>
     <a href="https://borgbackup.readthedocs.io/">Docs</a>
     <a href="https://github.com/borgbackup/community">Community</a>
     <a href="https://github.com/borgbackup/borg">Contribute</a>
@@ -792,8 +1118,8 @@ const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 
 if (!reduced) {
   window.addEventListener('pointerdown', (e) => {
-    // leave links, buttons and the interactive panels alone
-    if (e.button !== 0 || e.target.closest('a, button, .term, .dedup-panel, header.top, footer')) return;
+    // leave links, buttons, text content and the interactive panels alone
+    if (e.button !== 0 || e.target.closest('a, button, p, .features, .term, .dedup-panel, header.top, footer')) return;
     drag.on = true;
     drag.x = e.clientX; drag.y = e.clientY;
     drag.vx = 0; drag.vy = 0;
@@ -956,10 +1282,12 @@ if (!reduced) {
     });
   });
 
-  // feature cards
-  gsap.from('.feature', {
-    scrollTrigger: { trigger: '.features', start: 'top 80%' },
-    y: 40, opacity: 0, duration: 0.7, stagger: 0.09, ease: 'power2.out'
+  // card grids (features, releases, channels, providers, funding)
+  document.querySelectorAll('.features').forEach((grid) => {
+    gsap.from(grid.children, {
+      scrollTrigger: { trigger: grid, start: 'top 80%' },
+      y: 40, opacity: 0, duration: 0.7, stagger: 0.09, ease: 'power2.out'
+    });
   });
 
   // counters
@@ -1013,6 +1341,68 @@ if (!reduced) {
       }, '>-0.3');
     }
   });
+})();
+
+/* --- demo: lazy-loaded asciinema recordings --- */
+(function demo() {
+  const stage = document.getElementById('demoStage');
+  const tabs = document.getElementById('demoTabs');
+  const meta = document.getElementById('demoMeta');
+  const casts = [
+    { borg: '1.1', title: 'basic usage',      file: '_assets/asciicast-133292.json', dur: '6 min 11 s', speed: 1.0 },
+    { borg: '1.1', title: 'installation',     file: '_assets/asciicast-133291.json', dur: '1 min 40 s', speed: 1.0 },
+    { borg: '1.1', title: 'advanced usage',   file: '_assets/asciicast-133293.json', dur: '7 min 9 s',  speed: 1.0 },
+    { borg: '1.0', title: 'install + basics', file: '_assets/asciinema-28691.json',  dur: '5 min 30 s', speed: 1.5 },
+  ];
+
+  // the player JS/CSS are heavy, so they only load once the section is near
+  let assets = null;
+  const loadAssets = () => assets ??= new Promise((resolve, reject) => {
+    const css = document.createElement('link');
+    css.rel = 'stylesheet';
+    css.href = '_assets/asciinema-player-v2.4.1.css';
+    document.head.appendChild(css);
+    const js = document.createElement('script');
+    js.src = '_assets/asciinema-player-v2.4.1.js';
+    js.onload = resolve;
+    js.onerror = () => reject(new Error('player load failed'));
+    document.head.appendChild(js);
+  });
+
+  let current = -1;
+  const show = (idx) => {
+    if (idx === current) return;
+    current = idx;
+    tabs.querySelectorAll('button').forEach((b, i) => b.setAttribute('aria-selected', String(i === idx)));
+    loadAssets().then(() => {
+      if (current !== idx) return;
+      const c = casts[idx];
+      stage.innerHTML = '';
+      // the <asciinema-player> element needs the removed custom-elements-v0
+      // API, so use the player's programmatic API instead
+      asciinema.player.js.CreatePlayer(stage, c.file, { speed: c.speed, poster: 'npt:0:21' });
+      meta.textContent = `borg ${c.borg} — ${c.title} · ${c.dur} · all text in the recording can be selected and copied`;
+    }).catch(() => {
+      stage.innerHTML = '<p class="demo-hint">the demo player could not be loaded.</p>';
+    });
+  };
+
+  casts.forEach((c, i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.setAttribute('role', 'tab');
+    b.setAttribute('aria-selected', 'false');
+    b.textContent = `${c.borg} ${c.title}`;
+    b.addEventListener('click', () => show(i));
+    tabs.appendChild(b);
+  });
+
+  new IntersectionObserver((entries, io) => {
+    if (entries.some((e) => e.isIntersecting)) {
+      io.disconnect();
+      show(0);
+    }
+  }, { rootMargin: '500px' }).observe(stage);
 })();
 
 /* --- terminal typing --- */

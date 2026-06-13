@@ -36,3 +36,8 @@ pushes it to the "master" branch with a GitHub deploy key.
 GitHub Pages is used as the host, and the TLS certificate comes from Let's Encrypt (via GitHub).
 
 More details: https://github.com/borgbackup/borgbackup.github.io/issues/45
+
+## New site
+
+There is also a gorgeous new site, currently hidden at index2.html.
+

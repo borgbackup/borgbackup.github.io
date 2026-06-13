@@ -1,4 +1,7 @@
 
+# NOTE (threejs-gsap-site branch): index2.html is a hand-written three.js/GSAP
+# page committed directly, NOT generated from *.rst — keep it out of PAGES
+# so `make` / `make clean` do not overwrite or delete it.
 PAGES=\
 index.html \
 demo.html \

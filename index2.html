@@ -1298,8 +1298,9 @@ for (let s = 0; s < CHUNKS; s++) {
 }
 
 /* --- scroll-driven state --- */
-/* calm: 0 = full animation, 1 = cube gone, chunks stopped, stars only */
-const state = { progress: 0, mouseX: 0, mouseY: 0, calm: 0 };
+/* calm:     0 = full animation, 1 = cube gone, chunks stopped, stars only
+   starFade: 0 = stars at full brightness, 1 = stars gone (no animation left) */
+const state = { progress: 0, mouseX: 0, mouseY: 0, calm: 0, starFade: 0 };
 
 window.addEventListener('pointermove', (e) => {
   state.mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
@@ -1371,6 +1372,9 @@ function render() {
   sp.needsUpdate = true;
   // barely-there lateral sway; bounded so the wrap plane stays behind the camera
   stars.rotation.y = Math.sin(t * 0.05) * 0.04;
+  // second wind-down stage: once the cube is gone, the starfield fades to nothing
+  stars.material.opacity = 0.7 * (1 - state.starFade);
+  stars.visible = state.starFade < 0.999;
 
   // lattice: home position pushed along explode direction by scroll
   if (cubeGroup.visible) {
@@ -1435,14 +1439,34 @@ if (reduced) {
   renderer.setAnimationLoop(render);
 }
 
-/* --- stop button: wind the scene down to a calm starfield --- */
+/* --- stop button: wind the scene down in two stages, then to nothing ---
+   stop:   cube + chunks recede (as before), then the starfield fades out and
+           the render loop is parked, leaving no animated background at all.
+   resume: restart the loop, fade the stars back, then bring the cube back. */
 const stopBtn = document.getElementById('stopBtn');
+let stopped = false;
+let windTween = null;
 stopBtn.addEventListener('click', () => {
-  const toCalm = state.calm < 0.5;
-  stopBtn.textContent = toCalm ? 'Resume' : 'Stop';
-  stopBtn.setAttribute('aria-pressed', String(toCalm));
-  if (reduced) { state.calm = toCalm ? 1 : 0; render(); return; }
-  gsap.to(state, { calm: toCalm ? 1 : 0, duration: 2.8, ease: 'power2.inOut', overwrite: 'auto' });
+  stopped = !stopped;
+  stopBtn.textContent = stopped ? 'Resume' : 'Stop';
+  stopBtn.setAttribute('aria-pressed', String(stopped));
+  if (reduced) {
+    state.calm = state.starFade = stopped ? 1 : 0;
+    render();
+    return;
+  }
+  if (windTween) windTween.kill();
+  if (stopped) {
+    windTween = gsap.timeline()
+      .to(state, { calm: 1, duration: 2.8, ease: 'power2.inOut' })
+      .to(state, { starFade: 1, duration: 1.6, ease: 'power2.inOut',
+                   onComplete: () => renderer.setAnimationLoop(null) });
+  } else {
+    renderer.setAnimationLoop(render);   // wake the loop before reversing
+    windTween = gsap.timeline()
+      .to(state, { starFade: 0, duration: 1.0, ease: 'power2.out' })
+      .to(state, { calm: 0, duration: 2.8, ease: 'power2.inOut' });
+  }
 });
 
 // debugging/testing handle (this page is a prototype)

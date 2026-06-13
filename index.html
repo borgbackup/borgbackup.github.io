@@ -1567,19 +1567,26 @@ if (!reduced) {
     { borg: '1.0', title: 'install + basics', file: '_assets/asciinema-28691.json',  dur: '5 min 30 s', speed: 1.5 },
   ];
 
-  // the player JS/CSS are heavy, so they only load once the section is near
+  // the player JS/CSS are heavy, so they only load once the section is near.
+  // a failed attempt is NOT cached, so a later retry / scroll can recover
+  // (caching a rejected promise would wedge the player for the whole session).
   let assets = null;
-  const loadAssets = () => assets ??= new Promise((resolve, reject) => {
-    const css = document.createElement('link');
-    css.rel = 'stylesheet';
-    css.href = '_assets/asciinema-player-v3.15.1.css';
-    document.head.appendChild(css);
-    const js = document.createElement('script');
-    js.src = '_assets/asciinema-player-v3.15.1.min.js';
-    js.onload = resolve;
-    js.onerror = () => reject(new Error('player load failed'));
-    document.head.appendChild(js);
-  });
+  const loadAssets = () => {
+    if (assets) return assets;
+    assets = new Promise((resolve, reject) => {
+      if (window.AsciinemaPlayer) return resolve();   // already loaded
+      const css = document.createElement('link');
+      css.rel = 'stylesheet';
+      css.href = '_assets/asciinema-player-v3.15.1.css';
+      document.head.appendChild(css);
+      const js = document.createElement('script');
+      js.src = '_assets/asciinema-player-v3.15.1.min.js';
+      js.onload = () => window.AsciinemaPlayer ? resolve() : reject(new Error('player global missing'));
+      js.onerror = () => reject(new Error('player load failed'));
+      document.head.appendChild(js);
+    }).catch((err) => { assets = null; throw err; });   // let the next call retry
+    return assets;
+  };
 
   let current = -1;
   let player = null;
@@ -1609,7 +1616,18 @@ if (!reduced) {
       const timer = stage.querySelector('.ap-timer');
       if (timer) timer.setAttribute('aria-label', 'Elapsed and remaining time');
     }).catch(() => {
-      stage.innerHTML = '<p class="demo-hint">the demo player could not be loaded.</p>';
+      if (current !== idx) return;
+      stage.innerHTML = '';
+      const msg = document.createElement('p');
+      msg.className = 'demo-hint';
+      msg.textContent = 'The demo player could not be loaded. ';
+      const retry = document.createElement('button');
+      retry.type = 'button';
+      retry.className = 'connect';
+      retry.textContent = 'Retry';
+      retry.addEventListener('click', () => { current = -1; show(idx); });
+      msg.appendChild(retry);
+      stage.appendChild(msg);
     });
   };
 

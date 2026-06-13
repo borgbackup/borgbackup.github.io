@@ -503,16 +503,14 @@ section.block p.lead {
 
 .demo-stage {
   min-height: 22rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   padding: 1rem 0.6rem;
-  overflow-x: auto;
 }
 
-.demo-stage .asciinema-player-wrapper { max-width: 100%; }
+/* the v3 player scales to fill this width (fit: 'width'); a flex/centered
+   parent would collapse it to zero content width */
+.demo-stage .ap-player { width: 100%; max-width: 100%; }
 
-.demo-hint { color: var(--text-dim); font-size: 0.8rem; }
+.demo-hint { color: var(--text-dim); font-size: 0.8rem; text-align: center; padding: 8rem 0; }
 
 .demo-meta { margin: 0.8rem 0 0; color: var(--text-dim); font-size: 0.78rem; }
 
@@ -1431,16 +1429,17 @@ if (!reduced) {
   const loadAssets = () => assets ??= new Promise((resolve, reject) => {
     const css = document.createElement('link');
     css.rel = 'stylesheet';
-    css.href = '_assets/asciinema-player-v2.4.1.css';
+    css.href = '_assets/asciinema-player-v3.15.1.css';
     document.head.appendChild(css);
     const js = document.createElement('script');
-    js.src = '_assets/asciinema-player-v2.4.1.js';
+    js.src = '_assets/asciinema-player-v3.15.1.min.js';
     js.onload = resolve;
     js.onerror = () => reject(new Error('player load failed'));
     document.head.appendChild(js);
   });
 
   let current = -1;
+  let player = null;
   const show = (idx) => {
     if (idx === current) return;
     current = idx;
@@ -1448,18 +1447,24 @@ if (!reduced) {
     loadAssets().then(() => {
       if (current !== idx) return;
       const c = casts[idx];
+      if (player) { player.dispose(); player = null; }
       stage.innerHTML = '';
-      // the <asciinema-player> element needs the removed custom-elements-v0
-      // API, so use the player's programmatic API instead
-      asciinema.player.js.CreatePlayer(stage, c.file, { speed: c.speed, poster: 'npt:0:21' });
+      // asciinema-player v3: create(src, element, opts). v3 is keyboard-
+      // operable (space=play/pause, arrows=seek, ? = shortcuts) and ships
+      // its own focusable, always-visible control bar.
+      player = AsciinemaPlayer.create(c.file, stage, {
+        speed: c.speed, poster: 'npt:0:21', fit: 'width', controls: true
+      });
       meta.textContent = `borg ${c.borg} — ${c.title} · ${c.dur} · all text in the recording can be selected and copied`;
-      // the player's terminal area can scroll; make it keyboard-reachable
-      const termEl = stage.querySelector('.asciinema-terminal');
-      if (termEl) {
-        termEl.setAttribute('tabindex', '0');
-        termEl.setAttribute('role', 'group');
-        termEl.setAttribute('aria-label', `borg ${c.borg} ${c.title} recording`);
+      // name the focusable player so screen readers announce which recording
+      const root = stage.querySelector('.ap-player');
+      if (root) {
+        root.setAttribute('role', 'group');
+        root.setAttribute('aria-label', `borg ${c.borg} ${c.title} screencast`);
       }
+      // v3's seek readout is a focusable textbox without a name — label it
+      const timer = stage.querySelector('.ap-timer');
+      if (timer) timer.setAttribute('aria-label', 'Elapsed and remaining time');
     }).catch(() => {
       stage.innerHTML = '<p class="demo-hint">the demo player could not be loaded.</p>';
     });

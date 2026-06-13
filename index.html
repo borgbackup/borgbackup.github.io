@@ -178,6 +178,12 @@ header.top nav a svg { vertical-align: -1px; margin-left: 2px; }
 .btn.solid { background: var(--green); color: #021006; }
 .btn.solid:hover { box-shadow: 0 0 32px rgba(34, 208, 69, 0.8); }
 
+button.btn {
+  font-family: inherit;
+  color: var(--green);
+  cursor: pointer;
+}
+
 .scroll-hint {
   margin-top: 4rem;
   color: var(--text-dim);
@@ -511,6 +517,8 @@ noscript .hero-fallback {
   <div class="cta-row" data-hero>
     <a class="btn solid" href="/releases/">Install Borg</a>
     <a class="btn" href="/demo.html">Watch the demo</a>
+    <button class="btn" id="stopBtn" type="button" aria-pressed="false"
+            title="Calm the background animation">Stop</button>
   </div>
   <noscript>
     <div class="hero-fallback">
@@ -755,6 +763,7 @@ const resetStream = (st) => {
   st.y = (Math.random() - 0.5) * 16;
   st.speed = 4 + Math.random() * 5;
   st.spin = 0.25 + Math.random() * 0.5;
+  st.rot = Math.random() * Math.PI * 2;
 };
 for (let s = 0; s < CHUNKS; s++) {
   const st = {};
@@ -764,7 +773,8 @@ for (let s = 0; s < CHUNKS; s++) {
 }
 
 /* --- scroll-driven state --- */
-const state = { progress: 0, mouseX: 0, mouseY: 0 };
+/* calm: 0 = full animation, 1 = cube gone, chunks stopped, stars only */
+const state = { progress: 0, mouseX: 0, mouseY: 0, calm: 0 };
 
 window.addEventListener('pointermove', (e) => {
   state.mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
@@ -818,18 +828,24 @@ function render() {
   const dt = Math.min(clock.getDelta(), 0.05);
   const t = clock.elapsedTime;
   const p = state.progress;                       // 0 at top, 1 at page bottom
+  const calm = state.calm;                        // 1 = stars only
   const spread = Math.sin(p * Math.PI) * 7;       // explode mid-page, reassemble at end
 
+  cubeGroup.visible = calm < 0.995;
+  chunkMesh.visible = calm < 0.995;
+
   // lattice: home position pushed along explode direction by scroll
-  for (let k = 0; k < COUNT; k++) {
-    dummy.position.copy(home[k]).addScaledVector(dir[k], spread);
-    const s = scl[k] * (1 + 0.04 * Math.sin(t * 2 + k));
-    dummy.scale.setScalar(s);
-    dummy.rotation.set(spread * dir[k].x * 0.6, spread * dir[k].y * 0.6, 0);
-    dummy.updateMatrix();
-    lattice.setMatrixAt(k, dummy.matrix);
+  if (cubeGroup.visible) {
+    for (let k = 0; k < COUNT; k++) {
+      dummy.position.copy(home[k]).addScaledVector(dir[k], spread);
+      const s = scl[k] * (1 + 0.04 * Math.sin(t * 2 + k));
+      dummy.scale.setScalar(s);
+      dummy.rotation.set(spread * dir[k].x * 0.6, spread * dir[k].y * 0.6, 0);
+      dummy.updateMatrix();
+      lattice.setMatrixAt(k, dummy.matrix);
+    }
+    lattice.instanceMatrix.needsUpdate = true;
   }
-  lattice.instanceMatrix.needsUpdate = true;
 
   // free-spin inertia after the pointer is released
   if (!drag.on) {
@@ -841,23 +857,30 @@ function render() {
 
   cubeGroup.rotation.y = t * 0.12 + p * Math.PI * 2 + drag.ry;
   cubeGroup.rotation.x = Math.sin(t * 0.07) * 0.18 + p * 0.6 + drag.rx;
-  edges.material.opacity = Math.max(0, 0.4 - spread * 0.12) * (0.75 + 0.25 * Math.sin(t * 2));
-  core.intensity = 10 + 6 * Math.sin(t * 1.6);
+  // "stop": the cube recedes into the fog and shrinks away
+  cubeGroup.position.z = -calm * 55;
+  cubeGroup.scale.setScalar(Math.max(0.001, 1 - calm));
+  edges.material.opacity = Math.max(0, 0.4 - spread * 0.12) * (0.75 + 0.25 * Math.sin(t * 2)) * (1 - calm);
+  core.intensity = (10 + 6 * Math.sin(t * 1.6)) * (1 - calm);
 
-  // assimilation streams spiral inward
-  for (let s = 0; s < CHUNKS; s++) {
-    const st = streams[s];
-    st.radius -= st.speed * dt;
-    st.angle += st.spin * dt;
-    if (st.radius < 3.4) resetStream(st);
-    const fade = Math.min(1, (st.radius - 3.4) / 3);
-    dummy.position.set(Math.cos(st.angle) * st.radius, st.y * (st.radius / 30), Math.sin(st.angle) * st.radius);
-    dummy.scale.setScalar(Math.max(0.001, fade));
-    dummy.rotation.set(t * 2 + s, t * 1.5, 0);
-    dummy.updateMatrix();
-    chunkMesh.setMatrixAt(s, dummy.matrix);
+  // assimilation streams spiral inward; "stop" brakes them and fades them out
+  if (chunkMesh.visible) {
+    const drive = 1 - calm;
+    for (let s = 0; s < CHUNKS; s++) {
+      const st = streams[s];
+      st.radius -= st.speed * dt * drive;
+      st.angle += st.spin * dt * drive;
+      st.rot += 2 * dt * drive;
+      if (st.radius < 3.4) resetStream(st);
+      const fade = Math.min(1, (st.radius - 3.4) / 3);
+      dummy.position.set(Math.cos(st.angle) * st.radius, st.y * (st.radius / 30), Math.sin(st.angle) * st.radius);
+      dummy.scale.setScalar(Math.max(0.001, fade * drive));
+      dummy.rotation.set(st.rot + s, st.rot * 0.75, 0);
+      dummy.updateMatrix();
+      chunkMesh.setMatrixAt(s, dummy.matrix);
+    }
+    chunkMesh.instanceMatrix.needsUpdate = true;
   }
-  chunkMesh.instanceMatrix.needsUpdate = true;
 
   // camera: pull back as we scroll, gentle mouse parallax
   camera.position.x += ((state.mouseX * 1.6) - camera.position.x) * 0.04;
@@ -873,6 +896,16 @@ if (reduced) {
 } else {
   renderer.setAnimationLoop(render);
 }
+
+/* --- stop button: wind the scene down to a calm starfield --- */
+const stopBtn = document.getElementById('stopBtn');
+stopBtn.addEventListener('click', () => {
+  const toCalm = state.calm < 0.5;
+  stopBtn.textContent = toCalm ? 'Resume' : 'Stop';
+  stopBtn.setAttribute('aria-pressed', String(toCalm));
+  if (reduced) { state.calm = toCalm ? 1 : 0; render(); return; }
+  gsap.to(state, { calm: toCalm ? 1 : 0, duration: 2.8, ease: 'power2.inOut', overwrite: 'auto' });
+});
 
 // debugging/testing handle (this page is a prototype)
 window.__borg = { state, drag, cubeGroup, renderer };

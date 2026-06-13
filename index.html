@@ -33,9 +33,17 @@ body {
   color: var(--text);
   font-family: var(--mono);
   overflow-x: hidden;
+  /* keep vertical scroll + pinch zoom native, hand horizontal drags to the cube */
+  touch-action: pan-y pinch-zoom;
 }
 
 ::selection { background: var(--green); color: #021006; }
+
+body.dragging, body.dragging .hero {
+  cursor: grabbing;
+  user-select: none;
+  -webkit-user-select: none;
+}
 
 /* ---------- three.js canvas, fixed behind everything ---------- */
 #scene {
@@ -101,6 +109,7 @@ header.top nav a svg { vertical-align: -1px; margin-left: 2px; }
 
 /* ---------- hero ---------- */
 .hero {
+  cursor: grab;
   min-height: 100svh;
   display: flex;
   flex-direction: column;
@@ -188,6 +197,7 @@ section.block {
   max-width: 1060px;
   margin: 0 auto;
   padding: 6rem 1.5rem;
+  scroll-margin-top: 7rem;   /* keep kickers clear of the fixed header */
 }
 
 .kicker {
@@ -449,6 +459,8 @@ noscript .hero-fallback {
   header.top { flex-direction: column; gap: 0.4rem; }
   .chunk-row { grid-template-columns: 3.4rem repeat(8, 1fr); }
   .chunk { font-size: 0.6rem; }
+  .hero .designation, .scroll-hint { letter-spacing: 0.18em; }
+  section.block { scroll-margin-top: 9.5rem; }  /* taller two-row header */
 }
 </style>
 </head>
@@ -759,11 +771,43 @@ window.addEventListener('pointermove', (e) => {
   state.mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
 }, { passive: true });
 
+/* --- drag to rotate the cube (with inertia) --- */
+const drag = { on: false, x: 0, y: 0, rx: 0, ry: 0, vx: 0, vy: 0 };
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+
+if (!reduced) {
+  window.addEventListener('pointerdown', (e) => {
+    // leave links, buttons and the interactive panels alone
+    if (e.button !== 0 || e.target.closest('a, button, .term, .dedup-panel, header.top, footer')) return;
+    drag.on = true;
+    drag.x = e.clientX; drag.y = e.clientY;
+    drag.vx = 0; drag.vy = 0;
+    document.body.classList.add('dragging');
+  });
+  window.addEventListener('pointermove', (e) => {
+    if (!drag.on) return;
+    const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    drag.x = e.clientX; drag.y = e.clientY;
+    drag.vy = dx * 0.006; drag.vx = dy * 0.004;
+    drag.ry += drag.vy;
+    drag.rx = clamp(drag.rx + drag.vx, -0.9, 0.9);
+  });
+  const endDrag = () => {
+    drag.on = false;
+    document.body.classList.remove('dragging');
+  };
+  window.addEventListener('pointerup', endDrag);
+  window.addEventListener('pointercancel', endDrag);
+}
+
 const resize = () => {
   const w = window.innerWidth, h = window.innerHeight;
   renderer.setSize(w, h, false);
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
+  // pull the camera back on narrow/portrait screens so the cube fits the width
+  const halfTan = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.aspect;
+  state.baseZ = Math.max(15, 4.6 / halfTan);
 };
 window.addEventListener('resize', resize);
 resize();
@@ -787,8 +831,16 @@ function render() {
   }
   lattice.instanceMatrix.needsUpdate = true;
 
-  cubeGroup.rotation.y = t * 0.12 + p * Math.PI * 2;
-  cubeGroup.rotation.x = Math.sin(t * 0.07) * 0.18 + p * 0.6;
+  // free-spin inertia after the pointer is released
+  if (!drag.on) {
+    drag.ry += drag.vy;
+    drag.rx = clamp(drag.rx + drag.vx, -0.9, 0.9);
+    drag.vx *= 0.94;
+    drag.vy *= 0.94;
+  }
+
+  cubeGroup.rotation.y = t * 0.12 + p * Math.PI * 2 + drag.ry;
+  cubeGroup.rotation.x = Math.sin(t * 0.07) * 0.18 + p * 0.6 + drag.rx;
   edges.material.opacity = Math.max(0, 0.4 - spread * 0.12) * (0.75 + 0.25 * Math.sin(t * 2));
   core.intensity = 10 + 6 * Math.sin(t * 1.6);
 
@@ -810,7 +862,7 @@ function render() {
   // camera: pull back as we scroll, gentle mouse parallax
   camera.position.x += ((state.mouseX * 1.6) - camera.position.x) * 0.04;
   camera.position.y += ((-state.mouseY * 1.2) - camera.position.y) * 0.04;
-  camera.position.z = 15 + p * 7;
+  camera.position.z = state.baseZ + p * 7;
   camera.lookAt(0, 0, 0);
 
   renderer.render(scene, camera);
@@ -821,6 +873,9 @@ if (reduced) {
 } else {
   renderer.setAnimationLoop(render);
 }
+
+// debugging/testing handle (this page is a prototype)
+window.__borg = { state, drag, cubeGroup, renderer };
 
 /* ================================================================
    GSAP — choreography

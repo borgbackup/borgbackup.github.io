@@ -1165,6 +1165,16 @@ noscript .hero-fallback {
   setH();
   if (window.ResizeObserver) new ResizeObserver(setH).observe(header);
   else window.addEventListener('resize', setH);
+
+  // clicking the logo scrolls back to the top instead of reloading the page
+  // (href="/" stays as the no-JS fallback)
+  var logo = header.querySelector('.mini-logo');
+  if (logo) logo.addEventListener('click', function (e) {
+    e.preventDefault();
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
+    if (history.replaceState) history.replaceState(null, '', location.pathname + location.search);
+  });
 })();
 </script>
 

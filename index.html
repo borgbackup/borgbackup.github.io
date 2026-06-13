@@ -569,6 +569,79 @@ a.ext::after {
   line-height: 1.8;
 }
 
+/* ---------- embedded IRC chat window ---------- */
+.chat-window {
+  border: 1px solid var(--green);
+  background: rgba(2, 8, 4, 0.72);
+  box-shadow: 0 0 70px rgba(34, 208, 69, 0.18);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  overflow: hidden;
+}
+
+.chat-window .term-bar { border-bottom-color: var(--green); }
+
+.chat-body {
+  position: relative;
+  height: clamp(420px, 72vh, 660px);
+}
+
+/* facade shown until the visitor opts in to loading the third-party client */
+.chat-facade {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.2rem;
+  text-align: center;
+  padding: 2rem 1.5rem;
+}
+
+.chat-facade .lead-in {
+  color: var(--green);
+  letter-spacing: 0.04em;
+  font-size: 1.05rem;
+}
+
+.chat-facade .sub { color: var(--text-dim); font-size: 0.85rem; max-width: 46ch; line-height: 1.7; }
+
+.chat-facade .connect {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.9rem 1.8rem;
+  border: 1px solid var(--green);
+  background: rgba(34, 208, 69, 0.1);
+  color: var(--green);
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: bold;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+.chat-facade .connect:hover {
+  background: rgba(34, 208, 69, 0.22);
+  box-shadow: 0 0 28px rgba(34, 208, 69, 0.5);
+}
+
+.chat-facade .connect .play { font-size: 0.8em; }
+
+.chat-facade .fine { color: var(--green-dim); font-size: 0.72rem; }
+
+.chat-window iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #020503;
+}
+
+.chat-window.loading .chat-facade .connect { opacity: 0.6; pointer-events: none; }
+
 /* ---------- footer ---------- */
 footer {
   border-top: 1px solid var(--panel-line);
@@ -894,7 +967,8 @@ noscript .hero-fallback {
          for replies — stay connected. A registered nick is preferred, and may even be
          required during times of high spam activity.</p>
       <ul class="mini-links">
-        <li><a class="ext" href="https://web.libera.chat/?nick=Guest&amp;#borgbackup">web IRC client</a></li>
+        <li><a href="#chat">open the chat below</a></li>
+        <li><a class="ext" href="https://web.libera.chat/?nick=Guest&amp;#borgbackup">full client</a></li>
       </ul>
     </div>
     <div class="feature">
@@ -924,6 +998,30 @@ noscript .hero-fallback {
       <ul class="mini-links">
         <li><a class="ext" href="https://fosstodon.org/@borgbackup">@borgbackup</a></li>
       </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ LIVE CHAT ============================ -->
+<section class="block" id="chat">
+  <p class="kicker"><span aria-hidden="true">// </span>live chat</p>
+  <h2>Talk to the collective, right here.</h2>
+  <p class="lead">The <b>#borgbackup</b> channel on libera.chat, embedded. This is libera.chat&rsquo;s
+     own web client (web.libera.chat), so you can join from this page without installing
+     anything.</p>
+  <div class="chat-window" id="chatWindow">
+    <div class="term-bar"><i></i><i></i><i></i><span aria-hidden="true">#borgbackup · irc.libera.chat</span></div>
+    <div class="chat-body">
+      <div class="chat-facade" id="chatFacade">
+        <p class="lead-in">Join #borgbackup on libera.chat</p>
+        <p class="sub">Pick a nickname and you&rsquo;re in. A registered nick is preferred, and may be
+           required during times of high spam activity. Be patient after asking — people reply
+           when they see it.</p>
+        <button class="connect" type="button" id="chatConnect">
+          <span class="play" aria-hidden="true">▶</span> Connect to the channel
+        </button>
+        <p class="fine">Loads web.libera.chat in a frame and connects you to the channel.</p>
+      </div>
     </div>
   </div>
 </section>
@@ -1505,6 +1603,35 @@ if (!reduced) {
       show(0);
     }
   }, { rootMargin: '500px' }).observe(stage);
+})();
+
+/* --- live IRC chat: load the third-party client only on explicit opt-in --- */
+(function chat() {
+  const win = document.getElementById('chatWindow');
+  const facade = document.getElementById('chatFacade');
+  const btn = document.getElementById('chatConnect');
+  if (!win || !btn) return;
+
+  btn.addEventListener('click', () => {
+    win.classList.add('loading');
+    btn.querySelector('.play')?.replaceWith(document.createTextNode(''));
+    btn.childNodes[btn.childNodes.length - 1].textContent = ' Connecting…';
+
+    const frame = document.createElement('iframe');
+    // libera.chat's own webchat (their officially supported embed). Uses
+    // libera's gateway — the public kiwiirc.com gateway is not accepted by
+    // libera and fails to connect. Dark theme + Guest nick prefix + channel.
+    frame.src = 'https://web.libera.chat/?theme=Dark&nick=Guest?#borgbackup';
+    frame.title = 'Live #borgbackup chat on libera.chat (Kiwi IRC)';
+    frame.allow = 'clipboard-write; fullscreen';
+    frame.addEventListener('load', () => { facade.remove(); win.classList.remove('loading'); });
+    frame.addEventListener('error', () => {
+      win.classList.remove('loading');
+      facade.innerHTML = '<p class="sub">The chat client could not be loaded. ' +
+        'You can <a class="ext" href="https://web.libera.chat/?nick=Guest&amp;#borgbackup">open it in a new tab</a> instead.</p>';
+    });
+    win.querySelector('.chat-body').appendChild(frame);
+  });
 })();
 
 /* --- terminal typing --- */

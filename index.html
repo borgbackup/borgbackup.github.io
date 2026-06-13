@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>BorgBackup – Deduplicating archiver with compression and authenticated encryption</title>
+<meta name="description" content="BorgBackup (Borg) is a deduplicating backup program with compression and authenticated encryption. Free software, BSD licensed." />
+<link rel="shortcut icon" href="/favicon.ico" />
+<link rel="icon" type="image/ico" href="/favicon.ico" />
+<link rel="me" href="https://fosstodon.org/@borgbackup" />
+<style>
+:root {
+  --green: #22D045;
+  --green-dim: #14803a;
+  --green-dark: #0a3d1c;
+  --bg: #020503;
+  --panel: rgba(8, 18, 10, 0.82);
+  --panel-line: rgba(34, 208, 69, 0.22);
+  --text: #d7e8da;
+  --text-dim: #8aa892;
+  --mono: ui-monospace, Menlo, Monaco, "Cascadia Mono", "Segoe UI Mono",
+          "Roboto Mono", "Oxygen Mono", "Ubuntu Monospace", "Source Code Pro",
+          "Fira Mono", "Droid Sans Mono", monospace;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--mono);
+  overflow-x: hidden;
+}
+
+::selection { background: var(--green); color: #021006; }
+
+/* ---------- three.js canvas, fixed behind everything ---------- */
+#scene {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  display: block;
+}
+
+/* subtle scanline / vignette overlay above the 3D scene */
+#crt {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 50% 40%, transparent 40%, rgba(0,0,0,0.55) 100%),
+    repeating-linear-gradient(0deg, rgba(0,0,0,0.18) 0px, rgba(0,0,0,0.18) 1px, transparent 1px, transparent 3px);
+  mix-blend-mode: multiply;
+}
+
+.page { position: relative; z-index: 2; }
+
+a { color: var(--green); text-decoration: none; }
+a:hover { text-shadow: 0 0 8px rgba(34, 208, 69, 0.8); }
+
+/* ---------- top nav ---------- */
+header.top {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.6rem 1.2rem;
+  background: rgba(2, 6, 3, 0.65);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--panel-line);
+}
+
+header.top .mini-logo svg { display: block; height: 30px; width: auto; }
+
+header.top nav ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+header.top nav a {
+  font-size: 0.85rem;
+  font-weight: bold;
+  letter-spacing: 0.04em;
+}
+
+header.top nav a svg { vertical-align: -1px; margin-left: 2px; }
+
+/* ---------- hero ---------- */
+.hero {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 6rem 1.5rem 4rem;
+}
+
+.hero .logo svg {
+  width: min(420px, 78vw);
+  height: auto;
+  filter: drop-shadow(0 0 18px rgba(34, 208, 69, 0.45));
+}
+
+.hero .designation {
+  margin: 1.6rem 0 0.4rem;
+  font-size: clamp(0.7rem, 1.6vw, 0.85rem);
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: var(--green);
+  opacity: 0.9;
+}
+
+.hero h1 {
+  margin: 0.4rem 0 1rem;
+  font-size: clamp(1.3rem, 3.6vw, 2.3rem);
+  font-weight: normal;
+  line-height: 1.35;
+  max-width: 21ch;
+  text-shadow: 0 2px 24px rgba(0,0,0,0.9);
+}
+
+.hero h1 em {
+  font-style: normal;
+  color: var(--green);
+}
+
+.hero .futile {
+  margin: 0 0 2.2rem;
+  color: var(--text-dim);
+  font-size: clamp(0.85rem, 2vw, 1rem);
+}
+
+.hero .futile b { color: var(--green); font-weight: normal; }
+
+.cta-row { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; }
+
+.btn {
+  display: inline-block;
+  padding: 0.8rem 1.6rem;
+  border: 1px solid var(--green);
+  font-size: 0.95rem;
+  font-weight: bold;
+  letter-spacing: 0.06em;
+  background: rgba(34, 208, 69, 0.08);
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+.btn:hover {
+  background: rgba(34, 208, 69, 0.2);
+  box-shadow: 0 0 24px rgba(34, 208, 69, 0.45);
+  text-shadow: none;
+}
+
+.btn.solid { background: var(--green); color: #021006; }
+.btn.solid:hover { box-shadow: 0 0 32px rgba(34, 208, 69, 0.8); }
+
+.scroll-hint {
+  margin-top: 4rem;
+  color: var(--text-dim);
+  font-size: 0.75rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  animation: hint-bob 2.2s ease-in-out infinite;
+}
+
+@keyframes hint-bob {
+  0%, 100% { transform: translateY(0); opacity: 0.55; }
+  50% { transform: translateY(8px); opacity: 1; }
+}
+
+/* ---------- generic section shell ---------- */
+section.block {
+  max-width: 1060px;
+  margin: 0 auto;
+  padding: 6rem 1.5rem;
+}
+
+.kicker {
+  font-size: 0.75rem;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: var(--green);
+  margin: 0 0 0.8rem;
+}
+
+section.block h2 {
+  font-size: clamp(1.4rem, 3.2vw, 2.1rem);
+  font-weight: normal;
+  margin: 0 0 1rem;
+  line-height: 1.3;
+}
+
+section.block p.lead {
+  color: var(--text-dim);
+  max-width: 62ch;
+  line-height: 1.7;
+  margin: 0 0 2.5rem;
+}
+
+/* ---------- features grid ---------- */
+.features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.1rem;
+}
+
+.feature {
+  position: relative;
+  background: var(--panel);
+  border: 1px solid var(--panel-line);
+  padding: 1.6rem 1.4rem 1.5rem;
+  overflow: hidden;
+}
+
+.feature::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--green), transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.feature:hover::before { opacity: 1; }
+
+.feature:hover {
+  border-color: rgba(34, 208, 69, 0.5);
+  box-shadow: 0 0 30px rgba(34, 208, 69, 0.12) inset;
+}
+
+.feature .glyph {
+  font-size: 1.5rem;
+  color: var(--green);
+  display: block;
+  margin-bottom: 0.8rem;
+}
+
+.feature h3 {
+  margin: 0 0 0.6rem;
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+  color: var(--green);
+  font-weight: bold;
+}
+
+.feature p {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.65;
+  color: var(--text-dim);
+}
+
+/* ---------- dedup visual ---------- */
+.dedup-panel {
+  background: var(--panel);
+  border: 1px solid var(--panel-line);
+  padding: 2rem 1.4rem;
+}
+
+.dedup-rows { display: grid; gap: 1.1rem; }
+
+.chunk-row {
+  display: grid;
+  grid-template-columns: 5.5rem repeat(8, 1fr);
+  gap: 0.45rem;
+  align-items: center;
+}
+
+.chunk-row .label {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  letter-spacing: 0.08em;
+}
+
+.chunk {
+  aspect-ratio: 1.6;
+  border: 1px solid var(--green-dim);
+  background: rgba(34, 208, 69, 0.10);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  color: var(--green);
+  will-change: transform, opacity;
+}
+
+.chunk.new {
+  border-color: var(--green);
+  background: rgba(34, 208, 69, 0.28);
+  box-shadow: 0 0 14px rgba(34, 208, 69, 0.35);
+}
+
+.dedup-result {
+  display: flex;
+  gap: 0.6rem 2rem;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: 2rem;
+  padding-top: 1.4rem;
+  border-top: 1px dashed var(--panel-line);
+  font-size: 0.9rem;
+}
+
+.dedup-result .big {
+  font-size: clamp(1.4rem, 4vw, 2rem);
+  color: var(--green);
+}
+
+.dedup-result .note { color: var(--text-dim); font-size: 0.78rem; }
+
+/* ---------- terminal ---------- */
+.term {
+  background: #03070491;
+  border: 1px solid var(--panel-line);
+  box-shadow: 0 0 60px rgba(34, 208, 69, 0.07);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.term-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.6rem 0.9rem;
+  border-bottom: 1px solid var(--panel-line);
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}
+
+.term-bar i {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--green-dark);
+  border: 1px solid var(--green-dim);
+}
+
+.term-bar span { margin-left: 0.6rem; letter-spacing: 0.1em; }
+
+.term pre {
+  margin: 0;
+  padding: 1.2rem 1rem 1.4rem;
+  font-family: var(--mono);
+  font-size: clamp(0.62rem, 1.55vw, 0.82rem);
+  line-height: 1.55;
+  color: var(--text);
+  overflow-x: auto;
+  min-height: 18em;
+}
+
+.term pre .p { color: var(--green); }
+.term pre .c { color: var(--text-dim); }
+.term pre .hl { color: var(--green); }
+
+.cursor {
+  display: inline-block;
+  width: 0.6em; height: 1.1em;
+  background: var(--green);
+  vertical-align: -0.15em;
+  animation: blink 1s steps(1) infinite;
+}
+
+@keyframes blink { 50% { opacity: 0; } }
+
+/* ---------- counters strip ---------- */
+.counters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1.1rem;
+  text-align: center;
+}
+
+.counter {
+  padding: 1.6rem 1rem;
+  border: 1px solid var(--panel-line);
+  background: var(--panel);
+}
+
+.counter .num {
+  font-size: clamp(1.8rem, 5vw, 2.6rem);
+  color: var(--green);
+  text-shadow: 0 0 18px rgba(34, 208, 69, 0.5);
+}
+
+.counter .what {
+  margin-top: 0.5rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+/* ---------- footer ---------- */
+footer {
+  border-top: 1px solid var(--panel-line);
+  background: rgba(2, 6, 3, 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 3rem 1.5rem 2.5rem;
+  text-align: center;
+}
+
+footer .links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem 1.6rem;
+  margin-bottom: 1.6rem;
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+footer .check {
+  color: var(--green);
+  font-size: 0.95rem;
+  margin-bottom: 1rem;
+}
+
+footer .legal { color: var(--text-dim); font-size: 0.72rem; line-height: 1.7; }
+
+/* ---------- reduced motion / no JS ---------- */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .scroll-hint, .cursor { animation: none; }
+}
+
+noscript .hero-fallback {
+  display: block;
+  padding-top: 5rem;
+}
+
+@media (max-width: 640px) {
+  header.top { flex-direction: column; gap: 0.4rem; }
+  .chunk-row { grid-template-columns: 3.4rem repeat(8, 1fr); }
+  .chunk { font-size: 0.6rem; }
+}
+</style>
+</head>
+<body>
+
+<canvas id="scene" aria-hidden="true"></canvas>
+<div id="crt" aria-hidden="true"></div>
+
+<div class="page">
+
+<header class="top">
+  <a class="mini-logo" href="/" aria-label="BorgBackup home">
+    <!-- official borg logo -->
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 133.333" width="96" height="40" role="img" aria-label="BorgBackup">
+      <path transform="translate(20.9086, 32.2192)" fill="#22D045" d="M43.75 13.8021L26.6667 13.8021L26.6667 0L53.3854 0L67.2396 13.8021L67.2396 27.8646L60.3125 34.7917L67.2396 41.7187L67.2396 55.3125L53.3854 69.1146L26.6667 69.1146L26.6667 55.3125L43.75 55.3125L43.75 40.5729L26.6667 40.5729L26.6667 28.5417L43.75 28.5417ZM0 0L23.0208 0L23.0208 69.1146L0 69.1146Z"/>
+      <path transform="translate(97.6794, 46.0213)" fill="#22D045" d="M62.1354 41.5104L48.3333 55.3125L32.9167 55.3125L32.9167 42.3958L38.6458 42.3958L38.6458 13.8021L32.9167 13.8021L32.9167 0L48.3333 0L62.1354 13.8021ZM23.2813 42.3958L29.2708 42.3958L29.2708 55.3125L13.8021 55.3125L0 41.5104L0 13.8021L13.8021 0L29.2708 0L29.2708 13.8021L23.2813 13.8021Z"/>
+      <path transform="translate(170.231, 46.0213)" fill="#22D045" d="M36.5104 13.8021L26.7187 13.8021L26.7187 7.76042L34.4271 0L48.3854 0L59.5833 12.9167L59.5833 27.2396L36.5104 27.2396ZM0 55.3125L0 7.10543e-15L23.0208 7.10543e-15L23.0208 55.3125Z"/>
+      <path transform="translate(236.429, 46.0213)" fill="#22D045" d="M36.875 13.8021L26.6667 13.8021L26.6667 7.10543e-15L46.0937 7.10543e-15L59.8958 13.8021L59.8958 60.7812L46.0937 74.6875L15.7292 74.6875L8.80208 67.7083L8.80208 62.6042L36.875 62.6042ZM33.2292 42.3958L33.2292 48.4896L26.3542 55.3125L13.8021 55.3125L0 41.5104L0 13.8021L13.8021 0L23.0208 0L23.0208 42.3958Z"/>
+    </svg>
+  </a>
+  <nav aria-label="Main">
+    <ol>
+      <li><a href="/demo.html">Demo</a></li>
+      <li><a href="/releases/">Install</a></li>
+      <li><a href="/support/fund.html">Fund</a></li>
+      <li><a href="/support/free.html">Support</a></li>
+      <li><a href="/support/commercial.html">Services</a></li>
+      <li><a href="https://borgbackup.readthedocs.io/">Docs<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 12 12"><path fill="currentColor" d="M6 1h5v5L8.86 3.85 4.7 8 4 7.3l4.15-4.16L6 1Z M2 3h2v1H2v6h6V8h1v2a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/></svg></a></li>
+      <li><a href="https://github.com/borgbackup/community">Community<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 12 12"><path fill="currentColor" d="M6 1h5v5L8.86 3.85 4.7 8 4 7.3l4.15-4.16L6 1Z M2 3h2v1H2v6h6V8h1v2a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/></svg></a></li>
+      <li><a href="https://github.com/borgbackup/borg">Contribute<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 12 12"><path fill="currentColor" d="M6 1h5v5L8.86 3.85 4.7 8 4 7.3l4.15-4.16L6 1Z M2 3h2v1H2v6h6V8h1v2a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/></svg></a></li>
+    </ol>
+  </nav>
+</header>
+
+<!-- ============================ HERO ============================ -->
+<section class="hero" id="hero">
+  <div class="logo" data-hero>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 133.333" role="img" aria-label="BorgBackup">
+      <path transform="translate(20.9086, 32.2192)" fill="#22D045" d="M43.75 13.8021L26.6667 13.8021L26.6667 0L53.3854 0L67.2396 13.8021L67.2396 27.8646L60.3125 34.7917L67.2396 41.7187L67.2396 55.3125L53.3854 69.1146L26.6667 69.1146L26.6667 55.3125L43.75 55.3125L43.75 40.5729L26.6667 40.5729L26.6667 28.5417L43.75 28.5417ZM0 0L23.0208 0L23.0208 69.1146L0 69.1146Z"/>
+      <path transform="translate(97.6794, 46.0213)" fill="#22D045" d="M62.1354 41.5104L48.3333 55.3125L32.9167 55.3125L32.9167 42.3958L38.6458 42.3958L38.6458 13.8021L32.9167 13.8021L32.9167 0L48.3333 0L62.1354 13.8021ZM23.2813 42.3958L29.2708 42.3958L29.2708 55.3125L13.8021 55.3125L0 41.5104L0 13.8021L13.8021 0L29.2708 0L29.2708 13.8021L23.2813 13.8021Z"/>
+      <path transform="translate(170.231, 46.0213)" fill="#22D045" d="M36.5104 13.8021L26.7187 13.8021L26.7187 7.76042L34.4271 0L48.3854 0L59.5833 12.9167L59.5833 27.2396L36.5104 27.2396ZM0 55.3125L0 7.10543e-15L23.0208 7.10543e-15L23.0208 55.3125Z"/>
+      <path transform="translate(236.429, 46.0213)" fill="#22D045" d="M36.875 13.8021L26.6667 13.8021L26.6667 7.10543e-15L46.0937 7.10543e-15L59.8958 13.8021L59.8958 60.7812L46.0937 74.6875L15.7292 74.6875L8.80208 67.7083L8.80208 62.6042L36.875 62.6042ZM33.2292 42.3958L33.2292 48.4896L26.3542 55.3125L13.8021 55.3125L0 41.5104L0 13.8021L13.8021 0L23.0208 0L23.0208 42.3958Z"/>
+    </svg>
+  </div>
+  <p class="designation" data-hero>// deduplicating archiver — est. 2015</p>
+  <h1 data-hero>Backups with <em>deduplication</em>, <em>compression</em> and <em>authenticated&nbsp;encryption</em>.</h1>
+  <p class="futile" data-hero>Redundancy is futile. <b>Your data will be deduplicated.</b></p>
+  <div class="cta-row" data-hero>
+    <a class="btn solid" href="/releases/">Install Borg</a>
+    <a class="btn" href="/demo.html">Watch the demo</a>
+  </div>
+  <noscript>
+    <div class="hero-fallback">
+      <p>BorgBackup (Borg for short) provides space-efficient, encrypted, compressed backups.
+         This page uses JavaScript for the animated visuals; all information and links work without it.</p>
+    </div>
+  </noscript>
+  <div class="scroll-hint" data-hero>▼ scroll to assimilate ▼</div>
+</section>
+
+<!-- ============================ FEATURES ============================ -->
+<section class="block" id="features">
+  <p class="kicker">// capabilities</p>
+  <h2>One archiver. Every defense your data needs.</h2>
+  <p class="lead">Borg stores your files as content-defined chunks. Identical chunks are stored
+     exactly once — across files, across machines, across years of history.</p>
+  <div class="features">
+    <div class="feature">
+      <span class="glyph">▣</span>
+      <h3>Space-efficient storage</h3>
+      <p>Content-defined chunking deduplicates everything in the repository. Daily full
+         backups cost little more than the changes since yesterday.</p>
+    </div>
+    <div class="feature">
+      <span class="glyph">⬢</span>
+      <h3>Authenticated encryption</h3>
+      <p>AES encryption with cryptographic authentication. Your backup server never
+         needs to be trusted — it only ever sees ciphertext.</p>
+    </div>
+    <div class="feature">
+      <span class="glyph">◧</span>
+      <h3>Compression</h3>
+      <p>Pick your trade-off: lz4 for speed, zstd for balance, zlib and lzma for maximum
+         squeeze — or none at all.</p>
+    </div>
+    <div class="feature">
+      <span class="glyph">⌖</span>
+      <h3>Mountable archives</h3>
+      <p>Mount any archive as a regular filesystem with FUSE and browse old versions of
+         your files like any folder.</p>
+    </div>
+    <div class="feature">
+      <span class="glyph">⌬</span>
+      <h3>Runs everywhere you do</h3>
+      <p>Easy installation on Linux, macOS, BSD and more — from distribution packages,
+         single-file binaries, or pip.</p>
+    </div>
+    <div class="feature">
+      <span class="glyph">⚑</span>
+      <h3>Free &amp; open source</h3>
+      <p>BSD licensed, developed in the open, and backed by a large, active community
+         since 2015.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ DEDUP VISUAL ============================ -->
+<section class="block" id="dedup">
+  <p class="kicker">// deduplication</p>
+  <h2>Store it once. Reference it forever.</h2>
+  <p class="lead">Three nightly backups of the same machine. Most chunks already exist in the
+     repository — Borg stores only what changed.</p>
+  <div class="dedup-panel">
+    <div class="dedup-rows" id="dedupRows">
+      <div class="chunk-row" data-day="0">
+        <span class="label">night 1</span>
+        <div class="chunk new" data-id="A">A</div><div class="chunk new" data-id="B">B</div>
+        <div class="chunk new" data-id="C">C</div><div class="chunk new" data-id="D">D</div>
+        <div class="chunk new" data-id="E">E</div><div class="chunk new" data-id="F">F</div>
+        <div class="chunk new" data-id="G">G</div><div class="chunk new" data-id="H">H</div>
+      </div>
+      <div class="chunk-row" data-day="1">
+        <span class="label">night 2</span>
+        <div class="chunk dup" data-id="A">A</div><div class="chunk dup" data-id="B">B</div>
+        <div class="chunk dup" data-id="C">C</div><div class="chunk dup" data-id="D">D</div>
+        <div class="chunk dup" data-id="E">E</div><div class="chunk dup" data-id="F">F</div>
+        <div class="chunk dup" data-id="G">G</div><div class="chunk new" data-id="I">I</div>
+      </div>
+      <div class="chunk-row" data-day="2">
+        <span class="label">night 3</span>
+        <div class="chunk dup" data-id="A">A</div><div class="chunk dup" data-id="B">B</div>
+        <div class="chunk new" data-id="J">J</div><div class="chunk dup" data-id="D">D</div>
+        <div class="chunk dup" data-id="E">E</div><div class="chunk dup" data-id="F">F</div>
+        <div class="chunk dup" data-id="G">G</div><div class="chunk dup" data-id="I">I</div>
+      </div>
+    </div>
+    <div class="dedup-result">
+      <div><span class="big"><span id="chunksTotal">24</span> chunks seen</span></div>
+      <div><span class="big"><span id="chunksStored">24</span> stored</span></div>
+      <div class="note">duplicate chunks collapse into a single stored copy —<br/>history stays complete, the repository stays small.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ TERMINAL ============================ -->
+<section class="block" id="terminal">
+  <p class="kicker">// in practice</p>
+  <h2>A backup is one command.</h2>
+  <p class="lead">No daemons, no agents, no lock-in. Point Borg at a repository — local disk,
+     USB drive, or any machine you can reach over SSH — and go.</p>
+  <div class="term">
+    <div class="term-bar"><i></i><i></i><i></i><span>borg@cube:~</span></div>
+    <pre id="termOut" aria-label="Example borg session (illustrative output)"></pre>
+  </div>
+</section>
+
+<!-- ============================ COUNTERS ============================ -->
+<section class="block" id="numbers">
+  <p class="kicker">// the collective</p>
+  <h2>Trusted by sysadmins, hoarders and the merely paranoid.</h2>
+  <p class="lead">Borg has protected production servers, research data and family photo
+     archives for a decade. It is boring, in the best possible way.</p>
+  <div class="counters">
+    <div class="counter"><div class="num"><span data-count="10">0</span>+</div><div class="what">years of development</div></div>
+    <div class="counter"><div class="num"><span data-count="4">0</span></div><div class="what">compression algorithms</div></div>
+    <div class="counter"><div class="num"><span data-count="100">0</span>%</div><div class="what">free software, BSD licensed</div></div>
+    <div class="counter"><div class="num"><span data-count="0">7</span></div><div class="what">trust required in your server</div></div>
+  </div>
+</section>
+
+<!-- ============================ FOOTER ============================ -->
+<footer>
+  <div class="links">
+    <a href="/demo.html">Demo</a>
+    <a href="/releases/">Install</a>
+    <a href="/support/fund.html">Fund</a>
+    <a href="/support/free.html">Support</a>
+    <a href="/support/commercial.html">Services</a>
+    <a href="https://borgbackup.readthedocs.io/">Docs</a>
+    <a href="https://github.com/borgbackup/community">Community</a>
+    <a href="https://github.com/borgbackup/borg">Contribute</a>
+  </div>
+  <p class="check">… and always check your backups!</p>
+  <p class="legal">BorgBackup is free software, distributed under the BSD license.<br/>
+     Terminal output and dedup figures above are illustrative.</p>
+</footer>
+
+</div><!-- /.page -->
+
+<!-- GSAP (UMD) -->
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+
+<!-- three.js scene + GSAP choreography -->
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ================================================================
+   THREE.JS — the Borg cube
+   A lattice of instanced cubelets ("stored chunks"), a starfield,
+   and loose data chunks spiralling in to be assimilated.
+   ================================================================ */
+const canvas = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x020503, 0.012);
+
+const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 200);
+camera.position.set(0, 0, 15);
+
+scene.add(new THREE.AmbientLight(0x18301c, 1.4));
+const key = new THREE.DirectionalLight(0x9fffb4, 1.1);
+key.position.set(6, 8, 10);
+scene.add(key);
+const core = new THREE.PointLight(0x22d045, 14, 30);
+scene.add(core);
+
+/* --- cube lattice --- */
+const N = 6, SPACING = 1.06;
+const COUNT = N * N * N;
+const cubeGroup = new THREE.Group();
+scene.add(cubeGroup);
+
+const boxGeo = new THREE.BoxGeometry(0.92, 0.92, 0.92);
+const boxMat = new THREE.MeshLambertMaterial({ color: 0xffffff });
+const lattice = new THREE.InstancedMesh(boxGeo, boxMat, COUNT);
+lattice.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+cubeGroup.add(lattice);
+
+// per-instance home position, explode direction, scale, color
+const home = [], dir = [], scl = [];
+const dummy = new THREE.Object3D();
+const cBase = new THREE.Color(0x0c1a0e);
+const cMid  = new THREE.Color(0x14803a);
+const cHot  = new THREE.Color(0x22d045);
+let i = 0;
+const half = (N - 1) / 2;
+for (let x = 0; x < N; x++) for (let y = 0; y < N; y++) for (let z = 0; z < N; z++) {
+  const p = new THREE.Vector3((x - half) * SPACING, (y - half) * SPACING, (z - half) * SPACING);
+  home.push(p);
+  dir.push(p.clone().normalize().add(new THREE.Vector3(
+    (Math.random() - 0.5), (Math.random() - 0.5), (Math.random() - 0.5)
+  ).multiplyScalar(0.7)).normalize());
+  scl.push(0.82 + Math.random() * 0.18);
+  const r = Math.random();
+  lattice.setColorAt(i, r > 0.90 ? cHot : (r > 0.74 ? cMid : cBase));
+  i++;
+}
+lattice.instanceColor.needsUpdate = true;
+
+/* --- glowing outline of the assembled cube --- */
+const edgeSize = N * SPACING;
+const edges = new THREE.LineSegments(
+  new THREE.EdgesGeometry(new THREE.BoxGeometry(edgeSize, edgeSize, edgeSize)),
+  new THREE.LineBasicMaterial({ color: 0x22d045, transparent: true, opacity: 0.4 })
+);
+cubeGroup.add(edges);
+
+/* --- starfield --- */
+const starGeo = new THREE.BufferGeometry();
+const starCount = 900, starPos = new Float32Array(starCount * 3);
+for (let s = 0; s < starCount; s++) {
+  const v = new THREE.Vector3().randomDirection().multiplyScalar(40 + Math.random() * 60);
+  starPos.set([v.x, v.y, v.z], s * 3);
+}
+starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({
+  color: 0x7fdb91, size: 0.45, sizeAttenuation: true, transparent: true, opacity: 0.7
+})));
+
+/* --- incoming data chunks (assimilation streams) --- */
+const CHUNKS = 48;
+const chunkMesh = new THREE.InstancedMesh(
+  new THREE.BoxGeometry(0.22, 0.22, 0.22),
+  new THREE.MeshBasicMaterial({ color: 0x22d045 }),
+  CHUNKS
+);
+chunkMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+scene.add(chunkMesh);
+
+const streams = [];
+const resetStream = (st) => {
+  st.angle = Math.random() * Math.PI * 2;
+  st.radius = 18 + Math.random() * 22;
+  st.y = (Math.random() - 0.5) * 16;
+  st.speed = 4 + Math.random() * 5;
+  st.spin = 0.25 + Math.random() * 0.5;
+};
+for (let s = 0; s < CHUNKS; s++) {
+  const st = {};
+  resetStream(st);
+  st.radius = 4 + Math.random() * 36;   // stagger initial distances
+  streams.push(st);
+}
+
+/* --- scroll-driven state --- */
+const state = { progress: 0, mouseX: 0, mouseY: 0 };
+
+window.addEventListener('pointermove', (e) => {
+  state.mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+  state.mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+}, { passive: true });
+
+const resize = () => {
+  const w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+};
+window.addEventListener('resize', resize);
+resize();
+
+const clock = new THREE.Clock();
+
+function render() {
+  const dt = Math.min(clock.getDelta(), 0.05);
+  const t = clock.elapsedTime;
+  const p = state.progress;                       // 0 at top, 1 at page bottom
+  const spread = Math.sin(p * Math.PI) * 7;       // explode mid-page, reassemble at end
+
+  // lattice: home position pushed along explode direction by scroll
+  for (let k = 0; k < COUNT; k++) {
+    dummy.position.copy(home[k]).addScaledVector(dir[k], spread);
+    const s = scl[k] * (1 + 0.04 * Math.sin(t * 2 + k));
+    dummy.scale.setScalar(s);
+    dummy.rotation.set(spread * dir[k].x * 0.6, spread * dir[k].y * 0.6, 0);
+    dummy.updateMatrix();
+    lattice.setMatrixAt(k, dummy.matrix);
+  }
+  lattice.instanceMatrix.needsUpdate = true;
+
+  cubeGroup.rotation.y = t * 0.12 + p * Math.PI * 2;
+  cubeGroup.rotation.x = Math.sin(t * 0.07) * 0.18 + p * 0.6;
+  edges.material.opacity = Math.max(0, 0.4 - spread * 0.12) * (0.75 + 0.25 * Math.sin(t * 2));
+  core.intensity = 10 + 6 * Math.sin(t * 1.6);
+
+  // assimilation streams spiral inward
+  for (let s = 0; s < CHUNKS; s++) {
+    const st = streams[s];
+    st.radius -= st.speed * dt;
+    st.angle += st.spin * dt;
+    if (st.radius < 3.4) resetStream(st);
+    const fade = Math.min(1, (st.radius - 3.4) / 3);
+    dummy.position.set(Math.cos(st.angle) * st.radius, st.y * (st.radius / 30), Math.sin(st.angle) * st.radius);
+    dummy.scale.setScalar(Math.max(0.001, fade));
+    dummy.rotation.set(t * 2 + s, t * 1.5, 0);
+    dummy.updateMatrix();
+    chunkMesh.setMatrixAt(s, dummy.matrix);
+  }
+  chunkMesh.instanceMatrix.needsUpdate = true;
+
+  // camera: pull back as we scroll, gentle mouse parallax
+  camera.position.x += ((state.mouseX * 1.6) - camera.position.x) * 0.04;
+  camera.position.y += ((-state.mouseY * 1.2) - camera.position.y) * 0.04;
+  camera.position.z = 15 + p * 7;
+  camera.lookAt(0, 0, 0);
+
+  renderer.render(scene, camera);
+}
+
+if (reduced) {
+  render();                       // single static frame
+} else {
+  renderer.setAnimationLoop(render);
+}
+
+/* ================================================================
+   GSAP — choreography
+   ================================================================ */
+gsap.registerPlugin(ScrollTrigger);
+
+if (!reduced) {
+  // scroll progress drives the 3D scene
+  ScrollTrigger.create({
+    trigger: document.body,
+    start: 'top top',
+    end: 'bottom bottom',
+    scrub: 0.8,
+    onUpdate: (self) => { state.progress = self.progress; }
+  });
+
+  // hero entrance
+  gsap.from('[data-hero]', {
+    y: 36, opacity: 0, duration: 1.1, stagger: 0.12, ease: 'power3.out', delay: 0.15
+  });
+
+  // section headers + leads
+  document.querySelectorAll('section.block').forEach((sec) => {
+    gsap.from(sec.querySelectorAll('.kicker, h2, .lead'), {
+      scrollTrigger: { trigger: sec, start: 'top 75%' },
+      y: 30, opacity: 0, duration: 0.8, stagger: 0.12, ease: 'power2.out'
+    });
+  });
+
+  // feature cards
+  gsap.from('.feature', {
+    scrollTrigger: { trigger: '.features', start: 'top 80%' },
+    y: 40, opacity: 0, duration: 0.7, stagger: 0.09, ease: 'power2.out'
+  });
+
+  // counters
+  document.querySelectorAll('[data-count]').forEach((el) => {
+    const target = parseInt(el.dataset.count, 10);
+    const obj = { v: el.textContent === '7' ? 7 : 0 };
+    gsap.to(obj, {
+      v: target, duration: 1.6, ease: 'power1.out',
+      scrollTrigger: { trigger: el, start: 'top 85%' },
+      onUpdate: () => { el.textContent = Math.round(obj.v); }
+    });
+  });
+}
+
+/* --- dedup chunk collapse --- */
+(function dedupAnim() {
+  const rows = document.getElementById('dedupRows');
+  const firstOf = {};   // chunk id -> first occurrence element
+  rows.querySelectorAll('.chunk').forEach((el) => {
+    if (!(el.dataset.id in firstOf)) firstOf[el.dataset.id] = el;
+  });
+  const dups = rows.querySelectorAll('.chunk.dup');
+  const stored = Object.keys(firstOf).length;
+  const total = rows.querySelectorAll('.chunk').length;
+  document.getElementById('chunksTotal').textContent = total;
+  const storedEl = document.getElementById('chunksStored');
+
+  if (reduced) { storedEl.textContent = stored; return; }
+
+  ScrollTrigger.create({
+    trigger: rows,
+    start: 'top 70%',
+    once: true,
+    onEnter: () => {
+      const tl = gsap.timeline();
+      dups.forEach((el, idx) => {
+        const src = el.getBoundingClientRect();
+        const dst = firstOf[el.dataset.id].getBoundingClientRect();
+        tl.to(el, {
+          x: dst.left - src.left, y: dst.top - src.top,
+          opacity: 0.12, scale: 0.85, duration: 0.55, ease: 'power2.inOut'
+        }, 0.5 + idx * 0.045);
+      });
+      const cnt = { v: total };
+      tl.to(cnt, {
+        v: stored, duration: 1.0, ease: 'power1.inOut',
+        onUpdate: () => { storedEl.textContent = Math.round(cnt.v); }
+      }, 0.6);
+      tl.to(rows.querySelectorAll('.chunk.new'), {
+        boxShadow: '0 0 22px rgba(34,208,69,0.7)', duration: 0.4, stagger: 0.05
+      }, '>-0.3');
+    }
+  });
+})();
+
+/* --- terminal typing --- */
+(function terminal() {
+  const out = document.getElementById('termOut');
+  const lines = [
+    { type: 'cmd',  text: 'borg create --stats --compression zstd backup:repo::{now} ~/work' },
+    { type: 'out',  text: '------------------------------------------------------------------------------' },
+    { type: 'out',  text: 'Archive name: 2026-06-13T03:14:07' },
+    { type: 'out',  text: 'Number of files: 173429' },
+    { type: 'out',  text: '                       Original size      Compressed size    Deduplicated size' },
+    { type: 'hl',   text: 'This archive:               47.30 GB             21.07 GB             92.51 MB' },
+    { type: 'out',  text: 'All archives:              892.07 GB            412.86 GB             29.74 GB' },
+    { type: 'out',  text: '------------------------------------------------------------------------------' },
+    { type: 'cmd',  text: 'borg check backup:repo', comment: '   # … and always check your backups!' },
+    { type: 'out',  text: '' },
+  ];
+
+  const renderStatic = () => {
+    out.innerHTML = lines.map((l) => {
+      if (l.type === 'cmd') return `<span class="p">$ </span>${l.text}<span class="c">${l.comment || ''}</span>`;
+      if (l.type === 'hl') return `<span class="hl">${l.text}</span>`;
+      return l.text;
+    }).join('\n') + '\n<span class="p">$ </span><span class="cursor"></span>';
+  };
+
+  if (reduced) { renderStatic(); return; }
+
+  ScrollTrigger.create({
+    trigger: '#terminal .term',
+    start: 'top 70%',
+    once: true,
+    onEnter: () => {
+      const tl = gsap.timeline();
+      let html = '';
+      lines.forEach((l) => {
+        if (l.type === 'cmd') {
+          // type command character by character
+          const prefix = html;
+          const chars = { n: 0 };
+          tl.to(chars, {
+            n: l.text.length, duration: l.text.length * 0.035, ease: 'none',
+            onUpdate: () => {
+              out.innerHTML = prefix + '<span class="p">$ </span>' +
+                l.text.slice(0, Math.round(chars.n)) + '<span class="cursor"></span>';
+            }
+          });
+          html = prefix + '<span class="p">$ </span>' + l.text +
+                 (l.comment ? `<span class="c">${l.comment}</span>` : '') + '\n';
+          tl.to({}, { duration: 0.35 });
+        } else {
+          const rendered = l.type === 'hl' ? `<span class="hl">${l.text}</span>` : l.text;
+          html += rendered + '\n';
+          const snapshot = html;
+          tl.call(() => { out.innerHTML = snapshot + '<span class="cursor"></span>'; });
+          tl.to({}, { duration: 0.07 });
+        }
+      });
+      tl.call(() => { out.innerHTML = html + '<span class="p">$ </span><span class="cursor"></span>'; });
+    }
+  });
+})();
+</script>
+</body>
+</html>

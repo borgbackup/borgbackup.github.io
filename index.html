@@ -431,6 +431,10 @@ section.block p.lead {
   min-height: 18em;
 }
 
+/* the screen-reader copy of the session must not inherit the
+   scrollable overflow-x from .term pre */
+.term pre.sr-only { overflow: hidden; min-height: 0; padding: 0; }
+
 .term pre .p { color: var(--green); }
 .term pre .c { color: var(--text-dim); }
 .term pre .hl { color: var(--green); }
@@ -754,9 +758,9 @@ noscript .hero-fallback {
       </div>
     </div>
     <div class="dedup-result">
-      <div><span class="big"><span id="chunksTotal">24</span> chunks seen</span></div>
-      <div><span class="big"><span id="chunksStored">24</span> stored</span></div>
-      <div class="note">duplicate chunks collapse into a single stored copy —<br/>history stays complete, the repository stays small.</div>
+      <div aria-hidden="true"><span class="big"><span id="chunksTotal">24</span> chunks seen</span></div>
+      <div aria-hidden="true"><span class="big"><span id="chunksStored">24</span> stored</span></div>
+      <div class="note"><span class="sr-only" id="dedupResultSR"></span>duplicate chunks collapse into a single stored copy —<br/>history stays complete, the repository stays small.</div>
     </div>
   </div>
 </section>
@@ -769,7 +773,7 @@ noscript .hero-fallback {
      USB drive, or any machine you can reach over SSH — and go.</p>
   <div class="term" role="group" aria-label="Example borg session (illustrative output)">
     <div class="term-bar"><i></i><i></i><i></i><span aria-hidden="true">borg@cube:~</span></div>
-    <pre id="termOut"></pre>
+    <pre id="termOut" aria-hidden="true"></pre>
   </div>
 </section>
 
@@ -1021,10 +1025,10 @@ noscript .hero-fallback {
   <p class="lead">Borg has protected production servers, research data and family photo
      archives for a decade. It is boring, in the best possible way.</p>
   <div class="counters">
-    <div class="counter"><div class="num"><span data-count="10">0</span>+</div><div class="what">years of development</div></div>
-    <div class="counter"><div class="num"><span data-count="4">0</span></div><div class="what">compression algorithms</div></div>
-    <div class="counter"><div class="num"><span data-count="100">0</span>%</div><div class="what">free software, BSD licensed</div></div>
-    <div class="counter"><div class="num"><span data-count="0">7</span></div><div class="what">trust required in your server</div></div>
+    <div class="counter"><div class="num"><span aria-hidden="true"><span data-count="10">0</span>+</span><span class="sr-only">10+</span></div><div class="what">years of development</div></div>
+    <div class="counter"><div class="num"><span aria-hidden="true"><span data-count="4">0</span></span><span class="sr-only">4</span></div><div class="what">compression algorithms</div></div>
+    <div class="counter"><div class="num"><span aria-hidden="true"><span data-count="100">0</span>%</span><span class="sr-only">100%</span></div><div class="what">free software, BSD licensed</div></div>
+    <div class="counter"><div class="num"><span aria-hidden="true"><span data-count="0">7</span></span><span class="sr-only">0</span></div><div class="what">trust required in your server</div></div>
   </div>
 </section>
 
@@ -1379,6 +1383,8 @@ if (!reduced) {
   const total = rows.querySelectorAll('.chunk').length;
   document.getElementById('chunksTotal').textContent = total;
   const storedEl = document.getElementById('chunksStored');
+  // the visible numbers animate on scroll; give screen readers the final result
+  document.getElementById('dedupResultSR').textContent = `${total} chunks seen, ${stored} stored: `;
 
   if (reduced) { storedEl.textContent = stored; return; }
 
@@ -1493,6 +1499,15 @@ if (!reduced) {
       return l.text;
     }).join('\n') + '\n<span class="p">$ </span><span class="cursor"></span>';
   };
+
+  // the visible pre types out on scroll (and is aria-hidden);
+  // screen readers get the complete session up front
+  const sr = document.createElement('pre');
+  sr.className = 'sr-only';
+  sr.textContent = lines.map((l) =>
+    l.type === 'cmd' ? `$ ${l.text}${l.comment || ''}` : l.text
+  ).join('\n');
+  out.after(sr);
 
   if (reduced) { renderStatic(); return; }
 

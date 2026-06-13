@@ -72,6 +72,15 @@ body.dragging, body.dragging .hero {
 a { color: var(--green); text-decoration: none; }
 a:hover { text-shadow: 0 0 8px rgba(34, 208, 69, 0.8); }
 
+/* links inside running text must not rely on color alone */
+p a {
+  text-decoration: underline;
+  text-decoration-color: rgba(34, 208, 69, 0.55);
+  text-underline-offset: 0.2em;
+}
+
+p a:hover { text-decoration-color: var(--green); }
+
 /* ---------- skip link (visible only while focused) ---------- */
 .skip-link {
   position: fixed;

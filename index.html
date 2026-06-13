@@ -72,6 +72,23 @@ body.dragging, body.dragging .hero {
 a { color: var(--green); text-decoration: none; }
 a:hover { text-shadow: 0 0 8px rgba(34, 208, 69, 0.8); }
 
+/* ---------- skip link (visible only while focused) ---------- */
+.skip-link {
+  position: fixed;
+  top: -100%;
+  left: 0.6rem;
+  z-index: 20;
+  padding: 0.7rem 1.2rem;
+  background: var(--green);
+  color: #021006;
+  font-weight: bold;
+}
+
+.skip-link:focus { top: 0.6rem; }
+
+main { display: block; }
+main:focus { outline: none; }   /* focus target for the skip link, not an interactive element */
+
 /* ---------- top nav ---------- */
 header.top {
   position: fixed;
@@ -557,6 +574,8 @@ noscript .hero-fallback {
 </head>
 <body>
 
+<a class="skip-link" href="#main">Skip to content</a>
+
 <canvas id="scene" aria-hidden="true"></canvas>
 <div id="crt" aria-hidden="true"></div>
 
@@ -585,6 +604,8 @@ noscript .hero-fallback {
     </ol>
   </nav>
 </header>
+
+<main id="main" tabindex="-1">
 
 <!-- ============================ HERO ============================ -->
 <section class="hero" id="hero">
@@ -964,6 +985,8 @@ noscript .hero-fallback {
     <div class="counter"><div class="num"><span data-count="0">7</span></div><div class="what">trust required in your server</div></div>
   </div>
 </section>
+
+</main>
 
 <!-- ============================ FOOTER ============================ -->
 <footer>

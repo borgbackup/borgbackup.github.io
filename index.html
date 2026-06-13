@@ -254,7 +254,11 @@ section.block {
   max-width: 1060px;
   margin: 0 auto;
   padding: 6rem 1.5rem;
-  scroll-margin-top: 7rem;   /* keep kickers clear of the fixed header */
+  /* land the kicker ~2mm below the fixed header on anchor nav. The section's
+     6rem top padding sits between its border box (what scroll snaps to) and
+     the kicker, so we subtract it back out; --header-h is measured in JS and
+     adapts to the taller two-row header on narrow screens. */
+  scroll-margin-top: calc(var(--header-h, 62px) + 2mm - 6rem);
 }
 
 .kicker {
@@ -609,7 +613,7 @@ noscript .hero-fallback {
   .chunk-row { grid-template-columns: 3.4rem repeat(8, 1fr); }
   .chunk { font-size: 0.6rem; }
   .hero .designation, .scroll-hint { letter-spacing: 0.18em; }
-  section.block { scroll-margin-top: 9.5rem; }  /* taller two-row header */
+  /* scroll-margin-top now adapts via --header-h (set in JS) */
 }
 </style>
 </head>
@@ -1050,6 +1054,21 @@ noscript .hero-fallback {
 </footer>
 
 </div><!-- /.page -->
+
+<!-- expose the fixed-header height so section scroll-margins offset it exactly
+     (runs independently of three.js/GSAP so anchor nav works even without WebGL) -->
+<script>
+(function () {
+  var header = document.querySelector('header.top');
+  if (!header) return;
+  var setH = function () {
+    document.documentElement.style.setProperty('--header-h', header.offsetHeight + 'px');
+  };
+  setH();
+  if (window.ResizeObserver) new ResizeObserver(setH).observe(header);
+  else window.addEventListener('resize', setH);
+})();
+</script>
 
 <!-- GSAP (UMD) -->
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>

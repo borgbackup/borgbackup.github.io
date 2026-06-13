@@ -738,13 +738,18 @@ cubeGroup.add(edges);
 const starGeo = new THREE.BufferGeometry();
 const starCount = 900, starPos = new Float32Array(starCount * 3);
 for (let s = 0; s < starCount; s++) {
-  const v = new THREE.Vector3().randomDirection().multiplyScalar(40 + Math.random() * 60);
+  let v = new THREE.Vector3().randomDirection().multiplyScalar(40 + Math.random() * 60);
+  // stars drift along +z past the camera; keep them out of the camera's
+  // corridor so a passing star never balloons across the whole lens
+  while (Math.hypot(v.x, v.y) < 6)
+    v = new THREE.Vector3().randomDirection().multiplyScalar(40 + Math.random() * 60);
   starPos.set([v.x, v.y, v.z], s * 3);
 }
 starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
-scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({
+const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({
   color: 0x7fdb91, size: 0.45, sizeAttenuation: true, transparent: true, opacity: 0.7
-})));
+}));
+scene.add(stars);
 
 /* --- incoming data chunks (assimilation streams) --- */
 const CHUNKS = 48;
@@ -833,6 +838,19 @@ function render() {
 
   cubeGroup.visible = calm < 0.995;
   chunkMesh.visible = calm < 0.995;
+
+  // stars drift past the camera — a slow cruise through space
+  // (a touch faster when calm, where the starfield is all there is)
+  const starDrift = (1.2 + calm * 2.4) * dt;
+  const sp = starGeo.attributes.position;
+  for (let s = 0; s < starCount; s++) {
+    let z = sp.getZ(s) + starDrift;
+    if (z > 40) z -= 140;                 // wrap from behind the camera to deep space
+    sp.setZ(s, z);
+  }
+  sp.needsUpdate = true;
+  // barely-there lateral sway; bounded so the wrap plane stays behind the camera
+  stars.rotation.y = Math.sin(t * 0.05) * 0.04;
 
   // lattice: home position pushed along explode direction by scroll
   if (cubeGroup.visible) {

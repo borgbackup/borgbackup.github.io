@@ -1513,29 +1513,45 @@ if (!reduced) {
 
   if (reduced) { storedEl.textContent = stored; return; }
 
+  const news = rows.querySelectorAll('.chunk.new');
+  let tl = null;
+
+  // replay the collapse from scratch: reset every chunk to its start state,
+  // then build a fresh timeline (offsets are measured AFTER the reset so they
+  // are correct even if a previous run left the dups translated)
+  const play = () => {
+    if (tl) tl.kill();
+    gsap.killTweensOf(dups);
+    gsap.set(dups, { clearProps: 'transform,opacity' });
+    gsap.set(news, { clearProps: 'boxShadow' });
+    storedEl.textContent = total;
+
+    tl = gsap.timeline();
+    dups.forEach((el, idx) => {
+      const src = el.getBoundingClientRect();
+      const dst = firstOf[el.dataset.id].getBoundingClientRect();
+      tl.to(el, {
+        x: dst.left - src.left, y: dst.top - src.top,
+        opacity: 0.12, scale: 0.85, duration: 0.55, ease: 'power2.inOut'
+      }, 0.5 + idx * 0.045);
+    });
+    const cnt = { v: total };
+    tl.to(cnt, {
+      v: stored, duration: 1.0, ease: 'power1.inOut',
+      onUpdate: () => { storedEl.textContent = Math.round(cnt.v); }
+    }, 0.6);
+    tl.to(news, {
+      boxShadow: '0 0 22px rgba(34,208,69,0.7)', duration: 0.4, stagger: 0.05
+    }, '>-0.3');
+  };
+
+  // restart every time the rows scroll into view, from either direction
   ScrollTrigger.create({
     trigger: rows,
     start: 'top 70%',
-    once: true,
-    onEnter: () => {
-      const tl = gsap.timeline();
-      dups.forEach((el, idx) => {
-        const src = el.getBoundingClientRect();
-        const dst = firstOf[el.dataset.id].getBoundingClientRect();
-        tl.to(el, {
-          x: dst.left - src.left, y: dst.top - src.top,
-          opacity: 0.12, scale: 0.85, duration: 0.55, ease: 'power2.inOut'
-        }, 0.5 + idx * 0.045);
-      });
-      const cnt = { v: total };
-      tl.to(cnt, {
-        v: stored, duration: 1.0, ease: 'power1.inOut',
-        onUpdate: () => { storedEl.textContent = Math.round(cnt.v); }
-      }, 0.6);
-      tl.to(rows.querySelectorAll('.chunk.new'), {
-        boxShadow: '0 0 22px rgba(34,208,69,0.7)', duration: 0.4, stagger: 0.05
-      }, '>-0.3');
-    }
+    end: 'bottom 30%',
+    onEnter: play,
+    onEnterBack: play
   });
 })();
 

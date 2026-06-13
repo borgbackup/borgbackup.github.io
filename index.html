@@ -1453,6 +1453,13 @@ if (!reduced) {
       // API, so use the player's programmatic API instead
       asciinema.player.js.CreatePlayer(stage, c.file, { speed: c.speed, poster: 'npt:0:21' });
       meta.textContent = `borg ${c.borg} — ${c.title} · ${c.dur} · all text in the recording can be selected and copied`;
+      // the player's terminal area can scroll; make it keyboard-reachable
+      const termEl = stage.querySelector('.asciinema-terminal');
+      if (termEl) {
+        termEl.setAttribute('tabindex', '0');
+        termEl.setAttribute('role', 'group');
+        termEl.setAttribute('aria-label', `borg ${c.borg} ${c.title} recording`);
+      }
     }).catch(() => {
       stage.innerHTML = '<p class="demo-hint">the demo player could not be loaded.</p>';
     });

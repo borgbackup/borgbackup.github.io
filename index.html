@@ -1567,40 +1567,27 @@ if (!reduced) {
     { borg: '1.0', title: 'install + basics', file: '_assets/asciinema-28691.json',  dur: '5 min 30 s', speed: 1.5 },
   ];
 
-  // the player JS/CSS are heavy, so they only load once the section is near.
-  // the URLs carry a ?v= so a browser that earlier cached a 404 for the bare
-  // path (e.g. before this asset was deployed) can't serve that stale failure
-  // back — the versioned URL is a different cache key. a retry additionally
-  // appends a unique &cb= to force a fully uncached fetch, and a failed attempt
-  // is NOT cached in JS either, so a later retry / scroll can always recover.
-  const VER = '3.15.1';
-  const assetUrl = (ext, bust) =>
-    `_assets/asciinema-player-v${VER}.${ext}?v=${VER}` + (bust ? `&cb=${Date.now()}` : '');
+  // the player JS/CSS are heavy, so they only load once the section is near
   let assets = null;
-  const loadAssets = (bust) => {
-    if (assets) return assets;
-    assets = new Promise((resolve, reject) => {
-      if (window.AsciinemaPlayer) return resolve();   // already loaded
-      const css = document.createElement('link');
-      css.rel = 'stylesheet';
-      css.href = assetUrl('css', bust);
-      document.head.appendChild(css);
-      const js = document.createElement('script');
-      js.src = assetUrl('min.js', bust);
-      js.onload = () => window.AsciinemaPlayer ? resolve() : reject(new Error('player global missing'));
-      js.onerror = () => reject(new Error('player load failed'));
-      document.head.appendChild(js);
-    }).catch((err) => { assets = null; throw err; });   // let the next call retry
-    return assets;
-  };
+  const loadAssets = () => assets ??= new Promise((resolve, reject) => {
+    const css = document.createElement('link');
+    css.rel = 'stylesheet';
+    css.href = '_assets/asciinema-player-v3.15.1.css';
+    document.head.appendChild(css);
+    const js = document.createElement('script');
+    js.src = '_assets/asciinema-player-v3.15.1.min.js';
+    js.onload = resolve;
+    js.onerror = () => reject(new Error('player load failed'));
+    document.head.appendChild(js);
+  });
 
   let current = -1;
   let player = null;
-  const show = (idx, bust) => {
+  const show = (idx) => {
     if (idx === current) return;
     current = idx;
     tabs.querySelectorAll('button').forEach((b, i) => b.setAttribute('aria-selected', String(i === idx)));
-    loadAssets(bust).then(() => {
+    loadAssets().then(() => {
       if (current !== idx) return;
       const c = casts[idx];
       if (player) { player.dispose(); player = null; }
@@ -1622,18 +1609,7 @@ if (!reduced) {
       const timer = stage.querySelector('.ap-timer');
       if (timer) timer.setAttribute('aria-label', 'Elapsed and remaining time');
     }).catch(() => {
-      if (current !== idx) return;
-      stage.innerHTML = '';
-      const msg = document.createElement('p');
-      msg.className = 'demo-hint';
-      msg.textContent = 'The demo player could not be loaded. ';
-      const retry = document.createElement('button');
-      retry.type = 'button';
-      retry.className = 'connect';
-      retry.textContent = 'Retry';
-      retry.addEventListener('click', () => { current = -1; show(idx, true); });   // force an uncached fetch
-      msg.appendChild(retry);
-      stage.appendChild(msg);
+      stage.innerHTML = '<p class="demo-hint">the demo player could not be loaded.</p>';
     });
   };
 
@@ -1647,28 +1623,12 @@ if (!reduced) {
     tabs.appendChild(b);
   });
 
-  // auto-load the first cast when the section comes near. IntersectionObserver
-  // is primary, but it can stay silent in throttled/background contexts, which
-  // would leave the stage stuck on "loading player…" forever — so a passive
-  // scroll listener is a fallback, and both share a one-shot guard.
-  let autoLoaded = false;
-  const autoLoad = () => {
-    if (autoLoaded) return;
-    autoLoaded = true;
-    io.disconnect();
-    removeEventListener('scroll', onScroll);
-    show(0);
-  };
-  const io = new IntersectionObserver((entries) => {
-    if (entries.some((e) => e.isIntersecting)) autoLoad();
-  }, { rootMargin: '600px' });
-  io.observe(stage);
-  const onScroll = () => {
-    const r = stage.getBoundingClientRect();
-    if (r.top < innerHeight + 600 && r.bottom > -600) autoLoad();
-  };
-  addEventListener('scroll', onScroll, { passive: true });
-  onScroll();   // in case the section is already near the viewport on load
+  new IntersectionObserver((entries, io) => {
+    if (entries.some((e) => e.isIntersecting)) {
+      io.disconnect();
+      show(0);
+    }
+  }, { rootMargin: '500px' }).observe(stage);
 })();
 
 /* --- live IRC chat: load the third-party client only on explicit opt-in --- */

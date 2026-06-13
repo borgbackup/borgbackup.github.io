@@ -215,6 +215,18 @@ button.btn {
   50% { transform: translateY(8px); opacity: 1; }
 }
 
+/* text that sits directly over the animated canvas gets a local scrim
+   of stacked dark shadows, so drifting bright cubes can't wash it out */
+.hero .designation, .hero h1, .hero .futile, .scroll-hint,
+.kicker, section.block h2, section.block p.lead, .aside, .demo-meta {
+  text-shadow:
+    0 0 4px var(--bg),
+    0 0 9px var(--bg),
+    0 0 18px var(--bg),
+    0 0 32px var(--bg),
+    0 2px 24px rgba(0, 0, 0, 0.9);
+}
+
 /* ---------- generic section shell ---------- */
 section.block {
   max-width: 1060px;

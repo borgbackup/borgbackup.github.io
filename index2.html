@@ -139,7 +139,7 @@ header.top nav ol {
 }
 
 header.top nav a {
-  font-size: 0.85rem;
+  font-size: 1.00rem;
   font-weight: bold;
   letter-spacing: 0.04em;
 }
@@ -742,7 +742,7 @@ noscript .hero-fallback {
     <a class="btn solid" href="#install">Install Borg</a>
     <a class="btn" href="#demo">Watch the demo</a>
     <button class="btn" id="stopBtn" type="button" aria-pressed="false"
-            title="Calm the background animation">Stop</button>
+            title="Start the background animation">Animate</button>
   </div>
   <noscript>
     <div class="hero-fallback">
@@ -1126,7 +1126,6 @@ noscript .hero-fallback {
      archives for a decade. It is boring, in the best possible way.</p>
   <div class="counters">
     <div class="counter"><div class="num"><span aria-hidden="true"><span data-count="10">0</span>+</span><span class="sr-only">10+</span></div><div class="what">years of development</div></div>
-    <div class="counter"><div class="num"><span aria-hidden="true"><span data-count="4">0</span></span><span class="sr-only">4</span></div><div class="what">compression algorithms</div></div>
     <div class="counter"><div class="num"><span aria-hidden="true"><span data-count="100">0</span>%</span><span class="sr-only">100%</span></div><div class="what">free software, BSD licensed</div></div>
     <div class="counter"><div class="num"><span aria-hidden="true"><span data-count="0">7</span></span><span class="sr-only">0</span></div><div class="what">trust required in your server</div></div>
   </div>
@@ -1275,7 +1274,7 @@ scene.add(stars);
 const CHUNKS = 48;
 const chunkMesh = new THREE.InstancedMesh(
   new THREE.BoxGeometry(0.22, 0.22, 0.22),
-  new THREE.MeshBasicMaterial({ color: 0x22d045 }),
+  new THREE.MeshBasicMaterial({ color: 0x189230 }),   // 30% dimmer than the cube green
   CHUNKS
 );
 chunkMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
@@ -1299,7 +1298,7 @@ for (let s = 0; s < CHUNKS; s++) {
 
 /* --- scroll-driven state --- */
 /* calm: 0 = full animation, 1 = cube gone, chunks stopped, stars only */
-const state = { progress: 0, mouseX: 0, mouseY: 0, calm: 0 };
+const state = { progress: 0, mouseX: 0, mouseY: 0, calm: 1, starsOn: 0 };
 
 window.addEventListener('pointermove', (e) => {
   state.mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
@@ -1358,6 +1357,10 @@ function render() {
 
   cubeGroup.visible = calm < 0.995;
   chunkMesh.visible = calm < 0.995;
+
+  // starfield fades in/out with starsOn (0 = invisible in the stopped state)
+  stars.visible = state.starsOn > 0.001;
+  stars.material.opacity = 0.7 * state.starsOn;
 
   // stars drift past the camera — a slow cruise through space
   // (a touch faster when calm, where the starfield is all there is)
@@ -1435,14 +1438,29 @@ if (reduced) {
   renderer.setAnimationLoop(render);
 }
 
-/* --- stop button: wind the scene down to a calm starfield --- */
-const stopBtn = document.getElementById('stopBtn');
-stopBtn.addEventListener('click', () => {
-  const toCalm = state.calm < 0.5;
-  stopBtn.textContent = toCalm ? 'Resume' : 'Stop';
-  stopBtn.setAttribute('aria-pressed', String(toCalm));
-  if (reduced) { state.calm = toCalm ? 1 : 0; render(); return; }
-  gsap.to(state, { calm: toCalm ? 1 : 0, duration: 2.8, ease: 'power2.inOut', overwrite: 'auto' });
+/* --- animate button: the scene starts calm; this spins it up (and back) --- */
+const animBtn = document.getElementById('stopBtn');
+animBtn.addEventListener('click', () => {
+  const toAnimate = state.calm > 0.5;   // currently calm → start animating
+  animBtn.textContent = toAnimate ? 'Stop' : 'Animate';
+  animBtn.setAttribute('aria-pressed', String(toAnimate));
+  if (reduced) {
+    state.starsOn = toAnimate ? 1 : 0;
+    state.calm = toAnimate ? 0 : 1;
+    render();
+    return;
+  }
+  gsap.killTweensOf(state);
+  const tl = gsap.timeline();
+  if (toAnimate) {
+    // first tune in the starfield, then let the cube assemble out of it
+    tl.to(state, { starsOn: 1, duration: 1.2, ease: 'power2.out' });
+    tl.to(state, { calm: 0, duration: 2.4, ease: 'power2.inOut' }, '>-0.2');
+  } else {
+    // reverse: the cube recedes, then the starfield fades back out
+    tl.to(state, { calm: 1, duration: 2.4, ease: 'power2.inOut' });
+    tl.to(state, { starsOn: 0, duration: 1.2, ease: 'power2.out' }, '>-0.2');
+  }
 });
 
 // debugging/testing handle (this page is a prototype)

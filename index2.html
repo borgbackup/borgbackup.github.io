@@ -1471,11 +1471,13 @@ stopBtn.addEventListener('click', () => {
     windTween = gsap.timeline()
       // stars snap in, then the warp drive winds up — accelerating hard…
       .to(state, { starFade: 0, duration: 0.4, ease: 'power1.out' }, 0)
-      .to(state, { warp: 70, duration: 1.0, ease: 'power3.in' }, 0)
+      .to(state, { warp: 70, duration: 2.0, ease: 'power3.in' }, 0)
+      // …holds at full warp (constant speed)…
+      .to(state, { warp: 70, duration: 2.0 })
       // …then decelerates back to a normal cruise
-      .to(state, { warp: 1, duration: 1.6, ease: 'power2.out' })
+      .to(state, { warp: 1, duration: 2.0, ease: 'power2.out' })
       // dropping out of warp, the Borg cube reassembles into the familiar scene
-      .to(state, { calm: 0, duration: 2.4, ease: 'power2.inOut' }, '-=1.1');
+      .to(state, { calm: 0, duration: 2.4, ease: 'power2.inOut' }, '-=1.5');
   }
 });
 

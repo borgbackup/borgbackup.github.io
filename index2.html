@@ -1345,6 +1345,8 @@ resize();
 
 const timer = new THREE.Timer();
 const starScratch = new THREE.Vector3();   // reused when respawning wrapped stars
+const starBaseColor = new THREE.Color(0x7fdb91);   // cruise colour (matches the material)
+const starWarpColor = new THREE.Color(0xffffff);   // full-warp white
 
 function render() {
   timer.update();
@@ -1380,15 +1382,17 @@ function render() {
   // barely-there lateral sway; bounded so the wrap plane stays behind the camera
   stars.rotation.y = Math.sin(t * 0.05) * 0.04;
   // second wind-down stage: once the cube is gone, the starfield fades to nothing
-  stars.material.opacity = 0.7 * (1 - state.starFade);
   stars.visible = state.starFade < 0.999;
 
-  // warp drive: stars swell and brighten, and the lens punches outward so the
-  // field rushes past — strongest at peak warp, gone once we drop back to cruise
-  const warpK = state.warp - 1;
-  stars.material.size = 0.45 + Math.min(1.0, warpK * 0.018);
-  if (warpK > 0.01) stars.material.opacity = Math.min(1, stars.material.opacity + Math.min(0.3, warpK * 0.008));
-  const warpFov = BASE_FOV + Math.min(28, warpK * 0.45);
+  // warp drive: stars swell, brighten to white at full warp, then dim back —
+  // and the lens punches outward so the field rushes past. warpT tracks the
+  // warp curve (0 at cruise, 1 at full warp), so brightness ramps up while
+  // accelerating, holds at white through the constant phase, and fades on decel
+  const warpT = Math.min(1, (state.warp - 1) / 69);
+  stars.material.size = 0.45 + warpT * 1.0;
+  stars.material.color.copy(starBaseColor).lerp(starWarpColor, warpT);
+  stars.material.opacity = Math.min(1, 0.7 * (1 - state.starFade) + warpT * 0.5);
+  const warpFov = BASE_FOV + warpT * 28;
   if (Math.abs(camera.fov - warpFov) > 0.01) { camera.fov = warpFov; camera.updateProjectionMatrix(); }
 
   // lattice: home position pushed along explode direction by scroll

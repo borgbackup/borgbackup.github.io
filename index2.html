@@ -750,7 +750,7 @@ noscript .hero-fallback {
     <a class="btn solid" href="#install">Install Borg</a>
     <a class="btn" href="#demo">Watch the demo</a>
     <button class="btn" id="stopBtn" type="button" aria-pressed="true"
-            title="Start the background animation">Animate</button>
+            title="Engage the warp drive">Engage!</button>
   </div>
   <noscript>
     <div class="hero-fallback">
@@ -1197,7 +1197,8 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 const scene = new THREE.Scene();
 scene.fog = new THREE.FogExp2(0x020503, 0.012);
 
-const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 200);
+const BASE_FOV = 50;
+const camera = new THREE.PerspectiveCamera(BASE_FOV, 1, 0.1, 200);
 camera.position.set(0, 0, 15);
 
 scene.add(new THREE.AmbientLight(0x18301c, 1.4));
@@ -1294,7 +1295,7 @@ for (let s = 0; s < CHUNKS; s++) {
 /* --- scroll-driven state --- */
 /* calm:     0 = full animation, 1 = cube gone, chunks stopped, stars only
    starFade: 0 = stars at full brightness, 1 = stars gone (no animation left) */
-const state = { progress: 0, mouseX: 0, mouseY: 0, calm: 1, starFade: 1 };
+const state = { progress: 0, mouseX: 0, mouseY: 0, calm: 1, starFade: 1, warp: 1 };
 
 window.addEventListener('pointermove', (e) => {
   state.mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
@@ -1336,7 +1337,7 @@ const resize = () => {
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
   // pull the camera back on narrow/portrait screens so the cube fits the width
-  const halfTan = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.aspect;
+  const halfTan = Math.tan(THREE.MathUtils.degToRad(BASE_FOV / 2)) * camera.aspect;
   state.baseZ = Math.max(15, 4.6 / halfTan);
 };
 window.addEventListener('resize', resize);
@@ -1357,7 +1358,8 @@ function render() {
 
   // stars drift past the camera — a slow cruise through space
   // (a touch faster when calm, where the starfield is all there is)
-  const starDrift = (1.2 + calm * 2.4) * dt;
+  // state.warp multiplies the speed for the "Engage!" warp-drive burst
+  const starDrift = (1.2 + calm * 2.4) * state.warp * dt;
   const sp = starGeo.attributes.position;
   for (let s = 0; s < starCount; s++) {
     let z = sp.getZ(s) + starDrift;
@@ -1370,6 +1372,14 @@ function render() {
   // second wind-down stage: once the cube is gone, the starfield fades to nothing
   stars.material.opacity = 0.7 * (1 - state.starFade);
   stars.visible = state.starFade < 0.999;
+
+  // warp drive: stars swell and brighten, and the lens punches outward so the
+  // field rushes past — strongest at peak warp, gone once we drop back to cruise
+  const warpK = state.warp - 1;
+  stars.material.size = 0.45 + Math.min(1.0, warpK * 0.018);
+  if (warpK > 0.01) stars.material.opacity = Math.min(1, stars.material.opacity + Math.min(0.3, warpK * 0.008));
+  const warpFov = BASE_FOV + Math.min(28, warpK * 0.45);
+  if (Math.abs(camera.fov - warpFov) > 0.01) { camera.fov = warpFov; camera.updateProjectionMatrix(); }
 
   // lattice: home position pushed along explode direction by scroll
   if (cubeGroup.visible) {
@@ -1441,7 +1451,7 @@ let stopped = true;   // boot in the stopped/dark state; Animate spins it up
 let windTween = null;
 stopBtn.addEventListener('click', () => {
   stopped = !stopped;
-  stopBtn.textContent = stopped ? 'Animate' : 'Stop';
+  stopBtn.textContent = stopped ? 'Engage!' : 'Stop';
   stopBtn.setAttribute('aria-pressed', String(stopped));
   if (reduced) {
     state.calm = state.starFade = stopped ? 1 : 0;
@@ -1451,19 +1461,26 @@ stopBtn.addEventListener('click', () => {
   if (windTween) windTween.kill();
   if (stopped) {
     windTween = gsap.timeline()
-      .to(state, { calm: 1, duration: 2.8, ease: 'power2.inOut' })
+      .to(state, { warp: 1, duration: 0.6, ease: 'power2.out' }, 0)   // drop out of warp if mid-burst
+      .to(state, { calm: 1, duration: 2.8, ease: 'power2.inOut' }, 0)
       .to(state, { starFade: 1, duration: 1.6, ease: 'power2.inOut',
                    onComplete: () => renderer.setAnimationLoop(null) });
   } else {
-    renderer.setAnimationLoop(render);   // wake the loop before reversing
+    renderer.setAnimationLoop(render);   // wake the loop before engaging
+    state.warp = 1;
     windTween = gsap.timeline()
-      .to(state, { starFade: 0, duration: 1.0, ease: 'power2.out' })
-      .to(state, { calm: 0, duration: 2.8, ease: 'power2.inOut' });
+      // stars snap in, then the warp drive winds up — accelerating hard…
+      .to(state, { starFade: 0, duration: 0.4, ease: 'power1.out' }, 0)
+      .to(state, { warp: 70, duration: 1.0, ease: 'power3.in' }, 0)
+      // …then decelerates back to a normal cruise
+      .to(state, { warp: 1, duration: 1.6, ease: 'power2.out' })
+      // dropping out of warp, the Borg cube reassembles into the familiar scene
+      .to(state, { calm: 0, duration: 2.4, ease: 'power2.inOut' }, '-=1.1');
   }
 });
 
 // debugging/testing handle (this page is a prototype)
-window.__borg = { state, drag, cubeGroup, renderer };
+window.__borg = { state, drag, cubeGroup, camera, renderer };
 
 /* ================================================================
    GSAP — choreography

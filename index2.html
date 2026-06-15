@@ -132,13 +132,19 @@ header.top .mini-logo svg { display: block; height: 30px; width: auto; }
 header.top nav ol {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.25rem 1.1rem;
+  /* column gap grows with viewport width: tight on narrow screens,
+     roomier when there is plenty of horizontal space */
+  gap: 0.25rem clamp(0.4rem, 1.5vw, 1.7rem);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 header.top nav a {
+  display: inline-flex;
+  align-items: center;
+  /* generous padding for a larger, easier touch target */
+  padding: 0.5rem 0.55rem;
   font-size: 1.00rem;
   font-weight: bold;
   letter-spacing: 0.04em;

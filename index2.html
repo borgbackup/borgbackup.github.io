@@ -1335,11 +1335,12 @@ const resize = () => {
 window.addEventListener('resize', resize);
 resize();
 
-const clock = new THREE.Clock();
+const timer = new THREE.Timer();
 
 function render() {
-  const dt = Math.min(clock.getDelta(), 0.05);
-  const t = clock.elapsedTime;
+  timer.update();
+  const dt = Math.min(timer.getDelta(), 0.05);
+  const t = timer.getElapsed();
   const p = state.progress;                       // 0 at top, 1 at page bottom
   const calm = state.calm;                        // 1 = stars only
   const spread = Math.sin(p * Math.PI) * 7;       // explode mid-page, reassemble at end

@@ -1295,7 +1295,7 @@ for (let s = 0; s < CHUNKS; s++) {
 /* --- scroll-driven state --- */
 /* calm:     0 = full animation, 1 = cube gone, chunks stopped, stars only
    starFade: 0 = stars at full brightness, 1 = stars gone (no animation left) */
-const state = { progress: 0, mouseX: 0, mouseY: 0, calm: 1, starFade: 1, warp: 1 };
+const state = { progress: 0, mouseX: 0, mouseY: 0, calm: 1, starFade: 1, warp: 1, starWhite: 0 };
 
 window.addEventListener('pointermove', (e) => {
   state.mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
@@ -1390,7 +1390,9 @@ function render() {
   // accelerating, holds at white through the constant phase, and fades on decel
   const warpT = Math.min(1, (state.warp - 1) / 69);
   stars.material.size = 0.45 + warpT * 1.0;
-  stars.material.color.copy(starBaseColor).lerp(starWarpColor, warpT);
+  // colour follows its own track (starWhite): white the instant we engage,
+  // held through warp, greening only on deceleration
+  stars.material.color.copy(starBaseColor).lerp(starWarpColor, state.starWhite);
   stars.material.opacity = Math.min(1, 0.7 * (1 - state.starFade) + warpT * 0.5);
   const warpFov = BASE_FOV + warpT * 28;
   if (Math.abs(camera.fov - warpFov) > 0.01) { camera.fov = warpFov; camera.updateProjectionMatrix(); }
@@ -1476,20 +1478,24 @@ stopBtn.addEventListener('click', () => {
   if (stopped) {
     windTween = gsap.timeline()
       .to(state, { warp: 1, duration: 0.6, ease: 'power2.out' }, 0)   // drop out of warp if mid-burst
+      .to(state, { starWhite: 0, duration: 0.6, ease: 'power2.out' }, 0)   // and back to green
       .to(state, { calm: 1, duration: 2.8, ease: 'power2.inOut' }, 0)
       .to(state, { starFade: 1, duration: 1.6, ease: 'power2.inOut',
                    onComplete: () => renderer.setAnimationLoop(null) });
   } else {
     renderer.setAnimationLoop(render);   // wake the loop before engaging
     state.warp = 1;
+    state.starWhite = 1;                  // stars flash to white the instant we engage
     windTween = gsap.timeline()
-      // stars snap in, then the warp drive winds up — accelerating hard…
+      // stars snap in (already white), then the warp drive winds up — accelerating hard…
       .to(state, { starFade: 0, duration: 0.4, ease: 'power1.out' }, 0)
       .to(state, { warp: 70, duration: 2.0, ease: 'power3.in' }, 0)
       // …holds at full warp (constant speed)…
       .to(state, { warp: 70, duration: 2.0 })
       // …then decelerates back to a normal cruise
       .to(state, { warp: 1, duration: 2.0, ease: 'power2.out' })
+      // stars stay white through accel + cruise, then green back down over the decel
+      .to(state, { starWhite: 0, duration: 2.0, ease: 'power2.out' }, 4)
       // dropping out of warp, the Borg cube reassembles into the familiar scene
       .to(state, { calm: 0, duration: 2.4, ease: 'power2.inOut' }, '-=1.5');
   }

@@ -662,10 +662,18 @@ footer .links {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 0.5rem 1.6rem;
+  /* column gap grows with viewport width, like the header nav */
+  gap: 0.5rem clamp(0.6rem, 1.5vw, 1.8rem);
   margin-bottom: 1.6rem;
   font-size: 0.85rem;
   font-weight: bold;
+}
+
+footer .links a {
+  display: inline-flex;
+  align-items: center;
+  /* generous padding for a larger, easier touch target */
+  padding: 0.5rem 0.55rem;
 }
 
 footer .legal { color: var(--text-dim); font-size: 0.72rem; line-height: 1.7; }

@@ -1125,9 +1125,9 @@ noscript .hero-fallback {
   <p class="lead">Borg has protected production servers, research data and family photo
      archives for a decade. It is boring, in the best possible way.</p>
   <div class="counters">
-    <div class="counter"><div class="num"><span aria-hidden="true"><span data-count="10">0</span>+</span><span class="sr-only">10+</span></div><div class="what">years of development</div></div>
-    <div class="counter"><div class="num"><span aria-hidden="true"><span data-count="100">0</span>%</span><span class="sr-only">100%</span></div><div class="what">free software, BSD licensed</div></div>
-    <div class="counter"><div class="num"><span aria-hidden="true"><span data-count="0">7</span></span><span class="sr-only">0</span></div><div class="what">trust required in your server</div></div>
+    <div class="counter"><div class="num"><span aria-hidden="true"><span data-count="10" data-count-from="0">10</span>+</span><span class="sr-only">10+</span></div><div class="what">years of development</div></div>
+    <div class="counter"><div class="num"><span aria-hidden="true"><span data-count="100" data-count-from="0">100</span>%</span><span class="sr-only">100%</span></div><div class="what">free software, BSD licensed</div></div>
+    <div class="counter"><div class="num"><span aria-hidden="true"><span data-count="0" data-count-from="7">0</span></span><span class="sr-only">0</span></div><div class="what">trust required in your server</div></div>
   </div>
 </section>
 
@@ -1508,7 +1508,9 @@ if (!reduced) {
   // counters
   document.querySelectorAll('[data-count]').forEach((el) => {
     const target = parseInt(el.dataset.count, 10);
-    const obj = { v: el.textContent === '7' ? 7 : 0 };
+    const from = parseInt(el.dataset.countFrom, 10);
+    const obj = { v: from };
+    el.textContent = from;
     gsap.to(obj, {
       v: target, duration: 1.6, ease: 'power1.out',
       scrollTrigger: { trigger: el, start: 'top 85%' },

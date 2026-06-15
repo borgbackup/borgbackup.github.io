@@ -1261,8 +1261,23 @@ for (let s = 0; s < starCount; s++) {
   starPos.set([v.x, v.y, v.z], s * 3);
 }
 starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+// soft circular sprite so the points render as round dots instead of squares
+// (white, so it still takes the material's colour tint)
+const starSprite = (() => {
+  const sz = 64, c = document.createElement('canvas');
+  c.width = c.height = sz;
+  const ctx = c.getContext('2d');
+  const g = ctx.createRadialGradient(sz / 2, sz / 2, 0, sz / 2, sz / 2, sz / 2);
+  g.addColorStop(0.0, 'rgba(255,255,255,1)');
+  g.addColorStop(0.5, 'rgba(255,255,255,0.92)');
+  g.addColorStop(1.0, 'rgba(255,255,255,0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, sz, sz);
+  return new THREE.CanvasTexture(c);
+})();
 const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({
-  color: 0x7fdb91, size: 0.45, sizeAttenuation: true, transparent: true, opacity: 0.7
+  color: 0x7fdb91, size: 0.45, sizeAttenuation: true, transparent: true, opacity: 0.7,
+  map: starSprite, depthWrite: false
 }));
 scene.add(stars);
 

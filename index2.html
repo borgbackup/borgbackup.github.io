@@ -132,13 +132,19 @@ header.top .mini-logo svg { display: block; height: 30px; width: auto; }
 header.top nav ol {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.25rem 1.1rem;
+  /* column gap grows with viewport width: tight on narrow screens,
+     roomier when there is plenty of horizontal space */
+  gap: 0.25rem clamp(0.4rem, 1.5vw, 1.7rem);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 header.top nav a {
+  display: inline-flex;
+  align-items: center;
+  /* generous padding for a larger, easier touch target */
+  padding: 0.5rem 0.55rem;
   font-size: 1.00rem;
   font-weight: bold;
   letter-spacing: 0.04em;
@@ -656,16 +662,18 @@ footer .links {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 0.5rem 1.6rem;
+  /* column gap grows with viewport width, like the header nav */
+  gap: 0.5rem clamp(0.6rem, 1.5vw, 1.8rem);
   margin-bottom: 1.6rem;
   font-size: 0.85rem;
   font-weight: bold;
 }
 
-footer .check {
-  color: var(--green);
-  font-size: 0.95rem;
-  margin-bottom: 1rem;
+footer .links a {
+  display: inline-flex;
+  align-items: center;
+  /* generous padding for a larger, easier touch target */
+  padding: 0.5rem 0.55rem;
 }
 
 footer .legal { color: var(--text-dim); font-size: 0.72rem; line-height: 1.7; }
@@ -1006,7 +1014,7 @@ noscript .hero-fallback {
            required during times of high spam activity. Be patient after asking — people reply
            when they see it.</p>
         <button class="connect" type="button" id="chatConnect">
-          <span class="play" aria-hidden="true">▶</span> Connect to the channel
+          <span class="play" aria-hidden="true">▶</span> Open a channel!
         </button>
         <p class="fine">Loads web.libera.chat in a frame and connects you to the channel.</p>
       </div>
@@ -1133,7 +1141,6 @@ noscript .hero-fallback {
     <a class="ext" href="https://github.com/borgbackup/community">Community</a>
     <a class="ext" href="https://github.com/borgbackup/borg">Contribute</a>
   </div>
-  <p class="check">… and always check your backups!</p>
   <p class="legal">BorgBackup is free software, distributed under the BSD license.<br/>
      Terminal output and dedup figures above are illustrative.</p>
 </footer>
@@ -1676,15 +1683,18 @@ if (!reduced) {
 (function terminal() {
   const out = document.getElementById('termOut');
   const lines = [
-    { type: 'cmd',  text: 'borg create --stats --compression zstd backup:repo::{now} ~/work' },
+    { type: 'cmd',  text: 'export BORG_REPO=/media/BACKUPHDD/borg-repo' },
+    { type: 'out',  text: '' },
+    { type: 'cmd',  text: 'borg create --stats --compression zstd backup-work ~/work' },
     { type: 'out',  text: '------------------------------------------------------------------------------' },
-    { type: 'out',  text: 'Archive name: 2026-06-13T03:14:07' },
+    { type: 'out',  text: 'Archive name: backup-work' },
     { type: 'out',  text: 'Number of files: 173429' },
     { type: 'out',  text: '                       Original size      Compressed size    Deduplicated size' },
     { type: 'hl',   text: 'This archive:               47.30 GB             21.07 GB             92.51 MB' },
     { type: 'out',  text: 'All archives:              892.07 GB            412.86 GB             29.74 GB' },
     { type: 'out',  text: '------------------------------------------------------------------------------' },
-    { type: 'cmd',  text: 'borg check backup:repo', comment: '   # … and always check your backups!' },
+    { type: 'out',  text: '' },
+    { type: 'cmd',  text: 'borg check --verbose', comment: '   # … and always check your backups!' },
     { type: 'out',  text: '' },
   ];
 

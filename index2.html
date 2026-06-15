@@ -1344,6 +1344,7 @@ window.addEventListener('resize', resize);
 resize();
 
 const timer = new THREE.Timer();
+const starScratch = new THREE.Vector3();   // reused when respawning wrapped stars
 
 function render() {
   timer.update();
@@ -1363,7 +1364,16 @@ function render() {
   const sp = starGeo.attributes.position;
   for (let s = 0; s < starCount; s++) {
     let z = sp.getZ(s) + starDrift;
-    if (z > 40) z -= 140;                 // wrap from behind the camera to deep space
+    if (z > 40) {
+      z -= 140;                           // wrap from behind the camera to deep space
+      // re-randomize the lateral position on each wrap so the finite field
+      // never visibly repeats — otherwise it tiles every 140 units, which at
+      // warp speed cycles ~3x in the burst and reads as a pulse
+      do { starScratch.randomDirection().multiplyScalar(40 + Math.random() * 60); }
+      while (Math.hypot(starScratch.x, starScratch.y) < 6);
+      sp.setX(s, starScratch.x);
+      sp.setY(s, starScratch.y);
+    }
     sp.setZ(s, z);
   }
   sp.needsUpdate = true;

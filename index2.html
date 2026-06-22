@@ -161,7 +161,10 @@ header.top nav a svg { vertical-align: -1px; margin-left: 2px; }
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 6rem 1.5rem 4rem;
+  /* clear the fixed header: on mobile it wraps to several rows and grows
+     well past 6rem, so offset by its measured height (--header-h, set in JS)
+     to keep the logo/title from hiding behind it. Desktop keeps the 6rem look. */
+  padding: max(6rem, calc(var(--header-h, 62px) + 1.5rem)) 1.5rem 4rem;
 }
 
 .hero .logo svg {

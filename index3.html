@@ -55,7 +55,10 @@ body.dragging, body.dragging .hero {
   display: block;
 }
 
-/* subtle scanline / vignette overlay above the 3D scene */
+/* subtle scanline / vignette overlay above the 3D scene.
+   no mix-blend-mode here: it forces a full-viewport blend on every scrolled
+   frame (#117), and normal alpha compositing of these black-alpha gradients
+   looks the same anyway */
 #crt {
   position: fixed;
   inset: 0;
@@ -64,7 +67,6 @@ body.dragging, body.dragging .hero {
   background:
     radial-gradient(ellipse at 50% 40%, transparent 40%, rgba(0,0,0,0.55) 100%),
     repeating-linear-gradient(0deg, rgba(0,0,0,0.18) 0px, rgba(0,0,0,0.18) 1px, transparent 1px, transparent 3px);
-  mix-blend-mode: multiply;
 }
 
 .page { position: relative; z-index: 2; }
@@ -121,9 +123,10 @@ header.top {
   justify-content: space-between;
   gap: 1rem;
   padding: 0.6rem 1.2rem;
-  background: rgba(2, 6, 3, 0.65);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  /* no backdrop-filter: blurring a fixed element's backdrop re-renders it on
+     every scrolled frame and janks desktop scrolling (#117) — a more opaque
+     background gives the same separation for free */
+  background: rgba(2, 6, 3, 0.88);
   border-bottom: 1px solid var(--panel-line);
 }
 
@@ -247,14 +250,13 @@ button.btn {
 }
 
 /* text that sits directly over the animated canvas gets a local scrim
-   of stacked dark shadows, so drifting bright cubes can't wash it out */
+   of dark shadows, so drifting bright cubes can't wash it out.
+   two layers, not five: each layer rasterizes the glyphs again, which
+   made scrolling and the entrance tweens expensive on desktop (#117) */
 .hero .designation, .hero h1, .hero .futile, .scroll-hint,
 .kicker, section.block h2, section.block p.lead, .aside, .demo-meta {
   text-shadow:
-    0 0 4px var(--bg),
     0 0 9px var(--bg),
-    0 0 18px var(--bg),
-    0 0 32px var(--bg),
     0 2px 24px rgba(0, 0, 0, 0.9);
 }
 
@@ -377,7 +379,6 @@ section.block p.lead {
   justify-content: center;
   font-size: 0.75rem;
   color: var(--green);
-  will-change: transform, opacity;
 }
 
 .chunk.new {
@@ -406,12 +407,13 @@ section.block p.lead {
 .dedup-result .note { color: var(--text-dim); font-size: 0.78rem; }
 
 /* ---------- terminal ---------- */
+/* no backdrop-filter on scrolling panels (.term, .chat-window): their
+   backdrop shifts on every scrolled frame, forcing a per-frame re-blur (#117);
+   a slightly more opaque background reads the same over the dark scene */
 .term {
-  background: #03070491;
+  background: #030704d9;
   border: 1px solid var(--panel-line);
   box-shadow: 0 0 60px rgba(34, 208, 69, 0.07);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
 }
 
 .term-bar {
@@ -581,10 +583,8 @@ a.ext::after {
 /* ---------- embedded IRC chat window ---------- */
 .chat-window {
   border: 1px solid var(--green);
-  background: rgba(2, 8, 4, 0.72);
+  background: rgba(2, 8, 4, 0.88);
   box-shadow: 0 0 70px rgba(34, 208, 69, 0.18);
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
   overflow: hidden;
 }
 
@@ -654,9 +654,7 @@ a.ext::after {
 /* ---------- footer ---------- */
 footer {
   border-top: 1px solid var(--panel-line);
-  background: rgba(2, 6, 3, 0.8);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(2, 6, 3, 0.92);
   padding: 3rem 1.5rem 2.5rem;
   text-align: center;
 }

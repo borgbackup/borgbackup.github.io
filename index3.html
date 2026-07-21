@@ -1634,19 +1634,22 @@ if (!reduced) {
     { borg: '2.0', title: 'guided tour', file: '_assets/borg2-demo.cast',  dur: '4 min 2 s',  speed: 1.0 },
   ];
 
-  // the player JS/CSS are heavy, so they only load once the section is near
-  let assets = null;
-  const loadAssets = () => assets ??= new Promise((resolve, reject) => {
-    const css = document.createElement('link');
-    css.rel = 'stylesheet';
-    css.href = '_assets/asciinema-player-v3.15.1.css';
-    document.head.appendChild(css);
-    const js = document.createElement('script');
-    js.src = '_assets/asciinema-player-v3.15.1.min.js';
-    js.onload = resolve;
-    js.onerror = () => reject(new Error('player load failed'));
-    document.head.appendChild(js);
+  // the player JS/CSS are heavy, so they only load once the section is near.
+  // both have to be waited for: the player reads its palette from the
+  // --term-color-* custom properties once, at mount, and falls back to an
+  // all-black theme when the stylesheet has not been applied yet.
+  const loadTag = (tag, attrs) => new Promise((resolve, reject) => {
+    const el = Object.assign(document.createElement(tag), attrs);
+    el.onload = resolve;
+    el.onerror = () => reject(new Error(`${attrs.href || attrs.src} failed to load`));
+    document.head.appendChild(el);
   });
+
+  let assets = null;
+  const loadAssets = () => assets ??= Promise.all([
+    loadTag('link', { rel: 'stylesheet', href: '_assets/asciinema-player-v3.15.1.css' }),
+    loadTag('script', { src: '_assets/asciinema-player-v3.15.1.min.js' }),
+  ]);
 
   let current = -1;
   let player = null;

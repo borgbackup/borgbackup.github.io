@@ -4,6 +4,18 @@
 
 This is the project website of BorgBackup.
 
+## New site
+
+We made a new, georgeous site based on threejs and GSAP - enjoy (and don't miss the engage button).
+
+Notes:
+- its source code is a single file ``index3.html``.
+- index3.html gets automatically copied to index.html by the github build workflow.
+
+## Old site
+
+The old site is still accessible at index_old.html.
+
 All pages are meant to load very quickly with few or no external resources. All pages are generated from reStructuredText (reST).
 
 HTML files are **never** committed to this ("source") branch. GitHub Actions automatically updates
@@ -36,8 +48,4 @@ pushes it to the "master" branch with a GitHub deploy key.
 GitHub Pages is used as the host, and the TLS certificate comes from Let's Encrypt (via GitHub).
 
 More details: https://github.com/borgbackup/borgbackup.github.io/issues/45
-
-## New site
-
-There is also a gorgeous new site, currently hidden at index2.html.
 

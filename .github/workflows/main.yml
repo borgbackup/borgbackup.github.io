@@ -29,6 +29,14 @@ jobs:
         make
 
         git add --all .
+
+        # index.html is the old, rather simple site, built from the rst files, let's keep it
+        # at index_old.html for a while.
+        git mv index.html index_old.html
+
+        # index3.html is the new site made with threejs - let's use the new site!
+        git mv index3.html index.html
+
         git commit -m "Automatically built pages at $(git rev-parse --short HEAD)" || exit 0
 
         # travis/github_deploy_key.enc is an encrypted SSH key.

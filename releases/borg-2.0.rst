@@ -48,40 +48,45 @@ Major new features
   and optimizes working with archives (caching, pruning, repo-list output).
 
   An archive series is now simply all the archives in a repository that have
-  the same name. On the other hand, the unique identifier for a single archive is now its ID
-  (the hash, which can be shortened as long as it is unique).
+  the same name. On the other hand, the unique identifier for a single archive
+  is now its ID (the hash, which can be shortened as long as it is unique).
 
 - separation of archive metadata: name, tags, user, host, timestamp
 
   To support having a simple, clean archive (series) name, Borg now tracks and
-  displays name, tags, user, host, and timestamp separately (so you don't need to
-  put everything into the archive name as when using Borg 1.x).
+  displays name, tags, user, host, and timestamp separately (so you don't need
+  to put everything into the archive name as when using Borg 1.x).
 
   It's now possible to tag (label) archives. There is a special tag for
   protecting archives against delete/prune/recreate.
 
   Matching can be done on archive (series) name, tags, user, host, and archive ID.
 
+- packs
+
+  - a pack contains multiple chunks - less latency impact, less storage space overhead
+  - packs are assembled client-side, then stored into the repository, enabling
+    efficient usage of cloud storage (and other high-latency storages)
+  - optionally, BORG_STORE_CACHE can be used to enable borgstore caching
+
 - new repository and locking implementation based on the borgstore project
 
   - borgstore is a key/value store in Python, currently supporting file:, REST
-    (https/http talking to the REST server that comes with borgstore also),
-    sftp:, rclone:, and s3:/b2: backends.
+    (talking to the REST server that comes with borgstore also, either via a TCP
+    connection to a reachable IP:port or via stdio over an ssh tunnel), sftp:,
+    rclone:, and s3:/b2: backends.
     Borgstore backends are easy to implement, so there might be even more in
     the future.
-  - Borg uses these to implement file: and ssh: repositories and (new) sftp: and
-    rclone: repositories. Via rclone, Borg can use cloud repositories now!
-  - In addition to ssh: repositories, we also have socket: repositories now.
+  - Borg uses these to implement file:, rest:, https:, sftp:, s3: / b2: and
+    rclone: repositories. Via rclone, all sorts of cloud repositories can be used!
+  - Remote repositories (ssh flavour) are implemented as REST-over-stdio-over-ssh,
+    so we can get rid of the old RPC-over-stdio-over-ssh method.
   - Concurrent parallel access to a repository is now possible for most Borg
     commands (except check and compact).
-  - A "repository index" is no longer needed because objects are directly
-    found by their ID. The memory requirements of this index were proportional to
-    the object count in the repository. Thus, Borg now needs less RAM.
+  - The "chunks index" now lives in the repository, so all clients can share it.
+    No more expensive re-syncing the chunks index.
   - Stale repository locks get auto-removed if they don't get refreshed or if
     their owner process is known dead.
-  - Borg compact does much less I/O because it does not need to compact large
-    "segment files" to free space; each repository object is now stored separately
-    and thus can also be deleted individually.
   - Borg delete and prune are much faster now.
   - The repository works very differently now:
 
@@ -89,8 +94,8 @@ Major new features
       segment files, precise refcounting, repo index needed, exclusive lock
       needed, checkpointing and .part files needed.
     - borg 2: convergence, write order, separate objects, no refcounting,
-      garbage collection, no repo index needed, simplicity, mostly works with
-      a shared lock, no need for checkpointing or .part files.
+      garbage collection, mostly works with a shared lock, no need for
+      archive creation checkpointing or .part files.
 
 - uses a new hashtable (used for indexes, caches) based on the borghash project
 
@@ -126,14 +131,19 @@ Major new features
   - Using session keys: more secure and easier to manage, especially in multi-
     client or multi-repo contexts. By doing this, we could get rid of problematic
     long-term nonce/counter management.
+  - borg keys:
+
+    - locate the key automatically in the key directory or in the repository
+    - support multiple borg keys per repository
+  - The super-fast blake3 algorithm replaces blake2b for new repos.
   - The old crypto code will be removed in Borg 2.1 (currently we still need
     it to read from your old Borg 1.x repositories). Removing AES-CTR, PBKDF2,
-    encrypt-and-mac, counter/nonce management will make Borg more secure,
+    blake2b, encrypt-and-mac, counter/nonce management will make Borg more secure,
     easier to use and develop.
 
 - chunker improvements
 
-  - New and improved "buzhash64" chunker
+  - New and improved "buzhash64" and "fastcdc" chunkers.
   - All chunker code is now in Cython (the buzhash chunker used to be a big,
     hard-to-maintain piece of C code that included file reading and buffer
     management). The file reading and buffer management code has been moved
@@ -153,11 +163,13 @@ Major new features
   - remote repository URLs default to relative paths, using an absolute path
     is possible.
   - no longer supports SCP-style repo parameters (parsing ambiguity issues; no
-    :port possible); just use ssh://user@host:port/path.
+    :port possible); just use rest://user@host:port/path.
   - Separated repo and archive; no "::" anymore
   - Split some commands that worked on archives and repositories into two separate
     commands (makes the code/docs/help easier).
   - Renamed Borg init to Borg repo-create for better consistency
+  - Separate ``borg repo-create`` options to specify encryption, key location
+    and ID algorithm.
   - BORG_EXIT_CODES=modern is the default now to get more specific process
     exit codes
   - Use jsonargparse as CLI argument/option parser, also supporting YAML configs
@@ -170,9 +182,10 @@ Major new features
 
     - identical, regex, or glob/shell-style matching on the archive name
     - matching on archive tags, user, host, and ID (prefix)
+    - matching on the archive creation timestamp
     - giving the option multiple times (logical AND)
   - extract --continue: continue a previously interrupted extraction
-  - new borg repo-compress command can do a repo-wide efficient recompression.
+
   - borg analyze: list changed chunks' sizes per directory.
   - borg key change-location: usable for repokey <-> keyfile location change
   - borg benchmark cpu (so you can actually see what's fastest for your CPU)
@@ -185,7 +198,10 @@ Major new features
   - borg repo-space: optionally, you can allocate some reserved space in the
     repo to free in "file system full" conditions.
   - borg version: show local/remote Borg version
-  - borg prune: add quarterly pruning strategies (3M and 13W)
+  - borg prune:
+
+    - add quarterly pruning strategies (3M and 13W)
+    - add optional interval support for all prune retention flags
   - borg delete: it now SOFT-deletes archives and there is "borg undelete"
     to undo that. "borg compact" will free all space in the repository that
     belongs to soft-deleted archives, thus undelete only works for soft-deleted
@@ -198,10 +214,9 @@ Major new features
     e.g., -a 'PREFIX*'
   - borg upgrade (was only relevant for Attic/old Borg)
   - removed deprecated CLI options
-  - Remove recreate --recompress option; the repo-wide "repo-compress" is
-    more efficient.
+  - Remove recreate --recompress option.
   - Remove borg config command (it only worked locally anyway)
-  - repository storage quota limit
+  - repository quota (was replaced by borgstore posixfs backend quota support)
   - repository append-only mode (was replaced by borgstore posixfs backend
     permissions [all, read-only, write-only, no-delete])
 
@@ -231,7 +246,6 @@ Other changes
 - make user/group/uid/gid optional in archived files
 - make sure archive name/comment and other data that get into JSON are valid
   UTF-8 (no surrogate escapes)
-- new remote and progress logging (tunneled through the RPC result channel)
 - internal data format/processing changes
 
   - Using msgpack spec 2.0 now, cleanly differentiating between text and
@@ -270,7 +284,7 @@ Other changes
 
 - python, packaging and library changes
 
-  - minimum requirement: Python 3.10
+  - minimum requirement: Python 3.11
   - we unbundled all third-party code and require the respective libraries to
     be available and installed. This makes packaging easier for distribution package
     maintainers.

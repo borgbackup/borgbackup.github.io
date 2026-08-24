@@ -140,21 +140,31 @@ Major new features
     it to read from your old Borg 1.x repositories). Removing AES-CTR, PBKDF2,
     blake2b, encrypt-and-mac, counter/nonce management will make Borg more secure,
     easier to use and develop.
+  - New none-* and authenticated-* modes with better authentication/checksumming.
 
 - chunker improvements
 
-  - New and improved "buzhash64" and "fastcdc" chunkers.
-  - All chunker code is now in Cython (the buzhash chunker used to be a big,
-    hard-to-maintain piece of C code that included file reading and buffer
-    management). The file reading and buffer management code has been moved
-    to a separate module.
+  - New and faster "fastcdc" chunker (default), improved "buzhash64" chunker.
+  - New fingerprinting-resistant rabin-aes, toeplitz-aes and goldilocks-aes
+    chunkers.
+  - SIMD optimizations and HW accelerated AES on X86-64 and ARM64 architectures.
+  - Cython for high-level code, C for speed critical and platform dependent code.
   - All chunkers now use the same input file reading code that supports
     sparse files (and fmaps), posix_fadvise, and buffer management.
+
+- Borg create and extract got faster:
+
+  - Multithreading for zstd, blake3 and overlapping of pack building and storing.
+    Another thread can optionally be used for full-file digests (like sha256sum).
+  - Improved memory management, optimized handling of repeated/all-zero chunks.
 
 - borg cockpit: full-screen console-based status display (experimental)
 
 - borg mount: added a new implementation based on mfusepy, compatible with
   fuse2 and 3 (experimental)
+- borg mount: expose POSIX ACLs on Linux mounts (not enforced)
+
+- borg webdav: serve archives via WebDAV / HTTP, including PAX tar downloads.
 
 - shell completions: automatically generate completion scripts (based on shtab)
 
@@ -186,7 +196,9 @@ Major new features
     - giving the option multiple times (logical AND)
   - extract --continue: continue a previously interrupted extraction
 
-  - borg analyze: list changed chunks' sizes per directory.
+  - borg analyze: list changed chunks' sizes per directory, report deduplicated
+    size of a set of archives.
+  - borg find: search files across archives
   - borg key change-location: usable for repokey <-> keyfile location change
   - borg benchmark cpu (so you can actually see what's fastest for your CPU)
   - borg import/export-tar --tar-format=GNU/PAX/BORG, support ctime/atime PAX
@@ -195,6 +207,9 @@ Major new features
     now the default format.
   - borg create: add the "slashdot hack" to strip path prefixes in created
     archives
+  - borg create: --map and --reuse-from for efficient block device snapshot backups.
+  - borg create/import-tar --digests: compute digests over the full file content.
+  - borg export-tar: support sparse files
   - borg repo-space: optionally, you can allocate some reserved space in the
     repo to free in "file system full" conditions.
   - borg version: show local/remote Borg version
@@ -236,7 +251,7 @@ Other changes
   major speedup when source files have ACLs and user/group name lookup is slow,
   like e.g. on network shares.
 - export-tar/import-tar: added support for POSIX ACLs (PAX format)
-- NetBSD: added xattr support
+- NetBSD and Illumos/Solaris: added xattr support
 - crypto: use a one-step KDF for session keys
 - use setup.py less; use pip, build, and make.py
 - using the platformdirs Python package to determine locations for configs and

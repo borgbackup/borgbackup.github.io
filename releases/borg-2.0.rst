@@ -51,6 +51,9 @@ Major new features
   the same name. On the other hand, the unique identifier for a single archive
   is now its ID (the hash, which can be shortened as long as it is unique).
 
+  Archive series from different users or hosts may also share the same name,
+  there is the --group-by option to keep them apart.
+
 - separation of archive metadata: name, tags, user, host, timestamp
 
   To support having a simple, clean archive (series) name, Borg now tracks and
@@ -61,6 +64,7 @@ Major new features
   protecting archives against delete/prune/recreate.
 
   Matching can be done on archive (series) name, tags, user, host, and archive ID.
+  The new --group-by=name,user,host option can be used to keep stuff apart.
 
 - packs
 
@@ -199,6 +203,7 @@ Major new features
   - borg analyze: list changed chunks' sizes per directory, report deduplicated
     size of a set of archives.
   - borg find: search files across archives
+  - borg copy: copy an archive to a new archive name (fast & cheap!)
   - borg key change-location: usable for repokey <-> keyfile location change
   - borg benchmark cpu (so you can actually see what's fastest for your CPU)
   - borg import/export-tar --tar-format=GNU/PAX/BORG, support ctime/atime PAX

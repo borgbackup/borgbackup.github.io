@@ -81,7 +81,7 @@ Major new features
     rclone:, and s3:/b2: backends.
     Borgstore backends are easy to implement, so there might be even more in
     the future.
-  - Borg uses these to implement file:, rest:, https:, sftp:, s3: / b2: and
+  - Borg uses these to implement file:, ssh:, https:, sftp:, s3: / b2: and
     rclone: repositories. Via rclone, all sorts of cloud repositories can be used!
   - Remote repositories (ssh flavour) are implemented as REST-over-stdio-over-ssh,
     so we can get rid of the old RPC-over-stdio-over-ssh method.
@@ -92,6 +92,8 @@ Major new features
   - Stale repository locks get auto-removed if they don't get refreshed or if
     their owner process is known dead.
   - Borg delete and prune are much faster now.
+  - Repository index, cache, locks are encrypted/authenticated.
+  - Stores defaults (e.g. compression and chunker params) in the repository.
   - The repository works very differently now:
 
     - borg 1.x: transaction-based (commit or roll back), log-like, append-only
@@ -132,6 +134,8 @@ Major new features
 
   - New keys/repos only use new crypto: AEAD, AES-OCB, ChaCha20-Poly1305,
     Argon2.
+  - Remove the "none" mode (no encryption, no authentication). Use the
+    authenticated modes instead.
   - Using session keys: more secure and easier to manage, especially in multi-
     client or multi-repo contexts. By doing this, we could get rid of problematic
     long-term nonce/counter management.
@@ -139,12 +143,13 @@ Major new features
 
     - locate the key automatically in the key directory or in the repository
     - support multiple borg keys per repository
+    - document how to use hardware protected keys (with "age" or YubiKey directly).
   - The super-fast blake3 algorithm replaces blake2b for new repos.
   - The old crypto code will be removed in Borg 2.1 (currently we still need
     it to read from your old Borg 1.x repositories). Removing AES-CTR, PBKDF2,
     blake2b, encrypt-and-mac, counter/nonce management will make Borg more secure,
     easier to use and develop.
-  - New none-* and authenticated-* modes with better authentication/checksumming.
+  - New authenticated-* modes with better authentication/checksumming.
 
 - chunker improvements
 
@@ -164,8 +169,7 @@ Major new features
 
 - borg cockpit: full-screen console-based status display (experimental)
 
-- borg mount: added a new implementation based on mfusepy, compatible with
-  fuse2 and 3 (experimental)
+- borg mount: added implementations based on mfusepy and WinFSP (experimental).
 - borg mount: expose POSIX ACLs on Linux mounts (not enforced)
 
 - borg webdav: serve archives via WebDAV / HTTP, including PAX tar downloads.
@@ -177,7 +181,7 @@ Major new features
   - remote repository URLs default to relative paths, using an absolute path
     is possible.
   - no longer supports SCP-style repo parameters (parsing ambiguity issues; no
-    :port possible); just use rest://user@host:port/path.
+    :port possible); just use ssh://user@host:port/path.
   - Separated repo and archive; no "::" anymore
   - Split some commands that worked on archives and repositories into two separate
     commands (makes the code/docs/help easier).

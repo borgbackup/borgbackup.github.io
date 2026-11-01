@@ -274,13 +274,23 @@ header.top nav a svg { vertical-align: -1px; margin-left: 2px; }
   font-size: clamp(1.3rem, 3.6vw, 2.3rem);
   font-weight: normal;
   line-height: 1.35;
-  max-width: 21ch;
+  /* the four lines are set with <br>: a max-width box used to cap the
+     heading at 21ch, narrower than its unbreakable last line, so that line
+     overflowed to the right while the others stayed centred (#119) */
 }
 
 .hero h1 em {
   font-style: normal;
   color: var(--green);
 }
+
+/* optical centring: a trailing "." or "," occupies a whole monospace cell
+   that is mostly empty, which shifts the visible letters of a centred line
+   half a cell to the left (#119). taking the glyph out of the flow keeps it
+   at its place after the word (static position) but leaves it out of the
+   line width, so the letters, not the cell, are centred. a negative margin
+   would do the same but also changes where lines wrap. */
+.hero .hang { position: absolute; }
 
 .hero .futile {
   margin: 0 0 2.2rem;
@@ -864,8 +874,8 @@ noscript .hero-fallback {
     </svg>
   </div>
   <p class="designation" data-hero><span aria-hidden="true">// </span>deduplicating archiver · est. 2015</p>
-  <h1 data-hero>Backups with <em>deduplication</em>, <em>compression</em> and <em>authenticated&nbsp;encryption</em>.</h1>
-  <p class="futile" data-hero>Redundancy is futile. <b>Your data will be deduplicated.</b></p>
+  <h1 data-hero>Backups with<br/><em>deduplication</em><span class="hang">,</span><br/><em>compression</em> and<br/><em>authenticated encryption</em><span class="hang">.</span></h1>
+  <p class="futile" data-hero>Redundancy is futile. <b>Your data will be deduplicated<span class="hang">.</span></b></p>
   <div class="cta-row" data-hero>
     <a class="btn solid" href="#install">Install Borg</a>
     <a class="btn" href="#demo">Watch the demo</a>

@@ -782,16 +782,32 @@ footer .legal { color: var(--text-dim); font-size: 0.72rem; line-height: 1.7; }
 :root[data-theme="light"] .mini-logo svg path,
 :root[data-theme="light"] .hero .logo svg path { fill: var(--green); }
 
-/* the demo recordings are dark terminals (the player renders white on black),
-   so the box around them stays dark too and its chrome — tabs, title bar —
-   keeps the dark palette instead of framing a black screen in white */
-:root[data-theme="light"] .demo-term {
-  --term-bg: #050a06;
-  --text: #d7e8da;
-  --text-dim: #8aa892;
-  --green: #22D045;
-  --green-rgb: 34, 208, 69;
-  --panel-line: rgba(34, 208, 69, 0.22);
+/* the demo recordings follow the theme as well. The player colours its
+   text, cursor and control bar from --term-color-* custom properties, which
+   are live, so overriding them is enough (no re-mount, playback position is
+   kept). Dark keeps the player's own "asciinema" theme; light gets a palette
+   for the white box. The recordings use green, yellow, cyan and magenta
+   foregrounds, all at 4.5:1 or better here, and ANSI "white" (7, 15) maps to
+   dark greys so text in those colours stays visible on a light background. */
+:root[data-theme="light"] .ap-player {
+  --term-color-foreground: #14241a;
+  --term-color-background: #ffffff;
+  --term-color-0: #2e3436;
+  --term-color-1: #cc0000;
+  --term-color-2: #3d7a05;
+  --term-color-3: #8a6d00;
+  --term-color-4: #3465a4;
+  --term-color-5: #75507b;
+  --term-color-6: #0b6f71;
+  --term-color-7: #555753;
+  --term-color-8: #555753;
+  --term-color-9: #cc0000;
+  --term-color-10: #3d7a05;
+  --term-color-11: #8a6d00;
+  --term-color-12: #3465a4;
+  --term-color-13: #75507b;
+  --term-color-14: #0b6f71;
+  --term-color-15: #2e3436;
 }
 
 /* ---------- reduced motion / no JS ---------- */
@@ -1875,35 +1891,58 @@ if (!reduced) {
 
   let current = -1;
   let player = null;
+  let playing = false;   // tracked via player events, for re-mounts (see below)
+  // (re)create the player for cast idx. startAt > 0 resumes a recording that
+  // was already open, at the same position and in the same play state.
+  const mount = (idx, startAt, resume) => {
+    const c = casts[idx];
+    if (player) { player.dispose(); player = null; }
+    stage.innerHTML = '';
+    // asciinema-player v3: create(src, element, opts). v3 is keyboard-
+    // operable (space=play/pause, arrows=seek, ? = shortcuts) and ships
+    // its own focusable, always-visible control bar.
+    player = AsciinemaPlayer.create(c.file, stage, {
+      speed: c.speed, fit: 'width', controls: true,
+      startAt, poster: startAt > 0 ? `npt:${startAt}` : 'npt:0:21', autoPlay: !!resume
+    });
+    playing = !!resume;
+    // a paused re-mount shows the poster frame for startAt, but the control
+    // bar would still read 00:00 until play is pressed: seek there explicitly
+    if (startAt > 0 && !resume) player.seek(startAt);
+    player.addEventListener('playing', () => { playing = true; });
+    player.addEventListener('pause', () => { playing = false; });
+    player.addEventListener('ended', () => { playing = false; });
+    meta.textContent = `borg ${c.borg} ${c.title} · ${c.dur} · all text in the recording can be selected and copied`;
+    // name the focusable player so screen readers announce which recording
+    const root = stage.querySelector('.ap-player');
+    if (root) {
+      root.setAttribute('role', 'group');
+      root.setAttribute('aria-label', `borg ${c.borg} ${c.title} screencast`);
+    }
+    // v3's seek readout is a focusable textbox without a name — label it
+    const timer = stage.querySelector('.ap-timer');
+    if (timer) timer.setAttribute('aria-label', 'Elapsed and remaining time');
+  };
   const show = (idx) => {
     if (idx === current) return;
     current = idx;
     tabs.querySelectorAll('button').forEach((b, i) => b.setAttribute('aria-selected', String(i === idx)));
     loadAssets().then(() => {
-      if (current !== idx) return;
-      const c = casts[idx];
-      if (player) { player.dispose(); player = null; }
-      stage.innerHTML = '';
-      // asciinema-player v3: create(src, element, opts). v3 is keyboard-
-      // operable (space=play/pause, arrows=seek, ? = shortcuts) and ships
-      // its own focusable, always-visible control bar.
-      player = AsciinemaPlayer.create(c.file, stage, {
-        speed: c.speed, poster: 'npt:0:21', fit: 'width', controls: true
-      });
-      meta.textContent = `borg ${c.borg} ${c.title} · ${c.dur} · all text in the recording can be selected and copied`;
-      // name the focusable player so screen readers announce which recording
-      const root = stage.querySelector('.ap-player');
-      if (root) {
-        root.setAttribute('role', 'group');
-        root.setAttribute('aria-label', `borg ${c.borg} ${c.title} screencast`);
-      }
-      // v3's seek readout is a focusable textbox without a name — label it
-      const timer = stage.querySelector('.ap-timer');
-      if (timer) timer.setAttribute('aria-label', 'Elapsed and remaining time');
+      if (current === idx) mount(idx, 0, false);
     }).catch(() => {
       stage.innerHTML = '<p class="demo-hint">the demo player could not be loaded.</p>';
     });
   };
+  // the player resolves its --term-color-* palette once, at mount, and bakes
+  // the colours into the rendered text, so a theme switch after that would
+  // leave the recording in the old palette: re-mount it where it was.
+  document.addEventListener('borg:theme', () => {
+    if (!player || current < 0) return;
+    const idx = current, wasPlaying = playing;
+    Promise.resolve(player.getCurrentTime()).then((t) => {
+      if (player && current === idx) mount(idx, Math.max(0, t || 0), wasPlaying);
+    });
+  });
 
   casts.forEach((c, i) => {
     const b = document.createElement('button');

@@ -274,13 +274,23 @@ header.top nav a svg { vertical-align: -1px; margin-left: 2px; }
   font-size: clamp(1.3rem, 3.6vw, 2.3rem);
   font-weight: normal;
   line-height: 1.35;
-  max-width: 21ch;
+  /* the four lines are set with <br>: a max-width box used to cap the
+     heading at 21ch, narrower than its unbreakable last line, so that line
+     overflowed to the right while the others stayed centred (#119) */
 }
 
 .hero h1 em {
   font-style: normal;
   color: var(--green);
 }
+
+/* optical centring: a trailing "." or "," occupies a whole monospace cell
+   that is mostly empty, which shifts the visible letters of a centred line
+   half a cell to the left (#119). taking the glyph out of the flow keeps it
+   at its place after the word (static position) but leaves it out of the
+   line width, so the letters, not the cell, are centred. a negative margin
+   would do the same but also changes where lines wrap. */
+.hero .hang { position: absolute; }
 
 .hero .futile {
   margin: 0 0 2.2rem;
@@ -863,9 +873,9 @@ noscript .hero-fallback {
       <path transform="translate(236.429, 46.0213)" fill="#22D045" d="M36.875 13.8021L26.6667 13.8021L26.6667 7.10543e-15L46.0937 7.10543e-15L59.8958 13.8021L59.8958 60.7812L46.0937 74.6875L15.7292 74.6875L8.80208 67.7083L8.80208 62.6042L36.875 62.6042ZM33.2292 42.3958L33.2292 48.4896L26.3542 55.3125L13.8021 55.3125L0 41.5104L0 13.8021L13.8021 0L23.0208 0L23.0208 42.3958Z"/>
     </svg>
   </div>
-  <p class="designation" data-hero><span aria-hidden="true">// </span>deduplicating archiver — est. 2015</p>
-  <h1 data-hero>Backups with <em>deduplication</em>, <em>compression</em> and <em>authenticated&nbsp;encryption</em>.</h1>
-  <p class="futile" data-hero>Redundancy is futile. <b>Your data will be deduplicated.</b></p>
+  <p class="designation" data-hero><span aria-hidden="true">// </span>deduplicating archiver · est. 2015</p>
+  <h1 data-hero>Backups with<br/><em>deduplication</em><span class="hang">,</span><br/><em>compression</em> and<br/><em>authenticated encryption</em><span class="hang">.</span></h1>
+  <p class="futile" data-hero>Redundancy is futile. <b>Your data will be deduplicated<span class="hang">.</span></b></p>
   <div class="cta-row" data-hero>
     <a class="btn solid" href="#install">Install Borg</a>
     <a class="btn" href="#demo">Watch the demo</a>
@@ -886,7 +896,7 @@ noscript .hero-fallback {
   <p class="kicker"><span aria-hidden="true">// </span>capabilities</p>
   <h2>One archiver. Every defense your data needs.</h2>
   <p class="lead">Borg stores your files as content-defined chunks. Identical chunks are stored
-     exactly once — across files, across machines, across years of history.</p>
+     exactly once: across files, across machines, across years of history.</p>
   <div class="features">
     <div class="feature">
       <span class="glyph" aria-hidden="true">▣</span>
@@ -898,13 +908,13 @@ noscript .hero-fallback {
       <span class="glyph" aria-hidden="true">⬢</span>
       <h3>Authenticated encryption</h3>
       <p>AES encryption with cryptographic authentication. Your backup server never
-         needs to be trusted — it only ever sees ciphertext.</p>
+         needs to be trusted. It only ever sees ciphertext.</p>
     </div>
     <div class="feature">
       <span class="glyph" aria-hidden="true">◧</span>
       <h3>Compression</h3>
       <p>Pick your trade-off: lz4 for speed, zstd for balance, zlib and lzma for maximum
-         squeeze — or none at all.</p>
+         squeeze, or none at all.</p>
     </div>
     <div class="feature">
       <span class="glyph" aria-hidden="true">⌖</span>
@@ -915,7 +925,7 @@ noscript .hero-fallback {
     <div class="feature">
       <span class="glyph" aria-hidden="true">⌬</span>
       <h3>Runs everywhere you do</h3>
-      <p>Easy installation on Linux, macOS, BSD and more — from distribution packages,
+      <p>Easy installation on Linux, macOS, BSD and more: distribution packages,
          single-file binaries, or pip.</p>
     </div>
     <div class="feature">
@@ -932,10 +942,10 @@ noscript .hero-fallback {
   <p class="kicker"><span aria-hidden="true">// </span>deduplication</p>
   <h2>Store it once. Reference it forever.</h2>
   <p class="lead">Three nightly backups of the same machine. Most chunks already exist in the
-     repository — Borg stores only what changed.</p>
+     repository, so Borg stores only what changed.</p>
   <div class="dedup-panel">
     <p class="sr-only">Visualization: night 1 stores eight new chunks, A through H. Night 2 sees
-       the same chunks again plus one new chunk I — only I is stored. Night 3 adds only the new
+       the same chunks again plus one new chunk I, so only I is stored. Night 3 adds only the new
        chunk J. Duplicates are never stored twice.</p>
     <div class="dedup-rows" id="dedupRows" aria-hidden="true">
       <div class="chunk-row" data-day="0">
@@ -963,7 +973,7 @@ noscript .hero-fallback {
     <div class="dedup-result">
       <div aria-hidden="true"><span class="big"><span id="chunksTotal">24</span> chunks seen</span></div>
       <div aria-hidden="true"><span class="big"><span id="chunksStored">10</span> stored</span></div>
-      <div class="note"><span class="sr-only" id="dedupResultSR"></span>duplicate chunks collapse into a single stored copy —<br/>history stays complete, the repository stays small.</div>
+      <div class="note"><span class="sr-only" id="dedupResultSR"></span>duplicate chunks collapse into a single stored copy.<br/>History stays complete, the repository stays small.</div>
     </div>
   </div>
 </section>
@@ -972,8 +982,8 @@ noscript .hero-fallback {
 <section class="block" id="terminal">
   <p class="kicker"><span aria-hidden="true">// </span>in practice</p>
   <h2>A backup is one command.</h2>
-  <p class="lead">No daemons, no agents, no lock-in. Point Borg at a repository — local disk,
-     USB drive, or any machine you can reach over SSH — and go.</p>
+  <p class="lead">No daemons, no agents, no lock-in. Point Borg at a repository (local disk,
+     USB drive, or any machine you can reach over SSH) and go.</p>
   <div class="term" role="group" aria-label="Example borg session (illustrative output)">
     <div class="term-bar"><i></i><i></i><i></i><span aria-hidden="true">borg@cube:~</span></div>
     <pre id="termOut" aria-hidden="true"></pre>
@@ -984,7 +994,7 @@ noscript .hero-fallback {
 <section class="block" id="demo">
   <p class="kicker"><span aria-hidden="true">// </span>demo</p>
   <h2>Watch real sessions, not marketing.</h2>
-  <p class="lead">Recorded terminal sessions — every frame is real text, so you can pause
+  <p class="lead">Recorded terminal sessions: every frame is real text, so you can pause
      the player and select and copy anything you see.</p>
   <div class="term demo-term">
     <div class="term-bar">
@@ -1004,14 +1014,14 @@ noscript .hero-fallback {
   <p class="kicker"><span aria-hidden="true">// </span>install</p>
   <h2>Get Borg. Choose your series.</h2>
   <p class="lead">Install from your distribution&rsquo;s packages, as a single-file binary, or via
-     pip — the <a class="ext" href="https://borgbackup.readthedocs.io/en/stable/installation.html">installation
+     pip. The <a class="ext" href="https://borgbackup.readthedocs.io/en/stable/installation.html">installation
      docs</a> cover all of them.</p>
   <div class="features releases">
     <div class="feature">
       <h3>Borg 1.4<span class="badge stable">stable</span></h3>
       <div class="ver">1.4.5</div>
       <div class="when">released 2026-07-19</div>
-      <p>The current stable series — the right choice for production use.</p>
+      <p>The current stable series and the right choice for production use.</p>
       <ul class="mini-links">
         <li><a class="ext" href="https://borgbackup.readthedocs.io/en/1.4-maint/">Documentation</a></li>
         <li><a class="ext" href="https://github.com/borgbackup/borg/releases">Downloads</a></li>
@@ -1031,7 +1041,7 @@ noscript .hero-fallback {
       <h3>Borg 2.0<span class="badge testing">testing</span></h3>
       <div class="ver">2.0&hairsp;β</div>
       <div class="when">the next generation</div>
-      <p>Currently in testing — do <b>not</b> use it in production yet.</p>
+      <p>Currently in testing. Do <b>not</b> use it in production yet.</p>
       <ul class="mini-links">
         <li><a class="ext" href="https://borgbackup.readthedocs.io/en/master/">Documentation</a></li>
         <li><a class="ext" href="https://github.com/borgbackup/borg/releases">Downloads</a></li>
@@ -1050,7 +1060,7 @@ noscript .hero-fallback {
   <p class="kicker"><span aria-hidden="true">// </span>support</p>
   <h2>You are not alone. It&rsquo;s a collective.</h2>
   <p class="lead">Free community support. Please check the docs, the existing issues and the
-     mailing list posts first — a lot of topics are already documented, explained,
+     mailing list posts first: a lot of topics are already documented, explained,
      discussed and filed.</p>
   <div class="features channels">
     <div class="feature">
@@ -1075,7 +1085,7 @@ noscript .hero-fallback {
       <span class="glyph" aria-hidden="true">#</span>
       <h3>Chat (IRC)</h3>
       <p>Join #borgbackup on libera.chat: just ask or tell directly, then patiently wait
-         for replies — stay connected. A registered nick is preferred, and may even be
+         for replies and stay connected. A registered nick is preferred, and may even be
          required during times of high spam activity.</p>
       <ul class="mini-links">
         <li><a href="#chat">open the chat below</a></li>
@@ -1086,7 +1096,7 @@ noscript .hero-fallback {
       <span class="glyph" aria-hidden="true">◍</span>
       <h3>Mastodon</h3>
       <p>Follow @borgbackup@fosstodon.org for announcements. Mastodon is not suitable
-         for longer or more complex discussions — use one of the other channels for that.</p>
+         for longer or more complex discussions, so use one of the other channels for those.</p>
       <ul class="mini-links">
         <li><a class="ext" href="https://fosstodon.org/@borgbackup">@borgbackup</a></li>
       </ul>
@@ -1094,8 +1104,8 @@ noscript .hero-fallback {
     <div class="feature">
       <span class="glyph" aria-hidden="true">▣</span>
       <h3>Matrix chat</h3>
-      <p>Prefer Matrix? Use a client such as Element to join the #borgbackup room —
-         it is bridged to the IRC channel, same people on both sides.</p>
+      <p>Prefer Matrix? Use a client such as Element to join the #borgbackup room.
+         It is bridged to the IRC channel, same people on both sides.</p>
       <ul class="mini-links">
         <li><a class="ext" href="https://matrix.to/#/!KnTJxMbCJuuVyjTSeJ:libera.chat?via=libera.chat&amp;via=matrix.org&amp;via=rudd-o.com">#borgbackup room</a></li>
         <li><a class="ext" href="https://app.element.io">element</a></li>
@@ -1126,7 +1136,7 @@ noscript .hero-fallback {
       <div class="chat-facade" id="chatFacade">
         <p class="lead-in">Join #borgbackup on libera.chat</p>
         <p class="sub">Pick a nickname and you&rsquo;re in. A registered nick is preferred, and may be
-           required during times of high spam activity. Be patient after asking — people reply
+           required during times of high spam activity. Be patient after asking: people reply
            when they see it.</p>
         <button class="connect" type="button" id="chatConnect">
           <span class="play" aria-hidden="true">▶</span> Open a channel!
@@ -1146,7 +1156,7 @@ noscript .hero-fallback {
     <div class="feature">
       <span class="glyph" aria-hidden="true">⚒</span>
       <h3>Waldmann EDV</h3>
-      <p>BorgBackup consulting, support, and development — the company of Thomas
+      <p>BorgBackup consulting, support, and development from the company of Thomas
          Waldmann, Borg&rsquo;s lead developer and maintainer.</p>
       <ul class="mini-links">
         <li><a class="ext" href="https://waldmann-edv.de/WedvHome">waldmann-edv.de</a></li>
@@ -1210,8 +1220,8 @@ noscript .hero-fallback {
       <span class="glyph" aria-hidden="true">♥</span>
       <h3>Liberapay</h3>
       <p>Become a patron and support us regularly to help make the project sustainable in
-         the long term. The funds are distributed to the BorgBackup team members — and as
-         a BorgBackup developer, you can join the team.</p>
+         the long term. The funds are distributed to the BorgBackup team members, and as
+         a BorgBackup developer you can join the team.</p>
       <ul class="mini-links">
         <li><a class="ext" href="https://liberapay.com/borgbackup/donate">donate via liberapay</a></li>
       </ul>
@@ -1880,7 +1890,7 @@ if (!reduced) {
       player = AsciinemaPlayer.create(c.file, stage, {
         speed: c.speed, poster: 'npt:0:21', fit: 'width', controls: true
       });
-      meta.textContent = `borg ${c.borg} — ${c.title} · ${c.dur} · all text in the recording can be selected and copied`;
+      meta.textContent = `borg ${c.borg} ${c.title} · ${c.dur} · all text in the recording can be selected and copied`;
       // name the focusable player so screen readers announce which recording
       const root = stage.querySelector('.ap-player');
       if (root) {

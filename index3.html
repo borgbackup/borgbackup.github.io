@@ -843,7 +843,7 @@ noscript .hero-fallback {
     </div>
     <div class="dedup-result">
       <div aria-hidden="true"><span class="big"><span id="chunksTotal">24</span> chunks seen</span></div>
-      <div aria-hidden="true"><span class="big"><span id="chunksStored">24</span> stored</span></div>
+      <div aria-hidden="true"><span class="big"><span id="chunksStored">10</span> stored</span></div>
       <div class="note"><span class="sr-only" id="dedupResultSR"></span>duplicate chunks collapse into a single stored copy —<br/>history stays complete, the repository stays small.</div>
     </div>
   </div>
@@ -1185,335 +1185,356 @@ const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
    THREE.JS — the Borg cube
    A lattice of instanced cubelets ("stored chunks"), a starfield,
    and loose data chunks spiralling in to be assimilated.
+
+   WebGL may be unavailable (Tor/hardened browsers, GPU blocklists, some
+   VMs and remote desktops). The scene lives in its own function so that
+   case only skips the 3D background; everything else on the page still
+   runs. initScene() returns the scene state (fed by the scroll trigger
+   below) or null when no WebGL context could be created.
    ================================================================ */
-const canvas = document.getElementById('scene');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
-const scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2(0x020503, 0.012);
-
-const BASE_FOV = 50;
-const camera = new THREE.PerspectiveCamera(BASE_FOV, 1, 0.1, 200);
-camera.position.set(0, 0, 15);
-
-scene.add(new THREE.AmbientLight(0x18301c, 1.4));
-const key = new THREE.DirectionalLight(0x9fffb4, 1.1);
-key.position.set(6, 8, 10);
-scene.add(key);
-const core = new THREE.PointLight(0x22d045, 14, 30);
-scene.add(core);
-
-/* --- cube lattice --- */
-const N = 6, SPACING = 1.06;
-const COUNT = N * N * N;
-const cubeGroup = new THREE.Group();
-scene.add(cubeGroup);
-
-const boxGeo = new THREE.BoxGeometry(0.92, 0.92, 0.92);
-const boxMat = new THREE.MeshLambertMaterial({ color: 0xffffff });
-const lattice = new THREE.InstancedMesh(boxGeo, boxMat, COUNT);
-lattice.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-cubeGroup.add(lattice);
-
-// per-instance home position, explode direction, scale, color
-const home = [], dir = [], scl = [];
-const dummy = new THREE.Object3D();
-const cBase = new THREE.Color(0x0c1a0e);
-const cMid  = new THREE.Color(0x14803a);
-const cHot  = new THREE.Color(0x22d045);
-let i = 0;
-const half = (N - 1) / 2;
-for (let x = 0; x < N; x++) for (let y = 0; y < N; y++) for (let z = 0; z < N; z++) {
-  const p = new THREE.Vector3((x - half) * SPACING, (y - half) * SPACING, (z - half) * SPACING);
-  home.push(p);
-  dir.push(p.clone().normalize().add(new THREE.Vector3(
-    (Math.random() - 0.5), (Math.random() - 0.5), (Math.random() - 0.5)
-  ).multiplyScalar(0.7)).normalize());
-  scl.push(0.82 + Math.random() * 0.18);
-  const r = Math.random();
-  lattice.setColorAt(i, r > 0.90 ? cHot : (r > 0.74 ? cMid : cBase));
-  i++;
-}
-lattice.instanceColor.needsUpdate = true;
-
-/* --- glowing outline of the assembled cube --- */
-const edgeSize = N * SPACING;
-const edges = new THREE.LineSegments(
-  new THREE.EdgesGeometry(new THREE.BoxGeometry(edgeSize, edgeSize, edgeSize)),
-  new THREE.LineBasicMaterial({ color: 0x22d045, transparent: true, opacity: 0.4 })
-);
-cubeGroup.add(edges);
-
-/* --- starfield --- */
-const starGeo = new THREE.BufferGeometry();
-const starCount = 900, starPos = new Float32Array(starCount * 3);
-for (let s = 0; s < starCount; s++) {
-  let v = new THREE.Vector3().randomDirection().multiplyScalar(40 + Math.random() * 60);
-  // stars drift along +z past the camera; keep them out of the camera's
-  // corridor so a passing star never balloons across the whole lens
-  while (Math.hypot(v.x, v.y) < 6)
-    v = new THREE.Vector3().randomDirection().multiplyScalar(40 + Math.random() * 60);
-  starPos.set([v.x, v.y, v.z], s * 3);
-}
-starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
-// soft circular sprite so the points render as round dots instead of squares
-// (white, so it still takes the material's colour tint)
-const starSprite = (() => {
-  const sz = 64, c = document.createElement('canvas');
-  c.width = c.height = sz;
-  const ctx = c.getContext('2d');
-  const g = ctx.createRadialGradient(sz / 2, sz / 2, 0, sz / 2, sz / 2, sz / 2);
-  g.addColorStop(0.0, 'rgba(255,255,255,1)');
-  g.addColorStop(0.5, 'rgba(255,255,255,0.92)');
-  g.addColorStop(1.0, 'rgba(255,255,255,0)');
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, sz, sz);
-  return new THREE.CanvasTexture(c);
-})();
-const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({
-  color: 0x7fdb91, size: 0.45, sizeAttenuation: true, transparent: true, opacity: 0.7,
-  map: starSprite, depthWrite: false
-}));
-scene.add(stars);
-
-/* --- incoming data chunks (assimilation streams) --- */
-const CHUNKS = 48;
-const chunkMesh = new THREE.InstancedMesh(
-  new THREE.BoxGeometry(0.22, 0.22, 0.22),
-  new THREE.MeshBasicMaterial({ color: 0x189230 }),   // 30% dimmer than the cube green
-  CHUNKS
-);
-chunkMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-scene.add(chunkMesh);
-
-const streams = [];
-const resetStream = (st) => {
-  st.angle = Math.random() * Math.PI * 2;
-  st.radius = 18 + Math.random() * 22;
-  st.y = (Math.random() - 0.5) * 16;
-  st.speed = 4 + Math.random() * 5;
-  st.spin = 0.25 + Math.random() * 0.5;
-  st.rot = Math.random() * Math.PI * 2;
-};
-for (let s = 0; s < CHUNKS; s++) {
-  const st = {};
-  resetStream(st);
-  st.radius = 4 + Math.random() * 36;   // stagger initial distances
-  streams.push(st);
-}
-
-/* --- scroll-driven state --- */
-/* calm:     0 = full animation, 1 = cube gone, chunks stopped, stars only
-   starFade: 0 = stars at full brightness, 1 = stars gone (no animation left) */
-const state = { progress: 0, mouseX: 0, mouseY: 0, calm: 1, starFade: 1, warp: 1, starWhite: 0 };
-
-window.addEventListener('pointermove', (e) => {
-  state.mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
-  state.mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
-}, { passive: true });
-
-/* --- drag to rotate the cube (with inertia) --- */
-const drag = { on: false, x: 0, y: 0, rx: 0, ry: 0, vx: 0, vy: 0 };
-const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
-
-if (!reduced) {
-  window.addEventListener('pointerdown', (e) => {
-    // leave links, buttons, text content and the interactive panels alone
-    if (e.button !== 0 || e.target.closest('a, button, p, .features, .term, .dedup-panel, header.top, footer')) return;
-    drag.on = true;
-    drag.x = e.clientX; drag.y = e.clientY;
-    drag.vx = 0; drag.vy = 0;
-    document.body.classList.add('dragging');
-  });
-  window.addEventListener('pointermove', (e) => {
-    if (!drag.on) return;
-    const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
-    drag.x = e.clientX; drag.y = e.clientY;
-    drag.vy = dx * 0.006; drag.vx = dy * 0.004;
-    drag.ry += drag.vy;
-    drag.rx = clamp(drag.rx + drag.vx, -0.9, 0.9);
-  });
-  const endDrag = () => {
-    drag.on = false;
-    document.body.classList.remove('dragging');
-  };
-  window.addEventListener('pointerup', endDrag);
-  window.addEventListener('pointercancel', endDrag);
-}
-
-const resize = () => {
-  const w = window.innerWidth, h = window.innerHeight;
-  renderer.setSize(w, h, false);
-  camera.aspect = w / h;
-  camera.updateProjectionMatrix();
-  // pull the camera back on narrow/portrait screens so the cube fits the width
-  const halfTan = Math.tan(THREE.MathUtils.degToRad(BASE_FOV / 2)) * camera.aspect;
-  state.baseZ = Math.max(15, 4.6 / halfTan);
-};
-window.addEventListener('resize', resize);
-resize();
-
-const timer = new THREE.Timer();
-const starScratch = new THREE.Vector3();   // reused when respawning wrapped stars
-const starBaseColor = new THREE.Color(0x7fdb91);   // cruise colour (matches the material)
-const starWarpColor = new THREE.Color(0xffffff);   // full-warp white
-
-function render() {
-  timer.update();
-  const dt = Math.min(timer.getDelta(), 0.05);
-  const t = timer.getElapsed();
-  const p = state.progress;                       // 0 at top, 1 at page bottom
-  const calm = state.calm;                        // 1 = stars only
-  const spread = Math.sin(p * Math.PI) * 7;       // explode mid-page, reassemble at end
-
-  cubeGroup.visible = calm < 0.995;
-  chunkMesh.visible = calm < 0.995;
-
-  // stars drift past the camera — a slow cruise through space
-  // (a touch faster when calm, where the starfield is all there is)
-  // state.warp multiplies the speed for the "Engage!" warp-drive burst
-  const starDrift = (1.2 + calm * 2.4) * state.warp * dt;
-  const sp = starGeo.attributes.position;
-  for (let s = 0; s < starCount; s++) {
-    let z = sp.getZ(s) + starDrift;
-    if (z > 40) {
-      z -= 140;                           // wrap from behind the camera to deep space
-      // re-randomize the lateral position on each wrap so the finite field
-      // never visibly repeats — otherwise it tiles every 140 units, which at
-      // warp speed cycles ~3x in the burst and reads as a pulse
-      do { starScratch.randomDirection().multiplyScalar(40 + Math.random() * 60); }
-      while (Math.hypot(starScratch.x, starScratch.y) < 6);
-      sp.setX(s, starScratch.x);
-      sp.setY(s, starScratch.y);
-    }
-    sp.setZ(s, z);
-  }
-  sp.needsUpdate = true;
-  // barely-there lateral sway; bounded so the wrap plane stays behind the camera
-  stars.rotation.y = Math.sin(t * 0.05) * 0.04;
-  // second wind-down stage: once the cube is gone, the starfield fades to nothing
-  stars.visible = state.starFade < 0.999;
-
-  // warp drive: stars swell, brighten to white at full warp, then dim back —
-  // and the lens punches outward so the field rushes past. warpT tracks the
-  // warp curve (0 at cruise, 1 at full warp), so brightness ramps up while
-  // accelerating, holds at white through the constant phase, and fades on decel
-  const warpT = Math.min(1, (state.warp - 1) / 69);
-  stars.material.size = 0.45 + warpT * 1.0;
-  // colour follows its own track (starWhite): white the instant we engage,
-  // held through warp, greening only on deceleration
-  stars.material.color.copy(starBaseColor).lerp(starWarpColor, state.starWhite);
-  stars.material.opacity = Math.min(1, 0.7 * (1 - state.starFade) + warpT * 0.5);
-  const warpFov = BASE_FOV + warpT * 28;
-  if (Math.abs(camera.fov - warpFov) > 0.01) { camera.fov = warpFov; camera.updateProjectionMatrix(); }
-
-  // lattice: home position pushed along explode direction by scroll
-  if (cubeGroup.visible) {
-    for (let k = 0; k < COUNT; k++) {
-      dummy.position.copy(home[k]).addScaledVector(dir[k], spread);
-      const s = scl[k] * (1 + 0.04 * Math.sin(t * 2 + k));
-      dummy.scale.setScalar(s);
-      dummy.rotation.set(spread * dir[k].x * 0.6, spread * dir[k].y * 0.6, 0);
-      dummy.updateMatrix();
-      lattice.setMatrixAt(k, dummy.matrix);
-    }
-    lattice.instanceMatrix.needsUpdate = true;
-  }
-
-  // free-spin inertia after the pointer is released
-  if (!drag.on) {
-    drag.ry += drag.vy;
-    drag.rx = clamp(drag.rx + drag.vx, -0.9, 0.9);
-    drag.vx *= 0.94;
-    drag.vy *= 0.94;
-  }
-
-  cubeGroup.rotation.y = t * 0.12 + p * Math.PI * 2 + drag.ry;
-  cubeGroup.rotation.x = Math.sin(t * 0.07) * 0.18 + p * 0.6 + drag.rx;
-  // "stop": the cube recedes into the fog and shrinks away
-  cubeGroup.position.z = -calm * 55;
-  cubeGroup.scale.setScalar(Math.max(0.001, 1 - calm));
-  edges.material.opacity = Math.max(0, 0.4 - spread * 0.12) * (0.75 + 0.25 * Math.sin(t * 2)) * (1 - calm);
-  core.intensity = (10 + 6 * Math.sin(t * 1.6)) * (1 - calm);
-
-  // assimilation streams spiral inward; "stop" brakes them and fades them out
-  if (chunkMesh.visible) {
-    const drive = 1 - calm;
-    for (let s = 0; s < CHUNKS; s++) {
-      const st = streams[s];
-      st.radius -= st.speed * dt * drive;
-      st.angle += st.spin * dt * drive;
-      st.rot += 2 * dt * drive;
-      if (st.radius < 3.4) resetStream(st);
-      const fade = Math.min(1, (st.radius - 3.4) / 3);
-      dummy.position.set(Math.cos(st.angle) * st.radius, st.y * (st.radius / 30), Math.sin(st.angle) * st.radius);
-      dummy.scale.setScalar(Math.max(0.001, fade * drive));
-      dummy.rotation.set(st.rot + s, st.rot * 0.75, 0);
-      dummy.updateMatrix();
-      chunkMesh.setMatrixAt(s, dummy.matrix);
-    }
-    chunkMesh.instanceMatrix.needsUpdate = true;
-  }
-
-  // camera: pull back as we scroll, gentle mouse parallax
-  camera.position.x += ((state.mouseX * 1.6) - camera.position.x) * 0.04;
-  camera.position.y += ((-state.mouseY * 1.2) - camera.position.y) * 0.04;
-  camera.position.z = state.baseZ + p * 7;
-  camera.lookAt(0, 0, 0);
-
-  renderer.render(scene, camera);
-}
-
-// boot in the stopped/dark state: draw one empty frame, then leave the loop
-// parked until the visitor clicks Animate (the button wakes it)
-render();
-
-/* --- stop button: wind the scene down in two stages, then to nothing ---
-   stop:   cube + chunks recede (as before), then the starfield fades out and
-           the render loop is parked, leaving no animated background at all.
-   resume: restart the loop, fade the stars back, then bring the cube back. */
 const stopBtn = document.getElementById('stopBtn');
-let stopped = true;   // boot in the stopped/dark state; Animate spins it up
-let windTween = null;
-stopBtn.addEventListener('click', () => {
-  stopped = !stopped;
-  stopBtn.textContent = stopped ? 'Engage!' : 'Stop';
-  stopBtn.setAttribute('aria-pressed', String(stopped));
-  if (reduced) {
-    state.calm = state.starFade = stopped ? 1 : 0;
-    render();
-    return;
-  }
-  if (windTween) windTween.kill();
-  if (stopped) {
-    windTween = gsap.timeline()
-      .to(state, { warp: 1, duration: 0.6, ease: 'power2.out' }, 0)   // drop out of warp if mid-burst
-      .to(state, { starWhite: 0, duration: 0.6, ease: 'power2.out' }, 0)   // and back to green
-      .to(state, { calm: 1, duration: 2.8, ease: 'power2.inOut' }, 0)
-      .to(state, { starFade: 1, duration: 1.6, ease: 'power2.inOut',
-                   onComplete: () => renderer.setAnimationLoop(null) });
-  } else {
-    renderer.setAnimationLoop(render);   // wake the loop before engaging
-    state.warp = 1;
-    state.starWhite = 1;                  // stars flash to white the instant we engage
-    windTween = gsap.timeline()
-      // stars snap in (already white), then the warp drive winds up — accelerating hard…
-      .to(state, { starFade: 0, duration: 0.4, ease: 'power1.out' }, 0)
-      .to(state, { warp: 70, duration: 2.0, ease: 'power3.in' }, 0)
-      // …holds at full warp (constant speed)…
-      .to(state, { warp: 70, duration: 2.0 })
-      // …then decelerates back to a normal cruise
-      .to(state, { warp: 1, duration: 2.0, ease: 'power2.out' })
-      // stars stay white through accel + cruise, then green back down over the decel
-      .to(state, { starWhite: 0, duration: 2.0, ease: 'power2.out' }, 4)
-      // dropping out of warp, the Borg cube reassembles into the familiar scene
-      .to(state, { calm: 0, duration: 2.4, ease: 'power2.inOut' }, '-=1.5');
-  }
-});
 
-// debugging/testing handle (this page is a prototype)
-window.__borg = { state, drag, cubeGroup, camera, renderer };
+function initScene() {
+  const canvas = document.getElementById('scene');
+  let renderer;
+  try {
+    renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  } catch (err) {   // three.js throws when the browser refuses a WebGL context
+    console.warn('3D background disabled: WebGL is not available.', err);
+    return null;
+  }
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x020503, 0.012);
+
+  const BASE_FOV = 50;
+  const camera = new THREE.PerspectiveCamera(BASE_FOV, 1, 0.1, 200);
+  camera.position.set(0, 0, 15);
+
+  scene.add(new THREE.AmbientLight(0x18301c, 1.4));
+  const key = new THREE.DirectionalLight(0x9fffb4, 1.1);
+  key.position.set(6, 8, 10);
+  scene.add(key);
+  const core = new THREE.PointLight(0x22d045, 14, 30);
+  scene.add(core);
+
+  /* --- cube lattice --- */
+  const N = 6, SPACING = 1.06;
+  const COUNT = N * N * N;
+  const cubeGroup = new THREE.Group();
+  scene.add(cubeGroup);
+
+  const boxGeo = new THREE.BoxGeometry(0.92, 0.92, 0.92);
+  const boxMat = new THREE.MeshLambertMaterial({ color: 0xffffff });
+  const lattice = new THREE.InstancedMesh(boxGeo, boxMat, COUNT);
+  lattice.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  cubeGroup.add(lattice);
+
+  // per-instance home position, explode direction, scale, color
+  const home = [], dir = [], scl = [];
+  const dummy = new THREE.Object3D();
+  const cBase = new THREE.Color(0x0c1a0e);
+  const cMid  = new THREE.Color(0x14803a);
+  const cHot  = new THREE.Color(0x22d045);
+  let i = 0;
+  const half = (N - 1) / 2;
+  for (let x = 0; x < N; x++) for (let y = 0; y < N; y++) for (let z = 0; z < N; z++) {
+    const p = new THREE.Vector3((x - half) * SPACING, (y - half) * SPACING, (z - half) * SPACING);
+    home.push(p);
+    dir.push(p.clone().normalize().add(new THREE.Vector3(
+      (Math.random() - 0.5), (Math.random() - 0.5), (Math.random() - 0.5)
+    ).multiplyScalar(0.7)).normalize());
+    scl.push(0.82 + Math.random() * 0.18);
+    const r = Math.random();
+    lattice.setColorAt(i, r > 0.90 ? cHot : (r > 0.74 ? cMid : cBase));
+    i++;
+  }
+  lattice.instanceColor.needsUpdate = true;
+
+  /* --- glowing outline of the assembled cube --- */
+  const edgeSize = N * SPACING;
+  const edges = new THREE.LineSegments(
+    new THREE.EdgesGeometry(new THREE.BoxGeometry(edgeSize, edgeSize, edgeSize)),
+    new THREE.LineBasicMaterial({ color: 0x22d045, transparent: true, opacity: 0.4 })
+  );
+  cubeGroup.add(edges);
+
+  /* --- starfield --- */
+  const starGeo = new THREE.BufferGeometry();
+  const starCount = 900, starPos = new Float32Array(starCount * 3);
+  for (let s = 0; s < starCount; s++) {
+    let v = new THREE.Vector3().randomDirection().multiplyScalar(40 + Math.random() * 60);
+    // stars drift along +z past the camera; keep them out of the camera's
+    // corridor so a passing star never balloons across the whole lens
+    while (Math.hypot(v.x, v.y) < 6)
+      v = new THREE.Vector3().randomDirection().multiplyScalar(40 + Math.random() * 60);
+    starPos.set([v.x, v.y, v.z], s * 3);
+  }
+  starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+  // soft circular sprite so the points render as round dots instead of squares
+  // (white, so it still takes the material's colour tint)
+  const starSprite = (() => {
+    const sz = 64, c = document.createElement('canvas');
+    c.width = c.height = sz;
+    const ctx = c.getContext('2d');
+    const g = ctx.createRadialGradient(sz / 2, sz / 2, 0, sz / 2, sz / 2, sz / 2);
+    g.addColorStop(0.0, 'rgba(255,255,255,1)');
+    g.addColorStop(0.5, 'rgba(255,255,255,0.92)');
+    g.addColorStop(1.0, 'rgba(255,255,255,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, sz, sz);
+    return new THREE.CanvasTexture(c);
+  })();
+  const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({
+    color: 0x7fdb91, size: 0.45, sizeAttenuation: true, transparent: true, opacity: 0.7,
+    map: starSprite, depthWrite: false
+  }));
+  scene.add(stars);
+
+  /* --- incoming data chunks (assimilation streams) --- */
+  const CHUNKS = 48;
+  const chunkMesh = new THREE.InstancedMesh(
+    new THREE.BoxGeometry(0.22, 0.22, 0.22),
+    new THREE.MeshBasicMaterial({ color: 0x189230 }),   // 30% dimmer than the cube green
+    CHUNKS
+  );
+  chunkMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  scene.add(chunkMesh);
+
+  const streams = [];
+  const resetStream = (st) => {
+    st.angle = Math.random() * Math.PI * 2;
+    st.radius = 18 + Math.random() * 22;
+    st.y = (Math.random() - 0.5) * 16;
+    st.speed = 4 + Math.random() * 5;
+    st.spin = 0.25 + Math.random() * 0.5;
+    st.rot = Math.random() * Math.PI * 2;
+  };
+  for (let s = 0; s < CHUNKS; s++) {
+    const st = {};
+    resetStream(st);
+    st.radius = 4 + Math.random() * 36;   // stagger initial distances
+    streams.push(st);
+  }
+
+  /* --- scroll-driven state --- */
+  /* calm:     0 = full animation, 1 = cube gone, chunks stopped, stars only
+     starFade: 0 = stars at full brightness, 1 = stars gone (no animation left) */
+  const state = { progress: 0, mouseX: 0, mouseY: 0, calm: 1, starFade: 1, warp: 1, starWhite: 0 };
+
+  window.addEventListener('pointermove', (e) => {
+    state.mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+    state.mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+  }, { passive: true });
+
+  /* --- drag to rotate the cube (with inertia) --- */
+  const drag = { on: false, x: 0, y: 0, rx: 0, ry: 0, vx: 0, vy: 0 };
+  const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+
+  if (!reduced) {
+    window.addEventListener('pointerdown', (e) => {
+      // leave links, buttons, text content and the interactive panels alone
+      if (e.button !== 0 || e.target.closest('a, button, p, .features, .term, .dedup-panel, header.top, footer')) return;
+      drag.on = true;
+      drag.x = e.clientX; drag.y = e.clientY;
+      drag.vx = 0; drag.vy = 0;
+      document.body.classList.add('dragging');
+    });
+    window.addEventListener('pointermove', (e) => {
+      if (!drag.on) return;
+      const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      drag.x = e.clientX; drag.y = e.clientY;
+      drag.vy = dx * 0.006; drag.vx = dy * 0.004;
+      drag.ry += drag.vy;
+      drag.rx = clamp(drag.rx + drag.vx, -0.9, 0.9);
+    });
+    const endDrag = () => {
+      drag.on = false;
+      document.body.classList.remove('dragging');
+    };
+    window.addEventListener('pointerup', endDrag);
+    window.addEventListener('pointercancel', endDrag);
+  }
+
+  const resize = () => {
+    const w = window.innerWidth, h = window.innerHeight;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    // pull the camera back on narrow/portrait screens so the cube fits the width
+    const halfTan = Math.tan(THREE.MathUtils.degToRad(BASE_FOV / 2)) * camera.aspect;
+    state.baseZ = Math.max(15, 4.6 / halfTan);
+  };
+  window.addEventListener('resize', resize);
+  resize();
+
+  const timer = new THREE.Timer();
+  const starScratch = new THREE.Vector3();   // reused when respawning wrapped stars
+  const starBaseColor = new THREE.Color(0x7fdb91);   // cruise colour (matches the material)
+  const starWarpColor = new THREE.Color(0xffffff);   // full-warp white
+
+  function render() {
+    timer.update();
+    const dt = Math.min(timer.getDelta(), 0.05);
+    const t = timer.getElapsed();
+    const p = state.progress;                       // 0 at top, 1 at page bottom
+    const calm = state.calm;                        // 1 = stars only
+    const spread = Math.sin(p * Math.PI) * 7;       // explode mid-page, reassemble at end
+
+    cubeGroup.visible = calm < 0.995;
+    chunkMesh.visible = calm < 0.995;
+
+    // stars drift past the camera — a slow cruise through space
+    // (a touch faster when calm, where the starfield is all there is)
+    // state.warp multiplies the speed for the "Engage!" warp-drive burst
+    const starDrift = (1.2 + calm * 2.4) * state.warp * dt;
+    const sp = starGeo.attributes.position;
+    for (let s = 0; s < starCount; s++) {
+      let z = sp.getZ(s) + starDrift;
+      if (z > 40) {
+        z -= 140;                           // wrap from behind the camera to deep space
+        // re-randomize the lateral position on each wrap so the finite field
+        // never visibly repeats — otherwise it tiles every 140 units, which at
+        // warp speed cycles ~3x in the burst and reads as a pulse
+        do { starScratch.randomDirection().multiplyScalar(40 + Math.random() * 60); }
+        while (Math.hypot(starScratch.x, starScratch.y) < 6);
+        sp.setX(s, starScratch.x);
+        sp.setY(s, starScratch.y);
+      }
+      sp.setZ(s, z);
+    }
+    sp.needsUpdate = true;
+    // barely-there lateral sway; bounded so the wrap plane stays behind the camera
+    stars.rotation.y = Math.sin(t * 0.05) * 0.04;
+    // second wind-down stage: once the cube is gone, the starfield fades to nothing
+    stars.visible = state.starFade < 0.999;
+
+    // warp drive: stars swell, brighten to white at full warp, then dim back —
+    // and the lens punches outward so the field rushes past. warpT tracks the
+    // warp curve (0 at cruise, 1 at full warp), so brightness ramps up while
+    // accelerating, holds at white through the constant phase, and fades on decel
+    const warpT = Math.min(1, (state.warp - 1) / 69);
+    stars.material.size = 0.45 + warpT * 1.0;
+    // colour follows its own track (starWhite): white the instant we engage,
+    // held through warp, greening only on deceleration
+    stars.material.color.copy(starBaseColor).lerp(starWarpColor, state.starWhite);
+    stars.material.opacity = Math.min(1, 0.7 * (1 - state.starFade) + warpT * 0.5);
+    const warpFov = BASE_FOV + warpT * 28;
+    if (Math.abs(camera.fov - warpFov) > 0.01) { camera.fov = warpFov; camera.updateProjectionMatrix(); }
+
+    // lattice: home position pushed along explode direction by scroll
+    if (cubeGroup.visible) {
+      for (let k = 0; k < COUNT; k++) {
+        dummy.position.copy(home[k]).addScaledVector(dir[k], spread);
+        const s = scl[k] * (1 + 0.04 * Math.sin(t * 2 + k));
+        dummy.scale.setScalar(s);
+        dummy.rotation.set(spread * dir[k].x * 0.6, spread * dir[k].y * 0.6, 0);
+        dummy.updateMatrix();
+        lattice.setMatrixAt(k, dummy.matrix);
+      }
+      lattice.instanceMatrix.needsUpdate = true;
+    }
+
+    // free-spin inertia after the pointer is released
+    if (!drag.on) {
+      drag.ry += drag.vy;
+      drag.rx = clamp(drag.rx + drag.vx, -0.9, 0.9);
+      drag.vx *= 0.94;
+      drag.vy *= 0.94;
+    }
+
+    cubeGroup.rotation.y = t * 0.12 + p * Math.PI * 2 + drag.ry;
+    cubeGroup.rotation.x = Math.sin(t * 0.07) * 0.18 + p * 0.6 + drag.rx;
+    // "stop": the cube recedes into the fog and shrinks away
+    cubeGroup.position.z = -calm * 55;
+    cubeGroup.scale.setScalar(Math.max(0.001, 1 - calm));
+    edges.material.opacity = Math.max(0, 0.4 - spread * 0.12) * (0.75 + 0.25 * Math.sin(t * 2)) * (1 - calm);
+    core.intensity = (10 + 6 * Math.sin(t * 1.6)) * (1 - calm);
+
+    // assimilation streams spiral inward; "stop" brakes them and fades them out
+    if (chunkMesh.visible) {
+      const drive = 1 - calm;
+      for (let s = 0; s < CHUNKS; s++) {
+        const st = streams[s];
+        st.radius -= st.speed * dt * drive;
+        st.angle += st.spin * dt * drive;
+        st.rot += 2 * dt * drive;
+        if (st.radius < 3.4) resetStream(st);
+        const fade = Math.min(1, (st.radius - 3.4) / 3);
+        dummy.position.set(Math.cos(st.angle) * st.radius, st.y * (st.radius / 30), Math.sin(st.angle) * st.radius);
+        dummy.scale.setScalar(Math.max(0.001, fade * drive));
+        dummy.rotation.set(st.rot + s, st.rot * 0.75, 0);
+        dummy.updateMatrix();
+        chunkMesh.setMatrixAt(s, dummy.matrix);
+      }
+      chunkMesh.instanceMatrix.needsUpdate = true;
+    }
+
+    // camera: pull back as we scroll, gentle mouse parallax
+    camera.position.x += ((state.mouseX * 1.6) - camera.position.x) * 0.04;
+    camera.position.y += ((-state.mouseY * 1.2) - camera.position.y) * 0.04;
+    camera.position.z = state.baseZ + p * 7;
+    camera.lookAt(0, 0, 0);
+
+    renderer.render(scene, camera);
+  }
+
+  // boot in the stopped/dark state: draw one empty frame, then leave the loop
+  // parked until the visitor clicks Animate (the button wakes it)
+  render();
+
+  /* --- stop button: wind the scene down in two stages, then to nothing ---
+     stop:   cube + chunks recede (as before), then the starfield fades out and
+             the render loop is parked, leaving no animated background at all.
+     resume: restart the loop, fade the stars back, then bring the cube back. */
+  let stopped = true;   // boot in the stopped/dark state; Animate spins it up
+  let windTween = null;
+  stopBtn.addEventListener('click', () => {
+    stopped = !stopped;
+    stopBtn.textContent = stopped ? 'Engage!' : 'Stop';
+    stopBtn.setAttribute('aria-pressed', String(stopped));
+    if (reduced) {
+      state.calm = state.starFade = stopped ? 1 : 0;
+      render();
+      return;
+    }
+    if (windTween) windTween.kill();
+    if (stopped) {
+      windTween = gsap.timeline()
+        .to(state, { warp: 1, duration: 0.6, ease: 'power2.out' }, 0)   // drop out of warp if mid-burst
+        .to(state, { starWhite: 0, duration: 0.6, ease: 'power2.out' }, 0)   // and back to green
+        .to(state, { calm: 1, duration: 2.8, ease: 'power2.inOut' }, 0)
+        .to(state, { starFade: 1, duration: 1.6, ease: 'power2.inOut',
+                     onComplete: () => renderer.setAnimationLoop(null) });
+    } else {
+      renderer.setAnimationLoop(render);   // wake the loop before engaging
+      state.warp = 1;
+      state.starWhite = 1;                  // stars flash to white the instant we engage
+      windTween = gsap.timeline()
+        // stars snap in (already white), then the warp drive winds up — accelerating hard…
+        .to(state, { starFade: 0, duration: 0.4, ease: 'power1.out' }, 0)
+        .to(state, { warp: 70, duration: 2.0, ease: 'power3.in' }, 0)
+        // …holds at full warp (constant speed)…
+        .to(state, { warp: 70, duration: 2.0 })
+        // …then decelerates back to a normal cruise
+        .to(state, { warp: 1, duration: 2.0, ease: 'power2.out' })
+        // stars stay white through accel + cruise, then green back down over the decel
+        .to(state, { starWhite: 0, duration: 2.0, ease: 'power2.out' }, 4)
+        // dropping out of warp, the Borg cube reassembles into the familiar scene
+        .to(state, { calm: 0, duration: 2.4, ease: 'power2.inOut' }, '-=1.5');
+    }
+  });
+
+  // debugging/testing handle (this page is a prototype)
+  window.__borg = { state, drag, cubeGroup, camera, renderer };
+
+  return state;
+}
+
+const cube = initScene();
+// no WebGL, no scene: drop the Engage! button instead of leaving it dead
+if (!cube) stopBtn.remove();
 
 /* ================================================================
    GSAP — choreography
@@ -1521,13 +1542,13 @@ window.__borg = { state, drag, cubeGroup, camera, renderer };
 gsap.registerPlugin(ScrollTrigger);
 
 if (!reduced) {
-  // scroll progress drives the 3D scene
-  ScrollTrigger.create({
+  // scroll progress drives the 3D scene (if there is one)
+  if (cube) ScrollTrigger.create({
     trigger: document.body,
     start: 'top top',
     end: 'bottom bottom',
     scrub: 0.8,
-    onUpdate: (self) => { state.progress = self.progress; }
+    onUpdate: (self) => { cube.progress = self.progress; }
   });
 
   // hero entrance
